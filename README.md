@@ -8,14 +8,14 @@ Web tugas praktik C++ dengan satu challenge praktik gabungan materi. Mekanisme p
 2. Siswa mengisi nama lengkap dan menekan **Mulai Sesi**. Timer 90 menit berjalan setelah itu.
 3. Tidak ada mode istirahat. Setiap pelanggaran aturan yang terdeteksi mengurangi sisa waktu sebanyak 5 menit.
 4. Editor CodeMirror 6 menyediakan syntax highlighting C++, nomor baris, autocomplete dasar, auto-indent, comment shortcut, Tab indent, dan Ctrl+Enter.
-4a. Tinggi editor dapat diperbesar atau diperkecil dengan menarik handle di bawah area kode; pilihan tinggi disimpan di browser.
-5. Tab STDIN menerima input berbaris untuk program yang menggunakan `cin`, `getline`, dan `cin.ignore()`.
-6. **Run Code** mengompilasi lalu menjalankan kode terhadap STDIN yang dimasukkan siswa.
-7. **Check Tests** menjalankan tiga skenario terpisah untuk tiap misi. Pemeriksaan membaca nilai pada baris output yang memiliki label wajib. Nilai otomatis = `test lolos / 3 × 100`.
-8. **Submit Mission** baru aktif setelah pengujian. Submission mengirim nama, tugas, source code, jumlah test lolos, nilai, dan rincian pemeriksaan ke Google Spreadsheet.
-9. Draft, identitas nama, progres, waktu sesi, dan total penalti disimpan di localStorage.
-10. Pelanggaran yang diberi penalti meliputi copy, cut, paste, drag-and-drop kode, menyeleksi/menyalin soal atau membuka menu konteks pada area soal, shortcut screenshot/print, shortcut Developer Tools/View Source, dan berpindah tab. Setiap kejadian mengurangi 300 detik; akumulasi penalti disimpan di localStorage dan ditampilkan di header.
-11. Saat waktu habis, editor, Run, Check Tests, navigasi misi, dan Submit dikunci pada browser tersebut.
+5. Tinggi editor dapat diperbesar atau diperkecil dengan menarik handle di bawah area kode; pilihan tinggi disimpan di browser.
+6. Tab STDIN menerima input berbaris untuk program yang menggunakan `cin`, `getline`, dan `cin.ignore()`.
+7. **Run Code** mengompilasi lalu menjalankan kode terhadap STDIN yang dimasukkan siswa.
+8. **Check Tests** menjalankan tiga skenario terpisah untuk tiap misi. Pemeriksaan membaca nilai pada baris output yang memiliki label wajib. Nilai otomatis = `test lolos / 3 × 100`.
+9. **Submit Mission** baru aktif setelah pengujian. Submission mengirim nama, tugas, source code, jumlah test lolos, nilai, dan rincian pemeriksaan ke Google Spreadsheet.
+10. Draft, identitas nama, progres, waktu sesi, dan total penalti disimpan di localStorage.
+11. Pelanggaran yang diberi penalti meliputi copy, cut, paste, drag-and-drop kode, menyeleksi/menyalin soal atau membuka menu konteks pada area soal, shortcut screenshot/print, shortcut Developer Tools/View Source, dan berpindah tab. Setiap kejadian mengurangi 300 detik; akumulasi penalti disimpan di localStorage dan ditampilkan di header.
+12. Saat waktu habis, editor, Run, Check Tests, navigasi misi, dan Submit dikunci pada browser tersebut.
 
 > Catatan: penalti berjalan di sisi browser. Browser tidak selalu dapat mendeteksi screenshot yang diambil oleh sistem operasi, kamera eksternal, atau pembukaan Developer Tools melalui menu browser. Mekanisme ini adalah deterrent, bukan jaminan anti-cheat mutlak.
 
