@@ -518,22 +518,22 @@ svg.ui-icon{
 
 
 /* Protect challenge text from selection and clipboard copying. */
-.problem-panel,
-.problem-panel *:not(input):not(textarea){
+.clipboard-protection-enabled .problem-panel,
+.clipboard-protection-enabled .problem-panel *:not(input):not(textarea){
   -webkit-user-select:none!important;
   -moz-user-select:none!important;
   -ms-user-select:none!important;
   user-select:none!important;
   -webkit-touch-callout:none;
 }
-.problem-panel{
+.clipboard-protection-enabled .problem-panel{
   -webkit-user-drag:none;
   user-select:none;
-  outline:none;
 }
+.problem-panel{outline:none;}
 .problem-panel:focus{outline:none}
-.problem-panel .problem-tabs button,
-.problem-panel .icon-btn{user-select:none!important}
+.clipboard-protection-enabled .problem-panel .problem-tabs button,
+.clipboard-protection-enabled .problem-panel .icon-btn{user-select:none!important}
 
 
 /* Compact single-mission card: prevent the lone grid row from stretching. */
