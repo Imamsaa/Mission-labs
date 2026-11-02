@@ -2,15 +2,46 @@
  * C++ Mission Lab — Google Apps Script receiver.
  * Sheet target is stored in Script Properties by setup().
  * Long code submissions arrive through short JSONP chunks.
+ *
+ * Schema migration is additive: existing columns and rows are preserved.
  */
 const SHEET_NAME = 'Hasil Tugas C++';
+const TIME_ZONE = 'Asia/Jakarta';
 const HEADERS = [
   'Nama Peserta', 'Tugas', 'Waktu Submit', 'Kode C++', 'Status',
-  'Test Lolos', 'Total Test', 'Nilai Akhir', 'Rincian Pengujian'
+  'Test Lolos', 'Total Test', 'Nilai Akhir', 'Rincian Pengujian',
+  'Tanggal Submit', 'Jam Submit', 'Keberhasilan', 'Waktu Mulai',
+  'Sisa Waktu Saat Submit', 'Lama Pengerjaan', 'Jumlah Pelanggaran',
+  'Rincian Pelanggaran'
 ];
-const MAX_SUBMISSION_CHARS = 90000;
-const MAX_CHUNKS = 200;
+const MAX_SUBMISSION_CHARS = 110000;
+const MAX_CHUNKS = 220;
 const CHUNK_TTL_SECONDS = 600;
+
+function ensureHeaders_(sheet) {
+  if (sheet.getLastRow() === 0) {
+    sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
+    return HEADERS.slice();
+  }
+
+  const lastColumn = Math.max(sheet.getLastColumn(), 1);
+  let current = sheet.getRange(1, 1, 1, lastColumn).getDisplayValues()[0]
+    .map(function (value) { return String(value || '').trim(); });
+
+  if (!current.some(Boolean)) {
+    sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
+    return HEADERS.slice();
+  }
+
+  const missing = HEADERS.filter(function (header) {
+    return current.indexOf(header) === -1;
+  });
+  if (missing.length) {
+    sheet.getRange(1, lastColumn + 1, 1, missing.length).setValues([missing]);
+    current = current.concat(missing);
+  }
+  return current;
+}
 
 function setup() {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
@@ -18,22 +49,46 @@ function setup() {
 
   let sheet = spreadsheet.getSheetByName(SHEET_NAME);
   if (!sheet) sheet = spreadsheet.insertSheet(SHEET_NAME);
-  if (sheet.getLastRow() === 0) sheet.appendRow(HEADERS);
+
+  const headers = ensureHeaders_(sheet);
+  const headerMap = {};
+  headers.forEach(function (header, index) {
+    headerMap[header] = index + 1;
+  });
 
   sheet.setFrozenRows(1);
-  sheet.getRange(1, 1, 1, HEADERS.length)
+  sheet.getRange(1, 1, 1, headers.length)
     .setFontWeight('bold')
     .setBackground('#173b35')
-    .setFontColor('#ffffff');
-  sheet.setColumnWidth(1, 190);
-  sheet.setColumnWidth(2, 190);
-  sheet.setColumnWidth(3, 165);
-  sheet.setColumnWidth(4, 480);
-  sheet.setColumnWidth(9, 420);
+    .setFontColor('#ffffff')
+    .setWrap(true);
 
-  // Tidak menghapus isi sheet yang sudah ada.
+  const widths = {
+    'Nama Peserta': 190,
+    'Tugas': 170,
+    'Waktu Submit': 165,
+    'Kode C++': 480,
+    'Status': 120,
+    'Test Lolos': 90,
+    'Total Test': 90,
+    'Nilai Akhir': 95,
+    'Rincian Pengujian': 380,
+    'Tanggal Submit': 115,
+    'Jam Submit': 95,
+    'Keberhasilan': 190,
+    'Waktu Mulai': 165,
+    'Sisa Waktu Saat Submit': 155,
+    'Lama Pengerjaan': 135,
+    'Jumlah Pelanggaran': 125,
+    'Rincian Pelanggaran': 360
+  };
+  Object.keys(widths).forEach(function (header) {
+    if (headerMap[header]) sheet.setColumnWidth(headerMap[header], widths[header]);
+  });
+
+  // Tidak menghapus isi sheet atau kolom lama.
   PropertiesService.getScriptProperties().setProperty('SPREADSHEET_ID', spreadsheet.getId());
-  return 'Setup selesai: ' + spreadsheet.getUrl();
+  return 'Setup selesai. Header lama dipertahankan dan kolom baru ditambahkan: ' + spreadsheet.getUrl();
 }
 
 function doGet(e) {
@@ -58,7 +113,7 @@ function doGet(e) {
 
 function jsonpResponse_(result, callback) {
   const json = JSON.stringify(result);
-  if (callback && /^[a-zA-Z_$][\w$]*$/.test(callback)) {
+  if (callback && /^[a-zA-Z_$][\\w$]*$/.test(callback)) {
     return ContentService.createTextOutput(callback + '(' + json + ');')
       .setMimeType(ContentService.MimeType.JAVASCRIPT);
   }
@@ -95,11 +150,11 @@ function receiveChunk_(params) {
   }
   cache.removeAll(keys);
 
-  // Decode base64url -> UTF-8 JSON.
   while (encoded.length % 4) encoded += '=';
   const bytes = Utilities.base64DecodeWebSafe(encoded);
   const payloadText = Utilities.newBlob(bytes).getDataAsString('UTF-8');
   if (payloadText.length > MAX_SUBMISSION_CHARS) throw new Error('Ukuran tugas melebihi batas yang diizinkan.');
+
   const payload = JSON.parse(payloadText);
   const saved = saveSubmission_(payload);
   saved.complete = true;
@@ -108,8 +163,25 @@ function receiveChunk_(params) {
 
 function safeCellText_(value) {
   const text = String(value == null ? '' : value);
-  // Cegah formula injection pada data teks siswa.
-  return /^[=+\-@]/.test(text) ? "'" + text : text;
+  return /^[=+\\-@]/.test(text) ? "'" + text : text;
+}
+
+function formatDuration_(seconds) {
+  const safe = Math.max(0, Math.floor(Number(seconds) || 0));
+  const hours = String(Math.floor(safe / 3600)).padStart(2, '0');
+  const minutes = String(Math.floor((safe % 3600) / 60)).padStart(2, '0');
+  const remainder = String(safe % 60).padStart(2, '0');
+  return hours + ':' + minutes + ':' + remainder;
+}
+
+function parseViolationLog_(value) {
+  if (Array.isArray(value)) return value;
+  try {
+    const parsed = JSON.parse(String(value || '[]'));
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    return [];
+  }
 }
 
 function saveSubmission_(payload) {
@@ -119,11 +191,26 @@ function saveSubmission_(payload) {
   if (!name || !task || !code.trim()) throw new Error('Nama, tugas, dan kode wajib diisi.');
   if (name.length > 120) throw new Error('Nama terlalu panjang.');
   if (code.length > 45000) throw new Error('Kode C++ melebihi batas 45.000 karakter.');
-  if (!['Smart Canteen', 'Student Analytics'].includes(task)) throw new Error('Nama tugas tidak valid.');
+  if (task !== 'Smart Canteen') throw new Error('Nama tugas tidak valid.');
 
   const passed = Math.max(0, Math.min(3, Number(payload.passed) || 0));
   const total = Math.max(1, Math.min(3, Number(payload.total) || 1));
   const score = Math.max(0, Math.min(100, Math.round(passed / total * 100)));
+
+  const rawElapsed = Number(payload.elapsedSeconds);
+  const elapsedSeconds = Number.isFinite(rawElapsed) ? Math.max(0, Math.min(86400, Math.floor(rawElapsed))) : 0;
+  const rawRemaining = Number(payload.remainingSeconds);
+  const remainingSeconds = Number.isFinite(rawRemaining) ? Math.max(0, Math.min(SESSION_SECONDS_LIMIT_(), Math.floor(rawRemaining))) : 0;
+  const rawViolationCount = Number(payload.violationCount);
+  const violationCount = Number.isFinite(rawViolationCount) ? Math.max(0, Math.min(10000, Math.floor(rawViolationCount))) : 0;
+  const violations = parseViolationLog_(payload.violations).slice(0, 200).map(function (item) {
+    return {
+      reason: String((item && item.reason) || 'Pelanggaran').slice(0, 250),
+      occurredAt: String((item && item.occurredAt) || '').slice(0, 40),
+      penaltyMinutes: Math.max(0, Math.min(120, Number(item && item.penaltyMinutes) || 0))
+    };
+  });
+
   const spreadsheetId = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
   const spreadsheet = spreadsheetId
     ? SpreadsheetApp.openById(spreadsheetId)
@@ -133,18 +220,46 @@ function saveSubmission_(payload) {
   const sheet = spreadsheet.getSheetByName(SHEET_NAME);
   if (!sheet) throw new Error('Sheet belum dibuat. Jalankan setup() terlebih dahulu.');
 
-  const details = String(payload.details || '');
-  sheet.appendRow([
-    safeCellText_(name),
-    task,
-    new Date(),
-    safeCellText_(code),
-    score === 100 ? 'LULUS' : 'TERKIRIM',
-    passed,
-    total,
-    score,
-    safeCellText_(details.slice(0, 45000))
-  ]);
+  const headers = ensureHeaders_(sheet);
+  const submittedAt = new Date();
+  const startedAtMs = Number(payload.startedAtMs);
+  const startedAt = Number.isFinite(startedAtMs) && startedAtMs > 0 ? new Date(startedAtMs) : null;
+  const dateText = Utilities.formatDate(submittedAt, TIME_ZONE, 'dd/MM/yyyy');
+  const timeText = Utilities.formatDate(submittedAt, TIME_ZONE, 'HH:mm:ss');
+  const startText = startedAt ? Utilities.formatDate(startedAt, TIME_ZONE, 'dd/MM/yyyy HH:mm:ss') : '';
+  const successText = passed + '/' + total + ' test berhasil (' + score + '%)';
+  const violationText = violations.map(function (item, index) {
+    const when = item.occurredAt ? Utilities.formatDate(new Date(item.occurredAt), TIME_ZONE, 'dd/MM/yyyy HH:mm:ss') : 'waktu tidak tersedia';
+    return (index + 1) + '. ' + item.reason + ' | ' + when + ' | penalti ' + item.penaltyMinutes + ' menit';
+  }).join('\n');
 
-  return { ok: true, complete: true, score: score, message: 'Submission tersimpan.' };
+  const data = {
+    'Nama Peserta': safeCellText_(name),
+    'Tugas': safeCellText_(task),
+    'Waktu Submit': submittedAt,
+    'Kode C++': safeCellText_(code),
+    'Status': score === 100 ? 'LULUS' : 'BELUM LULUS',
+    'Test Lolos': passed,
+    'Total Test': total,
+    'Nilai Akhir': score,
+    'Rincian Pengujian': safeCellText_(String(payload.details || '').slice(0, 45000)),
+    'Tanggal Submit': dateText,
+    'Jam Submit': timeText,
+    'Keberhasilan': successText,
+    'Waktu Mulai': startText,
+    'Sisa Waktu Saat Submit': formatDuration_(remainingSeconds),
+    'Lama Pengerjaan': formatDuration_(elapsedSeconds),
+    'Jumlah Pelanggaran': violationCount,
+    'Rincian Pelanggaran': safeCellText_(violationText.slice(0, 20000))
+  };
+
+  const row = headers.map(function (header) {
+    return Object.prototype.hasOwnProperty.call(data, header) ? data[header] : '';
+  });
+  sheet.appendRow(row);
+  return { ok: true, complete: true, score: score, violationCount: violationCount, message: 'Submission tersimpan.' };
+}
+
+function SESSION_SECONDS_LIMIT_() {
+  return 70 * 60 + 60 * 60;
 }
