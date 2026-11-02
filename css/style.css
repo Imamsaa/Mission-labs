@@ -24,17 +24,16 @@
 button:disabled{cursor:not-allowed}
 @media(max-width:680px){.session-lock-card{padding:18px 15px}.session-lock-card p{font-size:10px}}
 
-/* Two-use participant break control. */
-.btn-break{padding:9px 11px;color:#d7e6f3;background:#192b3d;border:1px solid #334a60;font-size:10px}
-.btn-break:hover{background:#233a50;border-color:#4a657f}
-.btn-break.is-resume{color:#17210e;background:var(--green);border-color:var(--green)}
-.break-count{display:inline-flex;align-items:center;padding:7px 8px;border:1px solid var(--line);border-radius:7px;color:#aebdcb;background:#101b29;font:9px var(--mono);white-space:nowrap}
-.break-count-empty{color:var(--muted-2);opacity:.75}
-.break-count[hidden],.btn-break[hidden]{display:none!important}
+
+
+
+
+
+
 @media(max-width:680px){
   .top-actions{gap:5px}
-  .btn-break{padding:8px 7px;font-size:9px}
-  .break-count{padding:6px 5px;font-size:8px}
+  
+  
 }
 
 /* Minimal text-only brand requested for the hackathon header. */
@@ -120,8 +119,8 @@ body.modal-open{overflow:hidden}
 @media(max-width:1250px){.workspace{grid-template-columns:190px minmax(250px,.9fr) minmax(370px,1.2fr);gap:9px;padding:12px}.problem-panel{padding:16px 13px}.problem-title-row h1{font-size:19px}}
 @media(max-width:1000px){.workspace{grid-template-columns:200px minmax(0,1fr)}.sidebar{grid-row:1 / span 2}.editor-panel{grid-column:2}.problem-panel{min-height:0}.event-label{display:none}}
 @media(max-width:680px){.topbar{height:58px;padding:0 10px}.brand-title{font-size:12px}.top-actions{gap:5px}.timer-chip{padding:6px 7px;font-size:10px}.timer-label{display:none}.btn-small{font-size:8px;padding:7px}.workspace{display:flex;flex-direction:column;padding:9px;gap:9px}.sidebar{width:100%;padding:12px;min-height:0}.sidebar-heading{padding-bottom:10px}.sidebar-heading h2{font-size:14px}.challenge-list{display:grid;grid-template-columns:1fr 1fr;gap:5px}.challenge-item{padding:8px 6px;gap:6px}.challenge-copy b{font-size:9px}.challenge-copy small{font-size:7px}.sidebar-bottom{display:none}.problem-panel{padding:14px;min-height:0}.problem-title-row h1{font-size:19px}.problem-heading{margin:12px 0}.problem-content{padding-top:10px}.editor-panel{min-height:700px}.editor-host{height:300px}.editor-tools{gap:6px}.editor-policy-chip{font-size:7px}.runbar{align-items:flex-start;flex-direction:column}.run-actions{width:100%}.run-actions .btn{flex:1}.student-submit{align-items:stretch;flex-direction:column}.student-submit input{width:100%}.page-footer{font-size:6px}.console-view{min-height:125px}.stdin-toolbar{align-items:flex-start}.stdin-toolbar small{font-size:7px}}
-.btn-break{padding:8px 9px;color:#d7e6f3;background:#192b3d;border:1px solid #334a60;font-size:8px}.btn-break:hover{background:#233a50}.btn-break.is-resume{color:#17210e;background:#b9f36b;border-color:#b9f36b}.break-count{display:inline-flex;align-items:center;padding:6px 7px;border:1px solid #334158;border-radius:5px;color:#aebdcb;background:#101b29;font:8px 'DM Mono';white-space:nowrap}.break-count[hidden],.btn-break[hidden]{display:none!important}body.modal-open{overflow:hidden}.clipboard-modal{position:fixed;inset:0;z-index:90;display:grid;place-items:center;padding:18px}.clipboard-modal.hidden{display:none!important}.clipboard-modal-backdrop{position:absolute;inset:0;background:rgba(2,6,12,.82);backdrop-filter:blur(5px)}.clipboard-modal-card{position:relative;width:min(420px,100%);padding:27px 24px 22px;border:1px solid rgba(255,109,126,.48);border-radius:13px;background:linear-gradient(155deg,#172438,#0e1826);box-shadow:0 24px 90px rgba(0,0,0,.65);text-align:center}.clipboard-modal-icon{display:grid;place-items:center;width:48px;height:48px;margin:0 auto 14px;border:1px solid rgba(255,109,126,.38);border-radius:50%;background:rgba(255,109,126,.11);color:#ff8997;font:700 25px Inter}.clipboard-modal-eyebrow{margin:0 0 7px;color:#ff9aa5;font:500 8px 'DM Mono';letter-spacing:1.5px}.clipboard-modal-card h2{margin:0 0 9px;color:#edf3f9;font:700 19px Inter}.clipboard-modal-message{margin:0 auto 19px;max-width:330px;color:#c3cfdd;font-size:10px;line-height:1.7}.clipboard-modal-button{min-width:130px}.session-lock-overlay{z-index:8}.session-lock-card{z-index:2}
-@media(max-width:680px){.break-count{font-size:7px;padding:5px 4px}.btn-break{font-size:7px;padding:6px 5px}.top-actions{gap:4px}}
+body.modal-open{overflow:hidden}.clipboard-modal{position:fixed;inset:0;z-index:90;display:grid;place-items:center;padding:18px}.clipboard-modal.hidden{display:none!important}.clipboard-modal-backdrop{position:absolute;inset:0;background:rgba(2,6,12,.82);backdrop-filter:blur(5px)}.clipboard-modal-card{position:relative;width:min(420px,100%);padding:27px 24px 22px;border:1px solid rgba(255,109,126,.48);border-radius:13px;background:linear-gradient(155deg,#172438,#0e1826);box-shadow:0 24px 90px rgba(0,0,0,.65);text-align:center}.clipboard-modal-icon{display:grid;place-items:center;width:48px;height:48px;margin:0 auto 14px;border:1px solid rgba(255,109,126,.38);border-radius:50%;background:rgba(255,109,126,.11);color:#ff8997;font:700 25px Inter}.clipboard-modal-eyebrow{margin:0 0 7px;color:#ff9aa5;font:500 8px 'DM Mono';letter-spacing:1.5px}.clipboard-modal-card h2{margin:0 0 9px;color:#edf3f9;font:700 19px Inter}.clipboard-modal-message{margin:0 auto 19px;max-width:330px;color:#c3cfdd;font-size:10px;line-height:1.7}.clipboard-modal-button{min-width:130px}.session-lock-overlay{z-index:8}.session-lock-card{z-index:2}
+@media(max-width:680px){.top-actions{gap:4px}}
 
 
 /* Global consistency for the Mission Lab layout */
@@ -283,9 +282,9 @@ svg.ui-icon{stroke:currentColor;fill:none}
 .btn{min-height:36px;line-height:1.15}
 .btn-small{min-height:34px;padding:8px 11px;font-size:10px}
 .btn-quiet{white-space:nowrap}
-.btn-break{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
-.btn-break .ui-icon{width:14px;height:14px}
-.break-count{min-height:32px;font-size:9px;padding:6px 9px}
+
+
+
 .workspace{align-items:stretch;gap:13px;padding-top:15px}
 .panel{border-radius:11px}
 @media(min-width:1251px){
@@ -409,7 +408,7 @@ svg.ui-icon{stroke:currentColor;fill:none}
   .timer-icon .ui-icon{width:13px;height:13px}
   .timer-label{display:none}
   .top-actions .btn{min-height:32px;font-size:9px;padding:7px 8px}
-  .break-count{min-height:29px;font-size:8px;padding:5px 6px}
+  
   .workspace{display:flex;flex-direction:column;gap:10px;padding:10px 0;min-height:0}
   .sidebar{min-height:0;padding:13px}
   .sidebar-heading{padding-bottom:10px}
@@ -497,11 +496,11 @@ svg.ui-icon{
 .sidebar-note > .ui-icon{width:14px;height:14px;flex:0 0 14px;color:var(--green);margin:0}
 .sidebar-note > span{color:inherit;margin:0}
 .btn .ui-icon{display:block}
-.btn-break span{line-height:1}
+
 
 
 /* Session rule penalties replace the old break controls. */
-.break-count,.btn-break{display:none!important}
+
 .penalty-chip{
   display:inline-flex;align-items:center;justify-content:center;gap:6px;
   min-height:32px;padding:6px 9px;
