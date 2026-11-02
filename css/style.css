@@ -534,3 +534,29 @@ svg.ui-icon{
 .problem-panel:focus{outline:none}
 .problem-panel .problem-tabs button,
 .problem-panel .icon-btn{user-select:none!important}
+
+
+/* Compact single-mission card: prevent the lone grid row from stretching. */
+.challenge-list{
+  min-height:0!important;
+  align-content:start!important;
+  grid-auto-rows:max-content;
+}
+.challenge-item{
+  min-height:54px!important;
+  height:auto;
+  padding:9px 10px!important;
+  align-self:start;
+}
+.challenge-copy{gap:3px}
+@media(max-width:680px){
+  .challenge-list{
+    min-height:0!important;
+    align-content:start!important;
+    grid-auto-rows:max-content;
+  }
+  .challenge-item{
+    min-height:52px!important;
+    padding:8px 9px!important;
+  }
+}
