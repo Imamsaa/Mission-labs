@@ -27,7 +27,7 @@ function icon(name,size=14,className='') {
 const SESSION_SECONDS = 90 * 60;
 const START_KEY = 'cppMissionLab_sessionStart_v3';
 const FINISHED_KEY = 'cppMissionLab_sessionFinished_v3';
-const BREAK_KEY = 'cppMissionLab_breakState_v3';
+const PENALTY_KEY = 'cppMissionLab_penaltySeconds_v1';
 const PROGRESS_KEY = 'cppMissionLab_progress_v3';
 const NAME_KEY = 'cppMissionLab_studentName_v3';
 const APPS_SCRIPT_URL = window.CPP_MISSION_APPS_SCRIPT_URL || '';
@@ -106,9 +106,16 @@ let currentTask = 0, editor, editorCompartment, timerInterval = null, compileBus
 let compileWorker = null, runtimeWorker = null, cancelActive = null;
 let sessionStarted = Boolean(Number(localStorage.getItem(START_KEY)));
 let sessionFinished = localStorage.getItem(FINISHED_KEY) === '1';
-let breakState;
-try { breakState = JSON.parse(localStorage.getItem(BREAK_KEY) || '{"used":0,"active":false,"pausedRemaining":null}'); } catch { breakState={used:0,active:false,pausedRemaining:null}; }
-breakState.used = Math.max(0,Math.min(2,Number(breakState.used)||0)); breakState.active = Boolean(breakState.active);
+// Migrate an older paused session once, then discard its break-mode state.
+try {
+  const legacyBreak = JSON.parse(localStorage.getItem('cppMissionLab_breakState_v3') || 'null');
+  if (legacyBreak?.active && Number.isFinite(Number(legacyBreak.pausedRemaining))) {
+    const pausedRemaining = Math.max(0, Math.min(SESSION_SECONDS, Number(legacyBreak.pausedRemaining)));
+    const elapsedBeforeBreak = SESSION_SECONDS - pausedRemaining;
+    localStorage.setItem(START_KEY, String(Date.now() - elapsedBeforeBreak * 1000));
+  }
+} catch (error) { console.warn('Legacy session migration skipped:', error); }
+localStorage.removeItem('cppMissionLab_breakState_v3');
 let lastSubmission = null, compiledSource = '', compiledModule = null;
 let progress;
 try { progress=JSON.parse(localStorage.getItem(PROGRESS_KEY)||'{"solved":[],"drafts":{},"scores":{}}'); } catch { progress={solved:[],drafts:{},scores:{}}; }
@@ -116,7 +123,6 @@ try { progress=JSON.parse(localStorage.getItem(PROGRESS_KEY)||'{"solved":[],"dra
 function toast(message,type='good') { const node=document.createElement('div');node.className=`toast ${type}`;node.textContent=message;$('#toastRegion').append(node);setTimeout(()=>node.remove(),3600); }
 function escapeHTML(value) { return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function saveProgress() { localStorage.setItem(PROGRESS_KEY,JSON.stringify(progress));renderProgress(); }
-function saveBreakState() { localStorage.setItem(BREAK_KEY,JSON.stringify(breakState)); }
 function renderProgress() { const done=progress.solved.length;$('#solvedCount').textContent=done;$('#xpTotal').textContent=done*500;$('#progressPercent').textContent=`${done*50}%`;$('#progressBar').style.width=`${done*50}%`;tasks.forEach((task,i)=>{const el=$(`#done${i}`);if(el){const solved=progress.solved.includes(task.id);el.innerHTML=icon(solved?'checkCircle':'circle',15,solved?'is-done':'is-pending');el.setAttribute('aria-label',solved?'Selesai':'Belum selesai');}}); }
 function getCode() { return editor.state.doc.toString(); }
 function setCode(value) { editor.dispatch({changes:{from:0,to:editor.state.doc.length,insert:value}}); }
@@ -133,37 +139,81 @@ function renderTask(index) {
   $('#testsView').innerHTML=`<div class="empty-console"><span class="terminal-glyph">${icon('checkCircle',18)}</span><div><strong>Belum ada hasil test</strong><p>Tekan Check Tests untuk menjalankan tiga skenario pengujian.</p></div></div>`;showConsole('input');updateSessionLock();
 }
 function showConsole(name) { ['input','output','tests'].forEach(k=>{$(`#${k}View`).classList.toggle('hidden',k!==name);document.querySelector(`[data-console-tab="${k}"]`).classList.toggle('active',k===name);}); }
-function baseRemaining() { if(sessionFinished)return 0;if(breakState.active&&Number.isFinite(breakState.pausedRemaining))return Math.max(0,breakState.pausedRemaining);const start=Number(localStorage.getItem(START_KEY));return start?Math.max(0,SESSION_SECONDS-Math.floor((Date.now()-start)/1000)):SESSION_SECONDS; }
+function getPenaltySeconds() {
+  const value = Number(localStorage.getItem(PENALTY_KEY) || 0);
+  return Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
+}
+function formatClock(totalSeconds) {
+  const safe = Math.max(0, Math.floor(totalSeconds));
+  const minutes = String(Math.floor(safe / 60)).padStart(2, '0');
+  const seconds = String(safe % 60).padStart(2, '0');
+  return minutes + ':' + seconds;
+}
+function renderPenalty() {
+  const total = getPenaltySeconds();
+  const chip = $('#penaltyChip');
+  if (!chip) return;
+  chip.hidden = total <= 0;
+  $('#penaltyDisplay').textContent = '−' + formatClock(total);
+  chip.title = 'Total pengurangan waktu: ' + formatClock(total);
+}
+function baseRemaining() {
+  if (sessionFinished) return 0;
+  const startedAt = Number(localStorage.getItem(START_KEY));
+  const elapsed = startedAt ? Math.floor((Date.now() - startedAt) / 1000) : 0;
+  return Math.max(0, SESSION_SECONDS - elapsed - getPenaltySeconds());
+}
 function remainingSeconds() { return baseRemaining(); }
-function updateTimer() { const sec=remainingSeconds();$('#timerDisplay').textContent=`${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`;$('#timerDisplay').style.color=sec===0?'#ff8997':'';if(sec<=0&&sessionStarted&&!breakState.active)finishSession(true); }
+function updateTimer() {
+  const seconds = remainingSeconds();
+  $('#timerDisplay').textContent = formatClock(seconds);
+  $('#timerDisplay').style.color = seconds === 0 ? '#ff8997' : '';
+  renderPenalty();
+  if (seconds <= 0 && sessionStarted) finishSession(true);
+}
+function recordViolation(reason) {
+  if (!sessionStarted || sessionFinished) return false;
+  const before = remainingSeconds();
+  if (before <= 0) { finishSession(true); return false; }
+  const totalPenalty = getPenaltySeconds() + 300;
+  localStorage.setItem(PENALTY_KEY, String(totalPenalty));
+  renderPenalty();
+  updateTimer();
+  const after = remainingSeconds();
+  const message = 'Pelanggaran terdeteksi: ' + reason + '. Waktu dikurangi 5 menit. Sisa waktu: ' + formatClock(after) + '.';
+  showWarning('Pelanggaran Aturan', message);
+  toast('Pelanggaran dicatat · −05:00 · Sisa waktu ' + formatClock(after), 'bad');
+  return true;
+}
 function finishSession(notify=true) {
   if(sessionFinished)return;sessionFinished=true;localStorage.setItem(FINISHED_KEY,'1');if(timerInterval){clearInterval(timerInterval);timerInterval=null;}
   if(compileWorker)compileWorker.terminate();if(runtimeWorker)runtimeWorker.terminate();if(cancelActive)cancelActive(new Error('Waktu pengerjaan habis. Proses dibatalkan.'));
   updateSessionLock();if(notify)toast('Waktu pengerjaan habis. Semua tantangan dikunci.','bad');
 }
 function startSession() {
-  if(sessionStarted||sessionFinished)return;localStorage.setItem(START_KEY,String(Date.now()));sessionStarted=true;updateSessionLock();toast('Sesi dimulai. Waktu 90 menit berjalan.');
+  if(sessionStarted||sessionFinished)return;localStorage.setItem(PENALTY_KEY,'0');renderPenalty();localStorage.setItem(START_KEY,String(Date.now()));sessionStarted=true;updateSessionLock();toast('Sesi dimulai. Waktu 90 menit berjalan.');
   updateTimer();timerInterval=setInterval(updateTimer,1000);
 }
-function startBreak() {
-  if(!sessionStarted||sessionFinished||breakState.active)return;if(compileBusy){toast('Tunggu proses kompilasi selesai sebelum istirahat.','bad');return;}if(breakState.used>=2){toast('Dua kesempatan istirahat telah digunakan.','bad');return;}
-  breakState.used+=1;breakState.active=true;breakState.pausedRemaining=remainingSeconds();saveBreakState();if(timerInterval){clearInterval(timerInterval);timerInterval=null;}updateSessionLock();toast(`Istirahat dimulai · kesempatan ${breakState.used}/2.`);
-}
-function endBreak() {
-  if(!breakState.active||sessionFinished)return;const remain=Math.max(0,Number(breakState.pausedRemaining)||0);const elapsed=SESSION_SECONDS-remain;localStorage.setItem(START_KEY,String(Date.now()-elapsed*1000));breakState.active=false;breakState.pausedRemaining=null;saveBreakState();updateSessionLock();updateTimer();timerInterval=setInterval(updateTimer,1000);toast('Istirahat selesai. Waktu pengerjaan dilanjutkan.');
-}
 function updateSessionLock() {
-  const preStart=!sessionStarted&&!sessionFinished,onBreak=sessionStarted&&breakState.active&&!sessionFinished,finished=sessionFinished,locked=preStart||onBreak||finished;
-  $('#startTimerBtn').textContent=finished?'Waktu Habis':preStart?'Mulai Sesi':'Sesi Aktif';$('#startTimerBtn').disabled=!preStart;
-  $('#breakBtn').hidden=preStart||finished;$('#breakBtn').disabled=finished||(!onBreak&&breakState.used>=2);$('#breakBtn').innerHTML=onBreak?`${icon('play',14)}<span>Akhiri Istirahat</span>`:`${icon('coffee',14)}<span>Mulai Istirahat</span>`;$('#breakBtn').classList.toggle('is-resume',onBreak);
-  $('#breakCountChip').hidden=preStart||finished;$('#breakCountChip').textContent=`Istirahat ${breakState.used}/2`;
+  const preStart = !sessionStarted && !sessionFinished;
+  const finished = sessionFinished;
+  const locked = preStart || finished;
+  $('#startTimerBtn').textContent = finished ? 'Waktu Habis' : preStart ? 'Mulai Sesi' : 'Sesi Aktif';
+  $('#startTimerBtn').disabled = !preStart;
   editor.dispatch({effects:editorCompartment.reconfigure(EditorView.editable.of(!locked))});
-  ['runBtn','checkTestsBtn','submitBtn','resetCodeBtn','stdinInput','useSampleInputBtn','studentName'].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=locked||(id==='submitBtn'&&!lastSubmission);});
-  document.querySelectorAll('.challenge-item').forEach(el=>el.disabled=locked);
-  $('#sessionLockOverlay').classList.toggle('hidden',!locked);$('#sessionLockTitle').textContent=finished?'Waktu pengerjaan habis':onBreak?'Kamu sedang istirahat':'Sesi belum dimulai';
-  $('#sessionLockMessage').textContent=finished?'Waktu 90 menit telah berakhir. Editor, input, pengujian, dan pengiriman dikunci.':onBreak?'Editor dan tantangan dikunci sementara. Klik Akhiri Istirahat untuk melanjutkan.':'Baca tantangan dan rubrik terlebih dahulu. Editor akan terbuka setelah menekan Mulai Sesi.';
-  $('#editorStatus').textContent=finished?'Sesi berakhir · Editor terkunci':onBreak?'Terkunci · Sedang istirahat':preStart?'Terkunci · Mulai sesi untuk coding':'Draft tersimpan';
-  $('#editorHost').classList.toggle('session-locked',locked);updateTimer();
+  ['runBtn','checkTestsBtn','submitBtn','resetCodeBtn','stdinInput','useSampleInputBtn','studentName'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = locked || (id === 'submitBtn' && !lastSubmission);
+  });
+  document.querySelectorAll('.challenge-item').forEach(el => el.disabled = locked);
+  $('#sessionLockOverlay').classList.toggle('hidden', !locked);
+  $('#sessionLockTitle').textContent = finished ? 'Waktu pengerjaan habis' : 'Sesi belum dimulai';
+  $('#sessionLockMessage').textContent = finished
+    ? 'Waktu pengerjaan telah habis. Editor, input, pengujian, dan pengiriman dikunci.'
+    : 'Baca tantangan dan rubrik terlebih dahulu. Editor akan terbuka setelah menekan Mulai Sesi.';
+  $('#editorStatus').textContent = finished ? 'Sesi berakhir · Editor terkunci' : preStart ? 'Terkunci · Mulai sesi untuk coding' : 'Draft tersimpan';
+  $('#editorHost').classList.toggle('session-locked', locked);
+  updateTimer();
 }
 function showOutput(text,kind='') { $('#outputView').innerHTML=`<pre class="console-output ${kind}">${escapeHTML(text)}</pre>`;showConsole('output'); }
 function showLoading(title,message,percent=15) { $('#loadingTitle').textContent=title;$('#loadingMessage').textContent=message;$('#loadingProgress').style.width=`${percent}%` ;$('#loadingOverlay').classList.remove('hidden'); }
@@ -188,14 +238,14 @@ function renderTests(rows,total) {
   $('#testsView').innerHTML=`<div class="result-summary ${passed===total?'pass':'fail'}"><div class="result-score">${passed}/${total}</div><div><strong>${passed===total?'Semua test berhasil':'Masih ada test gagal'}</strong><br><small>SUBMISSION TEST · ${total} TEST CASE</small></div></div>`+rows.map((row,i)=>`<details class="test-detail" ${i===0?'open':''}><summary><span>${escapeHTML(row.hidden?'Hidden test':row.name)}</span><b class="${row.ok?'pass':'fail'} status-inline">${icon(row.ok?'check':'x',12)}<span>${row.ok?'PASS':'FAIL'}</span></b></summary>${row.hidden?'':`<div class="check-list">${row.checks.map(c=>`<div class="check-line"><span>${escapeHTML(c.label)}</span><span class="${c.ok?'pass':'fail'} status-inline">${icon(c.ok?'check':'x',12)}<span>${escapeHTML(c.actual??'Label tidak ditemukan')}</span></span></div>`).join('')}</div><pre class="test-output">${escapeHTML(row.output||'(Tidak ada output)')}</pre>`}</details>`).join('');return passed;
 }
 async function execute(mode) {
-  if(!sessionStarted||sessionFinished||breakState.active||compileBusy){toast('Mulai sesi atau tunggu proses selesai.','bad');return;}
+  if(!sessionStarted||sessionFinished||compileBusy){toast('Mulai sesi atau tunggu proses selesai.','bad');return;}
   const source=getCode();if(!source.trim()){toast('Editor masih kosong.','bad');return;}if(!/\bmain\s*\(/.test(source)){toast('Program harus memiliki fungsi main().','bad');return;}
   compileBusy=true;['runBtn','checkTestsBtn','submitBtn'].forEach(id=>$( '#' + id).disabled=true);const started=performance.now();$('#runDuration').textContent='Compiling';
   try {
-    const module=await getCompiled(source);if(sessionFinished||breakState.active)throw new Error('Sesi terkunci. Proses dibatalkan.');
+    const module=await getCompiled(source);if(sessionFinished)throw new Error('Sesi terkunci. Proses dibatalkan.');
     if(mode==='run'){showLoading('Menjalankan program...','Program dieksekusi pada worker terpisah.',75);const result=await runModule(module,$('#stdinInput').value);hideLoading();showOutput((result.stdout||'(Program selesai tanpa output)')+(result.stderr?`\n[STDERR]\n${result.stderr}`:''),'success');toast('Program berhasil dijalankan.');}
     else {
-      const rows=[];for(let i=0;i<tasks[currentTask].tests.length;i++){if(sessionFinished||breakState.active)throw new Error('Sesi terkunci. Pengujian dibatalkan.');const test=tasks[currentTask].tests[i];showLoading(`Pengujian ${i+1}/3`,test.hidden?'Menjalankan hidden test…':test.name,35+(i+1)/3*60);
+      const rows=[];for(let i=0;i<tasks[currentTask].tests.length;i++){if(sessionFinished)throw new Error('Sesi terkunci. Pengujian dibatalkan.');const test=tasks[currentTask].tests[i];showLoading(`Pengujian ${i+1}/3`,test.hidden?'Menjalankan hidden test…':test.name,35+(i+1)/3*60);
         try{const result=await runModule(module,test.input);const checks=test.checks.map(([label,expected])=>{const actual=parseLabel(result.stdout,label);return{label,expected,actual,ok:compareValue(actual,expected)};});rows.push({name:test.name,hidden:!!test.hidden,ok:checks.every(c=>c.ok),checks,output:result.stdout});}
         catch(error){rows.push({name:test.name,hidden:!!test.hidden,ok:false,checks:test.checks.map(([label])=>({label,actual:error.message,ok:false})),output:error.message});}
       }
@@ -203,7 +253,7 @@ async function execute(mode) {
     }
     $('#runDuration').textContent=`${Math.round(performance.now()-started)} ms`;
   } catch(error){hideLoading();showOutput(error.message||String(error),'error');$('#runDuration').textContent='Compile / runtime error';toast('Program gagal dijalankan. Periksa terminal.','bad');}
-  finally {compileBusy=false;const locked=!sessionStarted||sessionFinished||breakState.active;$('#runBtn').disabled=locked;$('#checkTestsBtn').disabled=locked;$('#submitBtn').disabled=locked||!lastSubmission||lastSubmission.task!==tasks[currentTask].title||lastSubmission.code!==getCode();}
+  finally {compileBusy=false;const locked=!sessionStarted||sessionFinished;$('#runBtn').disabled=locked;$('#checkTestsBtn').disabled=locked;$('#submitBtn').disabled=locked||!lastSubmission||lastSubmission.task!==tasks[currentTask].title||lastSubmission.code!==getCode();}
 }
 function toBase64Url(text) { const bytes=new TextEncoder().encode(text);let binary='';for(let i=0;i<bytes.length;i+=0x8000)binary+=String.fromCharCode(...bytes.subarray(i,i+0x8000));return btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/g,''); }
 function jsonpRequest(parameters) {
@@ -213,7 +263,7 @@ function jsonpRequest(parameters) {
 }
 async function sendSubmission(payload) { const encoded=toBase64Url(JSON.stringify(payload));const chunks=encoded.match(/.{1,650}/g)||[''];const session=(crypto.randomUUID?crypto.randomUUID():`${Date.now()}_${Math.random().toString(36).slice(2)}`).replace(/-/g,'');let result;for(let i=0;i<chunks.length;i++)result=await jsonpRequest({action:'chunk',session,index:i,total:chunks.length,data:chunks[i]});if(!result?.complete)throw new Error('Submission belum diterima lengkap.');return result; }
 async function submitMission() {
-  if(!sessionStarted||sessionFinished||breakState.active||remainingSeconds()<=0){if(sessionStarted&&remainingSeconds()<=0)finishSession();toast('Sesi belum aktif atau sudah berakhir.','bad');return;}
+  if(!sessionStarted||sessionFinished||remainingSeconds()<=0){if(sessionStarted&&remainingSeconds()<=0)finishSession();toast('Sesi belum aktif atau sudah berakhir.','bad');return;}
   const name=$('#studentName').value.trim();if(!name){toast('Isi nama lengkap siswa terlebih dahulu.','bad');$('#studentName').focus();return;}if(!lastSubmission||lastSubmission.code!==getCode()||lastSubmission.task!==tasks[currentTask].title){toast('Jalankan Check Tests kembali sebelum submit.','bad');return;}
   if(!APPS_SCRIPT_URL||APPS_SCRIPT_URL.includes('PASTE_APPS_SCRIPT')){toast('URL Apps Script belum diatur pada config.js.','bad');return;}
   const button=$('#submitBtn');button.disabled=true;button.innerHTML='<span class="button-spinner" aria-hidden="true"></span><span>Mengirim...</span>';
@@ -232,27 +282,48 @@ function initEditor(){
   $('#codeFallback')?.remove();
 }
 function bindEvents(){
-  $('#startTimerBtn').addEventListener('click',startSession);$('#breakBtn').addEventListener('click',()=>breakState.active?endBreak():startBreak());
+  $('#startTimerBtn').addEventListener('click',startSession);
   document.querySelectorAll('.challenge-item').forEach(button=>button.addEventListener('click',()=>renderTask(Number(button.dataset.task))));
   document.querySelectorAll('[data-tab]').forEach(button=>button.addEventListener('click',()=>{document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b===button));['description','rubric','materials'].forEach(t=>$(`#${t}Tab`).classList.toggle('hidden',t!==button.dataset.tab));}));
   document.querySelectorAll('[data-console-tab]').forEach(button=>button.addEventListener('click',()=>showConsole(button.dataset.consoleTab)));
   $('#runBtn').addEventListener('click',()=>execute('run'));$('#checkTestsBtn').addEventListener('click',()=>execute('submit'));$('#submitBtn').addEventListener('click',submitMission);
-  $('#resetCodeBtn').addEventListener('click',()=>{if(!sessionStarted||sessionFinished||breakState.active)return;if(confirm('Reset kode tugas ini ke template awal?')){setCode(starterCode);saveDraft();toast('Kode berhasil di-reset.');}});
+  $('#resetCodeBtn').addEventListener('click',()=>{if(!sessionStarted||sessionFinished)return;if(confirm('Reset kode tugas ini ke template awal?')){setCode(starterCode);saveDraft();toast('Kode berhasil di-reset.');}});
   $('#useSampleInputBtn').addEventListener('click',()=>{$('#stdinInput').value=tasks[currentTask].sampleInput;showConsole('input');});$('#clearOutputBtn').addEventListener('click',clearConsole);
   $('#studentName').value=localStorage.getItem(NAME_KEY)||'';$('#studentName').addEventListener('input',()=>localStorage.setItem(NAME_KEY,$('#studentName').value));
   $('#clipboardWarningAcknowledge').addEventListener('click',closeWarning);$('#clipboardWarningModal').addEventListener('click',e=>{if(e.target.id==='clipboardWarningModal')closeWarning();});
   document.addEventListener('keydown',event=>{
     if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();execute('run');}
-    if(!sessionStarted||sessionFinished||breakState.active)return;
-    const key=String(event.key||'').toLowerCase();const screenshot=event.key==='PrintScreen'||((event.metaKey&&event.shiftKey)&&['s','3','4','5'].includes(key));const print=(event.ctrlKey||event.metaKey)&&key==='p';
-    if(screenshot||print){event.preventDefault();event.stopPropagation();showWarning(screenshot?'Screenshot Dibatasi':'Pencetakan Dibatasi',screenshot?'Kami mendeteksi shortcut screenshot. Jangan menyebarkan materi tantangan. Catatan: browser tidak dapat memblokir semua tangkapan layar sistem.':'Fitur cetak tidak diperbolehkan selama sesi.');}
+    if(!sessionStarted||sessionFinished)return;
+    const key=String(event.key||'').toLowerCase();
+    const screenshot=event.key==='PrintScreen'||((event.metaKey&&event.shiftKey)&&['s','3','4','5'].includes(key));
+    const print=(event.ctrlKey||event.metaKey)&&key==='p';
     const devtools=event.key==='F12'||((event.ctrlKey||event.metaKey)&&event.shiftKey&&['i','j','c'].includes(key))||((event.ctrlKey||event.metaKey)&&key==='u');
-    if(devtools){event.preventDefault();event.stopPropagation();showWarning('Akses Developer Tools','Akses developer tools tidak diperbolehkan selama sesi. Ini hanya peringatan di sisi browser.');}
-    if((event.ctrlKey||event.metaKey)&&['c','x','v'].includes(key)&&$('#editorHost').contains(document.activeElement)){event.preventDefault();event.stopPropagation();showWarning('Aturan Editor','Copy, cut, dan paste dibatasi. Ketik kode secara mandiri.');}
+    if(screenshot||print||devtools){
+      event.preventDefault();event.stopPropagation();
+      const reason=screenshot?'Mengambil screenshot menggunakan shortcut':print?'Mencoba mencetak halaman':'Membuka Developer Tools atau View Source';
+      recordViolation(reason);
+    }
   },true);
-  $('#editorHost').addEventListener('paste',e=>{e.preventDefault();showWarning('Aturan Editor','Paste dinonaktifkan. Ketik kode secara mandiri.');},true);
-  let leftTab=false;document.addEventListener('visibilitychange',()=>{if(document.hidden){leftTab=sessionStarted&&!sessionFinished&&!breakState.active;return;}if(leftTab){leftTab=false;showWarning('Peringatan Pindah Tab','Kami mendeteksi kamu meninggalkan tab C++ Mission Lab. Tetap fokus mengerjakan tugas secara mandiri.');}});
+  const editorHost = $('#editorHost');
+  ['copy','cut','paste'].forEach(type => editorHost.addEventListener(type, event => {
+    if (!sessionStarted || sessionFinished) return;
+    event.preventDefault();event.stopPropagation();
+    const label = type === 'copy' ? 'Menyalin kode' : type === 'cut' ? 'Memotong kode' : 'Menempelkan kode';
+    recordViolation(label);
+  }, true));
+  editorHost.addEventListener('drop', event => {
+    if (!sessionStarted || sessionFinished) return;
+    event.preventDefault();event.stopPropagation();
+    recordViolation('Memasukkan kode melalui drag-and-drop');
+  }, true);
+  editorHost.addEventListener('dragover', event => {
+    if (sessionStarted && !sessionFinished) event.preventDefault();
+  }, true);
+  let leftTab=false;document.addEventListener('visibilitychange',()=>{
+    if(document.hidden){leftTab=sessionStarted&&!sessionFinished;return;}
+    if(leftTab){leftTab=false;recordViolation('Berpindah atau meninggalkan tab Mission Lab');}
+  });
 }
 
-initEditor();bindEvents();renderProgress();renderTask(0);updateSessionLock();
-if(sessionStarted&&!sessionFinished){if(breakState.active){updateTimer();}else{updateTimer();timerInterval=setInterval(updateTimer,1000);}}else if(sessionFinished)updateTimer();
+initEditor();bindEvents();renderProgress();renderTask(0);updateSessionLock();renderPenalty();
+if(sessionStarted&&!sessionFinished){updateTimer();timerInterval=setInterval(updateTimer,1000);}else if(sessionFinished)updateTimer();
