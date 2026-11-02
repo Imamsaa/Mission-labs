@@ -22,14 +22,14 @@
       "w3c-keyname":"https://esm.sh/w3c-keyname"
     }}
   </script>
-  <link rel="stylesheet" href="./css/style.css?v=rules-config-20261103" />
+  <link rel="stylesheet" href="./css/style.css?v=dual-countdown-20261103" />
 </head>
 <body>
   <div class="app-shell">
     <header class="topbar">
       <a class="brand" href="./"><span class="brand-mark" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 4l-4 16"/></svg></span><span class="brand-title">C++ MISSION LAB</span></a>
       <div class="event-label"><span class="live-dot"></span> ICT CLASS <span class="event-divider">/</span> PRACTICAL CHALLENGE</div>
-      <div class="top-actions"><div class="timer-chip"><span class="timer-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span id="timerDisplay">90:00</span><span class="timer-label">REMAINING</span></div><span class="penalty-chip" id="penaltyChip" hidden title="Total pengurangan waktu"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3.9 2.5 17.4A2 2 0 0 0 4.2 20h15.6a2 2 0 0 0 1.7-2.6L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4m0 3h.01"/></svg><span id="penaltyDisplay">−05:00</span></span></div>
+      <div class="top-actions"><div class="timer-chip"><span class="timer-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span id="timerDisplay">70:00</span><span class="timer-label">SISA WAKTU</span></div><div class="deadline-chip" id="deadlineChip" title="Batas akhir pengerjaan pukul 14.50 WIB"><span class="deadline-chip-label">BATAS 14.50 WIB</span><strong id="deadlineDisplay">--:--:--</strong></div><span class="penalty-chip" id="penaltyChip" hidden title="Total pengurangan waktu"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3.9 2.5 17.4A2 2 0 0 0 4.2 20h15.6a2 2 0 0 0 1.7-2.6L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4m0 3h.01"/></svg><span id="penaltyDisplay">−05:00</span></span></div>
     </header>
     <div class="workspace">
       <aside class="sidebar panel">
@@ -78,11 +78,13 @@
       </div>
       <p class="start-session-eyebrow">C++ MISSION LAB</p>
       <h2 id="startSessionTitle">Siap memulai tantangan?</h2>
-      <p class="start-session-description">Masukkan nama lengkap sebelum mengerjakan Smart Canteen. Timer 90 menit akan langsung berjalan setelah kamu menekan tombol mulai.</p>
+      <p class="start-session-description">Masukkan nama lengkap sebelum mengerjakan Smart Canteen. Timer 70 menit akan langsung berjalan setelah kamu menekan tombol mulai. Semua siswa juga harus menyelesaikan tugas sebelum pukul 14.50 WIB.</p>
       <label for="startStudentName">NAMA LENGKAP</label>
       <input id="startStudentName" type="text" maxlength="120" placeholder="Contoh: Ahmad Fulan" autocomplete="name" required>
       <p id="startSessionError" class="start-session-error" role="alert" hidden>Nama lengkap wajib diisi.</p>
-      <div class="start-session-note"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>90 menit · 1 tantangan · Waktu tidak dapat dijeda</span></div>
+      <div class="start-session-note"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>70 menit · 1 tantangan · Waktu tidak dapat dijeda</span></div>
+      <div class="start-session-deadline"><div><small>COUNTDOWN BATAS AKHIR</small><b>3 November 2026 · 14.50 WIB</b></div><strong id="deadlineModalCountdown">--:--:--</strong></div>
+      <p id="deadlineModalMessage" class="deadline-modal-message" aria-live="polite">Sesi harus selesai sebelum batas akhir bersama.</p>
       <button id="startSessionSubmit" class="btn btn-primary start-session-button" type="submit"><span>Mulai Sesi</span><svg class="ui-icon" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
     </form>
   </div>
