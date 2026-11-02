@@ -16,6 +16,8 @@ Web tugas praktik C++ dengan dua challenge gabungan materi. Mekanisme pengerjaan
 10. Pelanggaran yang diberi penalti meliputi copy, cut, paste, drag-and-drop kode, shortcut screenshot/print, shortcut Developer Tools/View Source, dan berpindah tab. Setiap kejadian mengurangi 300 detik; akumulasi penalti disimpan di localStorage dan ditampilkan di header.
 11. Saat waktu habis, editor, Run, Check Tests, navigasi misi, dan Submit dikunci pada browser tersebut.
 
+> Catatan: penalti berjalan di sisi browser. Browser tidak selalu dapat mendeteksi screenshot yang diambil oleh sistem operasi, kamera eksternal, atau pembukaan Developer Tools melalui menu browser. Mekanisme ini adalah deterrent, bukan jaminan anti-cheat mutlak.
+
 ## Dua challenge
 
 ### 01 — Smart Canteen
