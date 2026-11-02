@@ -81,3 +81,11 @@ Aturan dapat diaktifkan/nonaktifkan tanpa mengedit `js/app.js`. Ubah file **`js/
 Untuk development lokal, ubah empat properti aturan menjadi `false`. Sebelum digunakan siswa, aktifkan kembali dengan `true`. Nilai bawaan repository tetap mode ujian (semua aturan aktif, penalti 5 menit).
 
 Catatan: konfigurasi ini mengendalikan perilaku halaman. Browser tidak dapat menjamin pemblokiran screenshot sistem operasi atau mencegah tab baru secara mutlak; opsi tab mengatur penalti saat halaman ditinggalkan, bukan memblokir browser membuka tab.
+
+## Dua countdown pengerjaan
+
+- Timer individu: **70 menit** sejak siswa menekan Mulai Sesi.
+- Batas akhir bersama: **3 November 2026 pukul 14.50 WIB**.
+- Countdown batas akhir tampil di modal pembuka dan header saat siswa mengerjakan.
+- Sesi otomatis dikunci ketika salah satu countdown mencapai nol.
+- Kedua pengaturan dapat diubah di `js/rules.config.js` melalui `sessionMinutes` dan `deadlineAt`.
