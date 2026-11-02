@@ -104,8 +104,8 @@ self.onmessage = async event => {
         message: 'Menjalankan test case ' + (index + 1) + ' dari ' + testCases.length + '...'
       });
 
-      const inputText = testCase.input && !testCase.input.endsWith('\\n')
-        ? testCase.input + '\\n'
+      const inputText = testCase.input && !testCase.input.endsWith('\n')
+        ? testCase.input + '\n'
         : (testCase.input || '');
       const execution = await executeModule(result.module, inputText);
 
