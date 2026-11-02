@@ -38,6 +38,8 @@ const DEADLINE_TIMESTAMP = Date.parse(RULES.deadlineAt || '2026-11-03T14:50:00+0
 const START_KEY = 'cppMissionLab_sessionStart_v3';
 const FINISHED_KEY = 'cppMissionLab_sessionFinished_v3';
 const PENALTY_KEY = 'cppMissionLab_penaltySeconds_v1';
+const VIOLATION_COUNT_KEY = 'cppMissionLab_violationCount_v1';
+const VIOLATION_LOG_KEY = 'cppMissionLab_violationLog_v1';
 const PROGRESS_KEY = 'cppMissionLab_progress_v3';
 const NAME_KEY = 'cppMissionLab_studentName_v3';
 const APPS_SCRIPT_URL = window.CPP_MISSION_APPS_SCRIPT_URL || '';
@@ -120,6 +122,27 @@ function getPenaltySeconds() {
   const value = Number(localStorage.getItem(PENALTY_KEY) || 0);
   return Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
 }
+function getViolationCount() {
+  const value = Number(localStorage.getItem(VIOLATION_COUNT_KEY) || 0);
+  return Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
+}
+function getViolationLog() {
+  try {
+    const rows = JSON.parse(localStorage.getItem(VIOLATION_LOG_KEY) || '[]');
+    return Array.isArray(rows) ? rows : [];
+  } catch { return []; }
+}
+function elapsedSessionSeconds() {
+  const startedAt = Number(localStorage.getItem(START_KEY));
+  return startedAt > 0 ? Math.max(0, Math.floor((Date.now() - startedAt) / 1000)) : 0;
+}
+function formatDurationForSheet(totalSeconds) {
+  const safe = Math.max(0, Math.floor(Number(totalSeconds) || 0));
+  const hours = String(Math.floor(safe / 3600)).padStart(2, '0');
+  const minutes = String(Math.floor((safe % 3600) / 60)).padStart(2, '0');
+  const seconds = String(safe % 60).padStart(2, '0');
+  return hours + ':' + minutes + ':' + seconds;
+}
 function formatClock(totalSeconds) {
   const safe = Math.max(0, Math.floor(totalSeconds));
   const minutes = String(Math.floor(safe / 60)).padStart(2, '0');
@@ -179,16 +202,28 @@ function recordViolation(reason) {
   if (!sessionStarted || sessionFinished) return false;
   const before = remainingSeconds();
   if (before <= 0) { finishSession(true); return false; }
-  const penaltySeconds = Math.max(0, Math.round(Number(RULES.penaltyMinutes) || 0) * 60);
+
+  const penaltyMinutes = Math.max(0, Number(RULES.penaltyMinutes) || 0);
+  const penaltySeconds = Math.round(penaltyMinutes * 60);
   const totalPenalty = getPenaltySeconds() + penaltySeconds;
+  const event = {
+    reason: String(reason || 'Pelanggaran aturan').slice(0, 250),
+    occurredAt: new Date().toISOString(),
+    penaltyMinutes: penaltyMinutes
+  };
+  const log = getViolationLog();
+  log.push(event);
+  localStorage.setItem(VIOLATION_COUNT_KEY, String(getViolationCount() + 1));
+  localStorage.setItem(VIOLATION_LOG_KEY, JSON.stringify(log.slice(-200)));
   localStorage.setItem(PENALTY_KEY, String(totalPenalty));
+
   renderPenalty();
   updateTimer();
   const after = remainingSeconds();
   const penaltyLabel = formatClock(penaltySeconds);
-  const message = 'Pelanggaran terdeteksi: ' + reason + '. Waktu dikurangi ' + penaltyLabel + '. Sisa waktu: ' + formatClock(after) + '.';
+  const message = 'Pelanggaran terdeteksi: ' + event.reason + '. Waktu dikurangi ' + penaltyLabel + '. Sisa waktu: ' + formatClock(after) + '.';
   showWarning('Pelanggaran Aturan', message);
-  toast('Pelanggaran dicatat · −' + penaltyLabel + ' · Sisa waktu ' + formatClock(after), 'bad');
+  toast('Pelanggaran #' + getViolationCount() + ' dicatat · −' + penaltyLabel + ' · Sisa waktu ' + formatClock(after), 'bad');
   return true;
 }
 function finishSession(notify=true, reason='Waktu pengerjaan habis. Semua tantangan dikunci.') {
@@ -203,6 +238,8 @@ function startSession() {
     return false;
   }
   localStorage.setItem(PENALTY_KEY,'0');
+  localStorage.setItem(VIOLATION_COUNT_KEY,'0');
+  localStorage.setItem(VIOLATION_LOG_KEY,'[]');
   renderPenalty();
   localStorage.setItem(START_KEY,String(Date.now()));
   sessionStarted=true;
@@ -321,7 +358,26 @@ async function submitMission() {
   const name=$('#studentName').value.trim();if(!name){toast('Isi nama lengkap siswa terlebih dahulu.','bad');$('#studentName').focus();return;}if(!lastSubmission||lastSubmission.code!==getCode()||lastSubmission.task!==tasks[currentTask].title){toast('Jalankan Check Tests kembali sebelum submit.','bad');return;}
   if(!APPS_SCRIPT_URL||APPS_SCRIPT_URL.includes('PASTE_APPS_SCRIPT')){toast('URL Apps Script belum diatur pada config.js.','bad');return;}
   const button=$('#submitBtn');button.disabled=true;button.innerHTML='<span class="button-spinner" aria-hidden="true"></span><span>Mengirim...</span>';
-  try{const details=lastSubmission.rows.map(row=>({name:row.name,ok:row.ok,checks:row.checks}));const result=await sendSubmission({name,task:lastSubmission.task,code:lastSubmission.code,passed:lastSubmission.passed,total:3,score:lastSubmission.score,details:JSON.stringify(details)});
+  try{
+    const details=lastSubmission.rows.map(row=>({name:row.name,ok:row.ok,checks:row.checks}));
+    const startedAtMs=Number(localStorage.getItem(START_KEY))||Date.now();
+    const violationLog=getViolationLog();
+    const submissionPayload={
+      name,
+      task:lastSubmission.task,
+      code:lastSubmission.code,
+      passed:lastSubmission.passed,
+      total:lastSubmission.total||3,
+      score:lastSubmission.score,
+      details:JSON.stringify(details),
+      submittedAtClient:new Date().toISOString(),
+      startedAtMs,
+      remainingSeconds:remainingSeconds(),
+      elapsedSeconds:elapsedSessionSeconds(),
+      violationCount:getViolationCount(),
+      violations:JSON.stringify(violationLog)
+    };
+    const result=await sendSubmission(submissionPayload);
     progress.scores=progress.scores||{};progress.scores[tasks[currentTask].id]=lastSubmission.score;if(lastSubmission.score===100){progress.solved=Array.from(new Set([...(progress.solved||[]),tasks[currentTask].id]));}saveProgress();button.innerHTML=`${icon('checkCircle',14)}<span>Terkirim</span>`;toast(`Tugas berhasil dikirim. Nilai: ${result.score??lastSubmission.score}/100.`);
   }catch(error){button.disabled=false;button.innerHTML=`${icon('upload',14)}<span>Submit Mission</span>`;toast(error.message||'Pengiriman gagal.','bad');}
 }
