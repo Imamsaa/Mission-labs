@@ -1,19 +1,20 @@
 # C++ Mission Lab — ICT Class
 
-Web tugas praktik C++ dengan dua challenge gabungan materi. Mekanisme pengerjaan meniru alur `Imamsaa/Hackathon-C-Batch-1`: halaman soal dan rubrik, editor, STDIN, Run Code, test case, timer sesi, jeda, progress, serta pengiriman hasil.
+Web tugas praktik C++ dengan dua challenge gabungan materi. Mekanisme pengerjaan meniru alur `Imamsaa/Hackathon-C-Batch-1`: halaman soal dan rubrik, editor, STDIN, Run Code, test case, timer sesi dengan penalti pelanggaran, progress, serta pengiriman hasil.
 
 ## Fitur dan alur siswa
 
 1. Siswa dapat membaca challenge brief, rubrik penilaian, dan cakupan materi sebelum sesi dimulai.
 2. Siswa mengisi nama lengkap dan menekan **Mulai Sesi**. Timer 90 menit berjalan setelah itu.
-3. Ada dua kesempatan istirahat; saat istirahat, waktu dijeda dan editor/navigasi dikunci.
+3. Tidak ada mode istirahat. Setiap pelanggaran aturan yang terdeteksi mengurangi sisa waktu sebanyak 5 menit.
 4. Editor CodeMirror 6 menyediakan syntax highlighting C++, nomor baris, autocomplete dasar, auto-indent, comment shortcut, Tab indent, dan Ctrl+Enter.
 5. Tab STDIN menerima input berbaris untuk program yang menggunakan `cin`, `getline`, dan `cin.ignore()`.
 6. **Run Code** mengompilasi lalu menjalankan kode terhadap STDIN yang dimasukkan siswa.
 7. **Check Tests** menjalankan tiga skenario terpisah untuk tiap misi. Pemeriksaan membaca nilai pada baris output yang memiliki label wajib. Nilai otomatis = `test lolos / 3 × 100`.
 8. **Submit Mission** baru aktif setelah pengujian. Submission mengirim nama, tugas, source code, jumlah test lolos, nilai, dan rincian pemeriksaan ke Google Spreadsheet.
-9. Draft, identitas nama, progres, waktu sesi, dan status istirahat disimpan di localStorage.
-10. Saat waktu habis, editor, Run, Check Tests, navigasi misi, dan Submit dikunci pada browser tersebut.
+9. Draft, identitas nama, progres, waktu sesi, dan total penalti disimpan di localStorage.
+10. Pelanggaran yang diberi penalti meliputi copy, cut, paste, drag-and-drop kode, shortcut screenshot/print, shortcut Developer Tools/View Source, dan berpindah tab. Setiap kejadian mengurangi 300 detik; akumulasi penalti disimpan di localStorage dan ditampilkan di header.
+11. Saat waktu habis, editor, Run, Check Tests, navigasi misi, dan Submit dikunci pada browser tersebut.
 
 ## Dua challenge
 
