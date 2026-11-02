@@ -15,7 +15,7 @@ const HEADERS = [
   'Rincian Pelanggaran'
 ];
 const MAX_SUBMISSION_CHARS = 110000;
-const MAX_CHUNKS = 220;
+const MAX_CHUNKS = 240;
 const CHUNK_TTL_SECONDS = 600;
 
 function ensureHeaders_(sheet) {
@@ -202,7 +202,6 @@ function saveSubmission_(payload) {
   const rawRemaining = Number(payload.remainingSeconds);
   const remainingSeconds = Number.isFinite(rawRemaining) ? Math.max(0, Math.min(SESSION_SECONDS_LIMIT_(), Math.floor(rawRemaining))) : 0;
   const rawViolationCount = Number(payload.violationCount);
-  const violationCount = Number.isFinite(rawViolationCount) ? Math.max(0, Math.min(10000, Math.floor(rawViolationCount))) : 0;
   const violations = parseViolationLog_(payload.violations).slice(0, 200).map(function (item) {
     return {
       reason: String((item && item.reason) || 'Pelanggaran').slice(0, 250),
@@ -210,6 +209,8 @@ function saveSubmission_(payload) {
       penaltyMinutes: Math.max(0, Math.min(120, Number(item && item.penaltyMinutes) || 0))
     };
   });
+  const reportedViolationCount = Number.isFinite(rawViolationCount) ? Math.max(0, Math.min(10000, Math.floor(rawViolationCount))) : 0;
+  const violationCount = Math.max(reportedViolationCount, violations.length);
 
   const spreadsheetId = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
   const spreadsheet = spreadsheetId
