@@ -65,3 +65,19 @@ Nama Peserta · Tugas · Waktu Submit · Kode C++ · Status · Test Lolos · Tot
 ## Batasan integritas dan keamanan
 
 Aplikasi ini berjalan statis di browser. Timer, localStorage, clipboard guard, peringatan pindah tab, pembatasan print/screenshot, dan test di sisi klien merupakan deterrent/UX; semuanya dapat dilewati oleh pengguna yang menguasai browser atau source JavaScript. Nilai yang dikirim dari browser bukan penilaian anti-cheat yang kriptografis. Gunakan hasil otomatis sebagai pemeriksaan format/logika awal dan tinjau source code di spreadsheet sebelum menetapkan nilai final.
+
+## Konfigurasi aturan ujian dan development
+
+Aturan dapat diaktifkan/nonaktifkan tanpa mengedit `js/app.js`. Ubah file **`js/rules.config.js`**, lalu commit/push perubahan:
+
+| Properti | `true` | `false` |
+|---|---|---|
+| `restrictClipboard` | Copy/cut/paste dibatasi di editor dan teks soal tidak dapat dipilih | Copy/cut/paste dan seleksi teks diizinkan |
+| `penalizeTabSwitch` | Berpindah tab mengurangi waktu | Berpindah/membuka tab lain tidak dikenai penalti |
+| `penalizeContextMenu` | Klik kanan di area soal dikenai penalti | Menu konteks tidak dikenai penalti |
+| `penalizeSystemShortcuts` | Shortcut screenshot, print, dan DevTools dikenai penalti | Shortcut tersebut tidak dikenai penalti |
+| `penaltyMinutes` | Mengatur potongan waktu per pelanggaran yang terdeteksi | Contoh: `5` = lima menit |
+
+Untuk development lokal, ubah empat properti aturan menjadi `false`. Sebelum digunakan siswa, aktifkan kembali dengan `true`. Nilai bawaan repository tetap mode ujian (semua aturan aktif, penalti 5 menit).
+
+Catatan: konfigurasi ini mengendalikan perilaku halaman. Browser tidak dapat menjamin pemblokiran screenshot sistem operasi atau mencegah tab baru secara mutlak; opsi tab mengatur penalti saat halaman ditinggalkan, bukan memblokir browser membuka tab.
