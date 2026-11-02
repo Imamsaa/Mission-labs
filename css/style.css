@@ -158,3 +158,92 @@ button,input,textarea{font-family:inherit}
 .editor-host.editor-ready .cm-scroller{min-width:0;width:100%}
 .editor-host.editor-ready .cm-gutters{flex:0 0 auto;width:max-content;max-width:72px}
 .editor-host.editor-ready .cm-gutter{flex:0 0 auto;width:auto}
+
+
+
+/* Readability pass: challenge instructions must remain comfortable on phones. */
+.problem-description{
+  font-size:13px!important;
+  line-height:1.9!important;
+  letter-spacing:.05px;
+  color:#d1dbe7!important;
+}
+.problem-content p{
+  font-size:13px!important;
+  line-height:1.85!important;
+}
+.problem-content h3,
+.section-block h3{
+  font-size:14px!important;
+  line-height:1.45;
+  margin:16px 0 9px!important;
+}
+.problem-content ol,
+.problem-content ul{
+  padding-left:21px;
+  margin:9px 0 14px;
+  font-size:12.5px!important;
+  line-height:1.9!important;
+  color:#c8d4e2!important;
+}
+.problem-content li{
+  margin:8px 0!important;
+  padding-left:2px;
+}
+.problem-content code{
+  font-size:11.5px!important;
+  line-height:1.6;
+  padding:2px 5px;
+}
+.task-table{
+  font-size:12px!important;
+  margin:11px 0 15px!important;
+}
+.task-table th,.task-table td{
+  padding:9px 10px!important;
+  line-height:1.6;
+}
+.callout{
+  font-size:12px!important;
+  line-height:1.85!important;
+  padding:12px 13px!important;
+}
+.sample-block{
+  font-size:11.5px!important;
+  line-height:1.8!important;
+  padding:11px 12px!important;
+}
+.hint{
+  font-size:11.5px!important;
+  line-height:1.8!important;
+}
+.rubric-list>div{
+  font-size:12px!important;
+  line-height:1.6;
+  padding:10px 0!important;
+}
+.rubric-list b{font-size:12px!important}
+@media(max-width:680px){
+  .problem-description,
+  .problem-content p{
+    font-size:12.5px!important;
+    line-height:1.9!important;
+  }
+  .problem-content h3,
+  .section-block h3{
+    font-size:13px!important;
+  }
+  .problem-content ol,
+  .problem-content ul{
+    font-size:12px!important;
+    line-height:1.95!important;
+    padding-left:20px;
+  }
+  .problem-content li{margin:8px 0!important}
+  .problem-content code{font-size:11px!important}
+  .task-table{font-size:11.5px!important}
+  .task-table th,.task-table td{padding:8px!important}
+  .callout,.hint{font-size:11.5px!important}
+  .sample-block{font-size:11px!important}
+  .rubric-list>div{font-size:11.5px!important}
+}
