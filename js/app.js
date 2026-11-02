@@ -337,7 +337,13 @@ function bindEvents(){
   document.addEventListener('keydown', event => {
     if (!sessionStarted || sessionFinished || !problemPanel.contains(document.activeElement)) return;
     const key = String(event.key || '').toLowerCase();
-    if ((event.ctrlKey || event.metaKey) && ['c','x','v','a'].includes(key)) {
+    if (event.key === 'ContextMenu' || (event.shiftKey && event.key === 'F10')) {
+      event.preventDefault();
+      event.stopPropagation();
+      recordViolation('Membuka menu konteks melalui keyboard pada area soal');
+      return;
+    }
+    if ((event.ctrlKey || event.metaKey) && ['c','x','v','a'].includes(key) && !(event.shiftKey && key === 'c')) {
       event.preventDefault();
       event.stopPropagation();
       const action = key === 'c' ? 'Menyalin teks soal' : key === 'x' ? 'Memotong teks soal' : key === 'v' ? 'Menempelkan konten ke area soal' : 'Memilih seluruh teks soal';
