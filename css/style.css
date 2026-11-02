@@ -560,3 +560,56 @@ svg.ui-icon{
     padding:8px 9px!important;
   }
 }
+
+
+/* Vertical editor resizing: the grab bar sits between code and status footer. */
+.editor-host{
+  flex:0 0 auto!important;
+  min-height:240px!important;
+  height:clamp(310px,41vh,420px);
+}
+.editor-resize-handle{
+  flex:0 0 20px;
+  min-height:20px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  position:relative;
+  border-top:1px solid #1c2a3b;
+  border-bottom:1px solid #1c2a3b;
+  background:#101a28;
+  color:#70869b;
+  cursor:ns-resize;
+  touch-action:none;
+  user-select:none;
+  outline:none;
+}
+.editor-resize-handle:hover,
+.editor-resize-handle:focus-visible,
+.editor-resize-handle.is-dragging{
+  background:#172638;
+  color:#b9f36b;
+}
+.editor-resize-grip{
+  width:34px;
+  height:4px;
+  border-top:1px solid currentColor;
+  border-bottom:1px solid currentColor;
+  opacity:.8;
+}
+.editor-resize-handle small{
+  font:7px var(--mono);
+  letter-spacing:.8px;
+  line-height:1;
+}
+body.editor-resizing,
+body.editor-resizing *{
+  cursor:ns-resize!important;
+  user-select:none!important;
+}
+@media(max-width:680px){
+  .editor-resize-handle{flex-basis:24px;min-height:24px}
+  .editor-resize-grip{width:42px;height:5px}
+  .editor-resize-handle small{font-size:7px}
+}
