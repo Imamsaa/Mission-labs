@@ -149,3 +149,12 @@ button,input,textarea{font-family:inherit}
 @media(max-width:1250px){.app-shell{padding:0 16px}.workspace{grid-template-columns:215px minmax(280px,.9fr) minmax(380px,1.2fr);gap:10px}.problem-panel{padding:17px 14px}.problem-title-row h1{font-size:20px}}
 @media(max-width:1000px){.workspace{grid-template-columns:205px minmax(0,1fr)}.sidebar{grid-row:1/span 2;min-height:0}.problem-panel{min-height:0}.editor-panel{grid-column:2;min-height:680px}.challenge-list{max-height:360px}}
 @media(max-width:680px){.app-shell{padding:0 10px}.topbar{height:auto;min-height:62px;gap:8px;flex-wrap:wrap;padding:10px 0}.brand{min-width:0}.brand-title{font-size:13px}.event-label{display:none}.top-actions{gap:5px}.timer-chip{padding:7px 8px;gap:5px}.timer-label{display:none}.top-actions .btn{font-size:8px;padding:7px}.workspace{display:flex;flex-direction:column;padding-top:10px;min-height:0}.sidebar{min-height:0;padding:13px}.sidebar-heading{padding-bottom:10px}.sidebar-heading h2{font-size:16px}.challenge-list{display:grid;grid-template-columns:1fr 1fr;max-height:none;min-height:0;overflow:visible}.challenge-item{padding:9px 7px;gap:6px}.challenge-copy b{font-size:9px}.challenge-copy small{font-size:7px}.sidebar-bottom{margin-top:10px;padding-top:0}.problem-panel{min-height:0;padding:15px 13px}.problem-heading{margin:12px 0 14px}.problem-title-row h1{font-size:19px}.problem-content{padding-top:12px}.editor-panel{min-height:690px}.editor-host{height:300px}.runbar{align-items:stretch;flex-direction:column}.runbar-note{font-size:8px}.run-actions{width:100%;flex-wrap:wrap}.run-actions .btn{flex:1 1 30%;font-size:8px;padding:8px 7px}.student-submit{align-items:stretch;flex-direction:column}.student-submit label{white-space:normal}.student-submit #scorePreview{max-width:none}.page-footer{height:auto;min-height:38px;gap:7px;flex-wrap:wrap;font-size:7px}.console-view{min-height:130px}.stdin-toolbar{align-items:flex-start}.stdin-toolbar small{font-size:8px}}
+
+
+/* Fix: only CodeMirror should occupy the editor host after initialization. */
+.editor-host.editor-ready > .cm-editor{flex:1 1 0%;width:100%;max-width:100%;min-width:0}
+.editor-host.editor-ready > #codeFallback{display:none!important}
+.editor-host.editor-ready{display:flex;align-items:stretch}
+.editor-host.editor-ready .cm-scroller{min-width:0;width:100%}
+.editor-host.editor-ready .cm-gutters{flex:0 0 auto;width:max-content;max-width:72px}
+.editor-host.editor-ready .cm-gutter{flex:0 0 auto;width:auto}
