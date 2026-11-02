@@ -498,3 +498,21 @@ svg.ui-icon{
 .sidebar-note > span{color:inherit;margin:0}
 .btn .ui-icon{display:block}
 .btn-break span{line-height:1}
+
+
+/* Session rule penalties replace the old break controls. */
+.break-count,.btn-break{display:none!important}
+.penalty-chip{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  min-height:32px;padding:6px 9px;
+  border:1px solid rgba(255,109,126,.34);
+  border-radius:7px;background:rgba(255,109,126,.09);
+  color:#ff9ba6;font:500 9px var(--mono);font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+}
+.penalty-chip[hidden]{display:none!important}
+.penalty-chip .ui-icon{width:13px;height:13px;flex:0 0 13px}
+@media(max-width:680px){
+  .penalty-chip{min-height:29px;padding:5px 7px;font-size:8px;gap:4px}
+  .penalty-chip .ui-icon{width:12px;height:12px;flex-basis:12px}
+}
