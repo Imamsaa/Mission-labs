@@ -708,3 +708,50 @@ body.modal-open{overflow:hidden}
   .start-session-description{font-size:11px}
   .start-session-card input{height:43px;font-size:12px}
 }
+
+
+/* Dual countdown: individual 70-minute session and shared 14:50 WIB cutoff. */
+.deadline-chip{
+  display:flex;flex-direction:column;justify-content:center;gap:2px;
+  min-height:34px;padding:4px 9px;
+  border:1px solid rgba(255,190,105,.28);
+  border-radius:7px;background:rgba(75,50,24,.18);
+  white-space:nowrap;
+}
+.deadline-chip-label{
+  color:#c79c68;font:500 7px var(--mono);letter-spacing:.65px;
+}
+.deadline-chip strong{
+  color:#ffd49b;font:600 10px var(--mono);font-variant-numeric:tabular-nums;
+}
+.start-session-deadline{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  margin-top:10px;padding:12px 13px;
+  border:1px solid rgba(255,190,105,.28);
+  border-radius:8px;background:rgba(75,50,24,.18);
+}
+.start-session-deadline>div{display:flex;flex-direction:column;gap:5px}
+.start-session-deadline small{
+  color:#c79c68;font:500 8px var(--mono);letter-spacing:.9px;
+}
+.start-session-deadline b{
+  color:#c8d1dc;font:500 10px var(--font);
+}
+.start-session-deadline>strong{
+  color:#ffd49b;font:600 17px var(--mono);font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+}
+.deadline-modal-message{
+  margin:7px 0 0;color:#8fa0b4;font-size:9px;line-height:1.5;
+}
+.start-session-button:disabled{opacity:.45;cursor:not-allowed;transform:none}
+@media(max-width:680px){
+  .top-actions{gap:5px}
+  .deadline-chip{min-height:29px;padding:3px 6px}
+  .deadline-chip-label{font-size:6px}
+  .deadline-chip strong{font-size:8px}
+}
+@media(max-width:430px){
+  .start-session-deadline{align-items:flex-start;flex-direction:column;gap:8px}
+  .start-session-deadline>strong{font-size:20px}
+}
