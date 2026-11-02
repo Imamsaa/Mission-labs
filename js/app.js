@@ -291,6 +291,7 @@ function initEditorResizer() {
     if (event.button !== 0) return;
     event.preventDefault();
     drag = {pointerId:event.pointerId,startY:event.clientY,startHeight:host.getBoundingClientRect().height};
+    try { handle.setPointerCapture(event.pointerId); } catch (error) { /* Pointer capture may be unavailable in older browsers. */ }
     handle.classList.add('is-dragging');
     document.body.classList.add('editor-resizing');
     window.addEventListener('pointermove', moveDrag, {passive:false});
