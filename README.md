@@ -1,6 +1,6 @@
 # C++ Mission Lab — ICT Class
 
-Web tugas praktik C++ dengan dua challenge gabungan materi. Mekanisme pengerjaan meniru alur `Imamsaa/Hackathon-C-Batch-1`: halaman soal dan rubrik, editor, STDIN, Run Code, test case, timer sesi dengan penalti pelanggaran, progress, serta pengiriman hasil.
+Web tugas praktik C++ dengan satu challenge praktik gabungan materi. Mekanisme pengerjaan meniru alur `Imamsaa/Hackathon-C-Batch-1`: halaman soal dan rubrik, editor, STDIN, Run Code, test case, timer sesi dengan penalti pelanggaran, progress, serta pengiriman hasil.
 
 ## Fitur dan alur siswa
 
@@ -18,15 +18,11 @@ Web tugas praktik C++ dengan dua challenge gabungan materi. Mekanisme pengerjaan
 
 > Catatan: penalti berjalan di sisi browser. Browser tidak selalu dapat mendeteksi screenshot yang diambil oleh sistem operasi, kamera eksternal, atau pembukaan Developer Tools melalui menu browser. Mekanisme ini adalah deterrent, bukan jaminan anti-cheat mutlak.
 
-## Dua challenge
+## Satu challenge
 
 ### 01 — Smart Canteen
 Menggabungkan input, variabel, operator aritmatika/perbandingan/logika, validasi, nested `if`, `if-else if-else`, `switch-case`, dan `do-while`. Skenario: transaksi member/non-member, pembayaran tunai/QRIS, diskon bertingkat, produk tidak valid.
 
-### 02 — Student Analytics
-Menggabungkan `cin`, `getline`, `cin.ignore`, `for`, `while`, `do-while`, `switch-case`, nested `if`, operator logika, nilai berbobot, predikat, kelulusan, dan statistik kelas.
-
-Array, vector, function, struct, dan pointer tidak dipersyaratkan agar level tetap sejalan dengan materi yang telah diajarkan.
 
 ## Compiler WebAssembly
 
