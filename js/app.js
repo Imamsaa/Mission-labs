@@ -408,7 +408,7 @@ function runCompilerWorker(source, options = {}) {
   });
 }
 
-function parseLabel(output,label)function parseLabel(output,label) { const escaped=label.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');const match=output.match(new RegExp(`^\\s*${escaped}\\s*:\\s*(.*?)\\s*$`,'mi'));return match?match[1].trim():null; }
+function parseLabel(output,label) { const escaped=label.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');const match=output.match(new RegExp(`^\\s*${escaped}\\s*:\\s*(.*?)\\s*$`,'mi'));return match?match[1].trim():null; }
 function compareValue(actual,expected) { if(actual===null)return false;if(typeof expected==='number'){const value=Number(actual.replace(/,/g,'.'));return Number.isFinite(value)&&Math.abs(value-expected)<=0.011;}return actual.trim().toLowerCase()===String(expected).trim().toLowerCase(); }
 function renderTests(rows,total) {
   const passed=rows.filter(row=>row.ok).length;$('#testResultCount').textContent=`${passed}/${total}`;
@@ -423,7 +423,7 @@ async function execute(mode) {
 
   const source = getCode();
   if (!source.trim()) { toast('Editor masih kosong.', 'bad'); return; }
-  if (!/\\bmain\\s*\\(/.test(source)) { toast('Program harus memiliki fungsi main().', 'bad'); return; }
+  if (!/\bmain\s*\(/.test(source)) { toast('Program harus memiliki fungsi main().', 'bad'); return; }
 
   compileBusy = true;
   ['runBtn', 'checkTestsBtn', 'submitBtn'].forEach(id => { $('#' + id).disabled = true; });
@@ -442,9 +442,9 @@ async function execute(mode) {
       const sections = [];
       if (result.stdout) sections.push(result.stdout);
       else sections.push('(Program selesai tanpa menghasilkan output.)');
-      if (result.stderr) sections.push('[STDERR]\\n' + result.stderr);
-      if (result.runtimeError) sections.push('[RUNTIME ERROR]\\n' + result.runtimeError);
-      showOutput(sections.join('\\n\\n'), result.runtimeError ? 'error' : 'success');
+      if (result.stderr) sections.push('[STDERR]\n' + result.stderr);
+      if (result.runtimeError) sections.push('[RUNTIME ERROR]\n' + result.runtimeError);
+      showOutput(sections.join('\n\n'), result.runtimeError ? 'error' : 'success');
       toast(result.runtimeError ? 'Program mengalami runtime error.' : 'Program berhasil dijalankan.', result.runtimeError ? 'bad' : 'good');
     } else {
       const currentTests = tasks[currentTask].tests;
@@ -469,15 +469,15 @@ async function execute(mode) {
         });
         const outputParts = [];
         if (execution.stdout) outputParts.push(execution.stdout);
-        if (execution.stderr) outputParts.push('[STDERR]\\n' + execution.stderr);
-        if (execution.runtimeError) outputParts.push('[RUNTIME ERROR]\\n' + execution.runtimeError);
+        if (execution.stderr) outputParts.push('[STDERR]\n' + execution.stderr);
+        if (execution.runtimeError) outputParts.push('[RUNTIME ERROR]\n' + execution.runtimeError);
 
         return {
           name: test.name,
           hidden: !!test.hidden,
           ok: checks.every(check => check.ok),
           checks,
-          output: outputParts.join('\\n\\n') || '(Tidak ada output)'
+          output: outputParts.join('\n\n') || '(Tidak ada output)'
         };
       });
 
@@ -488,7 +488,7 @@ async function execute(mode) {
       lastSubmission = { task: tasks[currentTask].title, code: source, rows, passed, total, score };
       $('#scorePreview').textContent = passed + '/' + total + ' test lolos · Nilai ' + score + '/100';
       $('#submitBtn').disabled = false;
-      showOutput(rows.map(row => row.hidden ? '[Hidden test] selesai' : row.output).join('\\n\\n'), passed === total ? 'success' : '');
+      showOutput(rows.map(row => row.hidden ? '[Hidden test] selesai' : row.output).join('\n\n'), passed === total ? 'success' : '');
       toast('Pengujian selesai: ' + passed + '/' + total + ' test lolos.', passed === total ? 'good' : 'bad');
     }
 
@@ -507,7 +507,7 @@ async function execute(mode) {
   }
 }
 
-function toBase64Url(text)function toBase64Url(text) { const bytes=new TextEncoder().encode(text);let binary='';for(let i=0;i<bytes.length;i+=0x8000)binary+=String.fromCharCode(...bytes.subarray(i,i+0x8000));return btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/g,''); }
+function toBase64Url(text) { const bytes=new TextEncoder().encode(text);let binary='';for(let i=0;i<bytes.length;i+=0x8000)binary+=String.fromCharCode(...bytes.subarray(i,i+0x8000));return btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/g,''); }
 function jsonpRequest(parameters) {
   return new Promise((resolve,reject)=>{const callback=`__cppMission_${Date.now()}_${Math.random().toString(36).slice(2)}`;const script=document.createElement('script');const url=new URL(APPS_SCRIPT_URL);Object.entries(parameters).forEach(([k,v])=>url.searchParams.set(k,String(v)));url.searchParams.set('callback',callback);
     const timeout=setTimeout(()=>{cleanup();reject(new Error('Pengiriman timeout. Periksa koneksi atau deployment Apps Script.'));},30000);function cleanup(){clearTimeout(timeout);delete window[callback];script.remove();}
