@@ -113,7 +113,7 @@ function doGet(e) {
 
 function jsonpResponse_(result, callback) {
   const json = JSON.stringify(result);
-  if (callback && /^[a-zA-Z_$][\\w$]*$/.test(callback)) {
+  if (callback && /^[a-zA-Z_$][\w$]*$/.test(callback)) {
     return ContentService.createTextOutput(callback + '(' + json + ');')
       .setMimeType(ContentService.MimeType.JAVASCRIPT);
   }
@@ -163,7 +163,7 @@ function receiveChunk_(params) {
 
 function safeCellText_(value) {
   const text = String(value == null ? '' : value);
-  return /^[=+\\-@]/.test(text) ? "'" + text : text;
+  return /^[=+\-@]/.test(text) ? "'" + text : text;
 }
 
 function formatDuration_(seconds) {
@@ -229,7 +229,13 @@ function saveSubmission_(payload) {
   const startText = startedAt ? Utilities.formatDate(startedAt, TIME_ZONE, 'dd/MM/yyyy HH:mm:ss') : '';
   const successText = passed + '/' + total + ' test berhasil (' + score + '%)';
   const violationText = violations.map(function (item, index) {
-    const when = item.occurredAt ? Utilities.formatDate(new Date(item.occurredAt), TIME_ZONE, 'dd/MM/yyyy HH:mm:ss') : 'waktu tidak tersedia';
+    let when = 'waktu tidak tersedia';
+    if (item.occurredAt) {
+      const eventDate = new Date(item.occurredAt);
+      if (!isNaN(eventDate.getTime())) {
+        when = Utilities.formatDate(eventDate, TIME_ZONE, 'dd/MM/yyyy HH:mm:ss');
+      }
+    }
     return (index + 1) + '. ' + item.reason + ' | ' + when + ' | penalti ' + item.penaltyMinutes + ' menit';
   }).join('\n');
 
