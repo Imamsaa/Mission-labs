@@ -13,7 +13,7 @@ Web tugas praktik C++ dengan dua challenge gabungan materi. Mekanisme pengerjaan
 7. **Check Tests** menjalankan tiga skenario terpisah untuk tiap misi. Pemeriksaan membaca nilai pada baris output yang memiliki label wajib. Nilai otomatis = `test lolos / 3 × 100`.
 8. **Submit Mission** baru aktif setelah pengujian. Submission mengirim nama, tugas, source code, jumlah test lolos, nilai, dan rincian pemeriksaan ke Google Spreadsheet.
 9. Draft, identitas nama, progres, waktu sesi, dan total penalti disimpan di localStorage.
-10. Pelanggaran yang diberi penalti meliputi copy, cut, paste, drag-and-drop kode, shortcut screenshot/print, shortcut Developer Tools/View Source, dan berpindah tab. Setiap kejadian mengurangi 300 detik; akumulasi penalti disimpan di localStorage dan ditampilkan di header.
+10. Pelanggaran yang diberi penalti meliputi copy, cut, paste, drag-and-drop kode, menyeleksi/menyalin soal atau membuka menu konteks pada area soal, shortcut screenshot/print, shortcut Developer Tools/View Source, dan berpindah tab. Setiap kejadian mengurangi 300 detik; akumulasi penalti disimpan di localStorage dan ditampilkan di header.
 11. Saat waktu habis, editor, Run, Check Tests, navigasi misi, dan Submit dikunci pada browser tersebut.
 
 > Catatan: penalti berjalan di sisi browser. Browser tidak selalu dapat mendeteksi screenshot yang diambil oleh sistem operasi, kamera eksternal, atau pembukaan Developer Tools melalui menu browser. Mekanisme ini adalah deterrent, bukan jaminan anti-cheat mutlak.
