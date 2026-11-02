@@ -5,6 +5,15 @@ import { indentMore, indentLess, toggleComment } from '@codemirror/commands';
 import { Compartment } from '@codemirror/state';
 
 const $ = s => document.querySelector(s);
+const RULES = Object.freeze({
+  restrictClipboard: true,
+  penalizeTabSwitch: true,
+  penalizeContextMenu: true,
+  penalizeSystemShortcuts: true,
+  penaltyMinutes: 5,
+  ...(window.MISSION_RULES || {})
+});
+document.documentElement.classList.toggle('clipboard-protection-enabled', Boolean(RULES.restrictClipboard));
 const ICON_PATHS = Object.freeze({
   clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
   coffee: '<path d="M4 8h13v7a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V8Z"/><path d="M17 10h2a2 2 0 0 1 0 4h-2M8 3v2m5-2v2"/>',
@@ -142,14 +151,16 @@ function recordViolation(reason) {
   if (!sessionStarted || sessionFinished) return false;
   const before = remainingSeconds();
   if (before <= 0) { finishSession(true); return false; }
-  const totalPenalty = getPenaltySeconds() + 300;
+  const penaltySeconds = Math.max(0, Math.round(Number(RULES.penaltyMinutes) || 0) * 60);
+  const totalPenalty = getPenaltySeconds() + penaltySeconds;
   localStorage.setItem(PENALTY_KEY, String(totalPenalty));
   renderPenalty();
   updateTimer();
   const after = remainingSeconds();
-  const message = 'Pelanggaran terdeteksi: ' + reason + '. Waktu dikurangi 5 menit. Sisa waktu: ' + formatClock(after) + '.';
+  const penaltyLabel = formatClock(penaltySeconds);
+  const message = 'Pelanggaran terdeteksi: ' + reason + '. Waktu dikurangi ' + penaltyLabel + '. Sisa waktu: ' + formatClock(after) + '.';
   showWarning('Pelanggaran Aturan', message);
-  toast('Pelanggaran dicatat · −05:00 · Sisa waktu ' + formatClock(after), 'bad');
+  toast('Pelanggaran dicatat · −' + penaltyLabel + ' · Sisa waktu ' + formatClock(after), 'bad');
   return true;
 }
 function finishSession(notify=true) {
@@ -373,7 +384,7 @@ function bindEvents(){
   $('#clipboardWarningAcknowledge').addEventListener('click',closeWarning);$('#clipboardWarningModal').addEventListener('click',e=>{if(e.target.id==='clipboardWarningModal')closeWarning();});
   document.addEventListener('keydown',event=>{
     if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();execute('run');}
-    if(!sessionStarted||sessionFinished)return;
+    if(!sessionStarted||sessionFinished||!RULES.penalizeSystemShortcuts)return;
     const key=String(event.key||'').toLowerCase();
     const screenshot=event.key==='PrintScreen'||((event.metaKey&&event.shiftKey)&&['s','3','4','5'].includes(key));
     const print=(event.ctrlKey||event.metaKey)&&key==='p';
@@ -386,18 +397,18 @@ function bindEvents(){
   },true);
   const editorHost = $('#editorHost');
   ['copy','cut','paste'].forEach(type => editorHost.addEventListener(type, event => {
-    if (!sessionStarted || sessionFinished) return;
+    if (!RULES.restrictClipboard || !sessionStarted || sessionFinished) return;
     event.preventDefault();event.stopPropagation();
     const label = type === 'copy' ? 'Menyalin kode' : type === 'cut' ? 'Memotong kode' : 'Menempelkan kode';
     recordViolation(label);
   }, true));
   editorHost.addEventListener('drop', event => {
-    if (!sessionStarted || sessionFinished) return;
+    if (!RULES.restrictClipboard || !sessionStarted || sessionFinished) return;
     event.preventDefault();event.stopPropagation();
     recordViolation('Memasukkan kode melalui drag-and-drop');
   }, true);
   editorHost.addEventListener('dragover', event => {
-    if (sessionStarted && !sessionFinished) event.preventDefault();
+    if (RULES.restrictClipboard && sessionStarted && !sessionFinished) event.preventDefault();
   }, true);
   const problemPanel = $('.problem-panel');
   // Focus the non-editable question surface when a student interacts with its text.
@@ -406,16 +417,16 @@ function bindEvents(){
   });
   // Text selection is disabled with CSS; this also blocks keyboard/context selection paths.
   problemPanel.addEventListener('selectstart', event => {
-    event.preventDefault();
+    if (RULES.restrictClipboard) event.preventDefault();
   }, true);
   problemPanel.addEventListener('contextmenu', event => {
-    if (!sessionStarted || sessionFinished) return;
+    if (!RULES.penalizeContextMenu || !sessionStarted || sessionFinished) return;
     event.preventDefault();
     event.stopPropagation();
     recordViolation('Membuka menu konteks pada area soal');
   }, true);
   document.addEventListener('keydown', event => {
-    if (!sessionStarted || sessionFinished || !problemPanel.contains(document.activeElement)) return;
+    if (!RULES.restrictClipboard || !sessionStarted || sessionFinished || !problemPanel.contains(document.activeElement)) return;
     const key = String(event.key || '').toLowerCase();
     if (event.key === 'ContextMenu' || (event.shiftKey && event.key === 'F10')) {
       event.preventDefault();
@@ -442,13 +453,13 @@ function bindEvents(){
     return false;
   }
   ['copy','cut'].forEach(type => document.addEventListener(type, event => {
-    if (!sessionStarted || sessionFinished || !selectionTouchesProblemPanel()) return;
+    if (!RULES.restrictClipboard || !sessionStarted || sessionFinished || !selectionTouchesProblemPanel()) return;
     event.preventDefault();
     event.stopImmediatePropagation();
     recordViolation(type === 'copy' ? 'Menyalin teks soal' : 'Memotong teks soal');
   }, true));
   let leftTab=false;document.addEventListener('visibilitychange',()=>{
-    if(document.hidden){leftTab=sessionStarted&&!sessionFinished;return;}
+    if(document.hidden){leftTab=Boolean(RULES.penalizeTabSwitch&&sessionStarted&&!sessionFinished);return;}
     if(leftTab){leftTab=false;recordViolation('Berpindah atau meninggalkan tab Mission Lab');}
   });
 }
