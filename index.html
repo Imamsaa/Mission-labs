@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#090d17" />
+  <meta name="description" content="C++ Mission Lab — platform tugas praktik C++ untuk ICT Class." />
+  <title>C++ Mission Lab — ICT Class</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="./coi-serviceworker.js"></script>
+  <script type="importmap">
+    {"imports": {
+      "@codemirror/":"https://esm.sh/*@codemirror/",
+      "@lezer/":"https://esm.sh/*@lezer/",
+      "@marijn/find-cluster-break":"https://esm.sh/@marijn/find-cluster-break",
+      "codemirror":"https://esm.sh/*codemirror",
+      "crelt":"https://esm.sh/crelt",
+      "style-mod":"https://esm.sh/style-mod",
+      "w3c-keyname":"https://esm.sh/w3c-keyname"
+    }}
+  </script>
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="./"><span class="brand-title">C++ MISSION LAB</span></a>
+      <div class="event-label"><span class="live-dot"></span> ICT CLASS <span class="event-divider">/</span> PRACTICAL CHALLENGE</div>
+      <div class="top-actions"><div class="timer-chip"><span>◷</span><span id="timerDisplay">90:00</span><span class="timer-label">REMAINING</span></div><button id="startTimerBtn" class="btn btn-quiet btn-small">Mulai Sesi</button><span id="breakCountChip" class="break-count" hidden>Istirahat 0/2</span><button id="breakBtn" class="btn btn-break btn-small" hidden disabled>☕ Mulai Istirahat</button></div>
+    </header>
+    <div class="workspace">
+      <aside class="sidebar panel">
+        <div class="sidebar-heading"><div><p class="eyebrow">MISSION MAP</p><h2>Tantangan</h2></div><span class="count-pill">02</span></div>
+        <div class="challenge-list" id="challengeList">
+          <button class="challenge-item active" data-task="0"><span class="challenge-number">01</span><span class="challenge-copy"><b>Smart Canteen</b><small>Transaction &amp; logic</small></span><span class="challenge-check" id="done0">○</span></button>
+          <button class="challenge-item" data-task="1"><span class="challenge-number">02</span><span class="challenge-copy"><b>Student Analytics</b><small>Data &amp; reporting</small></span><span class="challenge-check" id="done1">○</span></button>
+        </div>
+        <div class="sidebar-bottom">
+          <div class="progress-card"><div class="progress-top"><span>PROGRESS KAMU</span><strong id="progressPercent">0%</strong></div><div class="progress-track"><span id="progressBar"></span></div><p><strong id="solvedCount">0</strong> dari 2 misi selesai · <strong id="xpTotal">0</strong> XP</p></div>
+          <div class="sidebar-note">✦ Kerjakan mandiri. Uji sebelum mengirim.</div>
+        </div>
+      </aside>
+      <main class="problem-panel panel">
+        <div class="problem-topline"><div class="breadcrumbs"><span>MISSION</span><span>/</span><strong id="problemNumber">01</strong><span id="problemStage" class="stage-tag">PRACTICAL CHALLENGE</span></div></div>
+        <div class="problem-heading"><div class="problem-title-row"><h1 id="problemTitle">Smart Canteen</h1><span class="difficulty hard" id="problemDifficulty">CHALLENGE</span></div><p id="problemSubtitle"></p></div>
+        <div class="problem-tabs"><button class="problem-tab active" data-tab="description">Challenge Brief</button><button class="problem-tab" data-tab="rubric">Penilaian</button><button class="problem-tab" data-tab="materials">Materi</button></div>
+        <section id="descriptionTab" class="problem-content"></section><section id="rubricTab" class="problem-content hidden"></section><section id="materialsTab" class="problem-content hidden"></section>
+      </main>
+      <section class="editor-panel panel">
+        <div class="editor-topbar"><div class="file-tab"><span class="file-dot"></span><span>main.cpp</span></div><div class="editor-tools"><span class="editor-policy-chip">C++17 · WEBASSEMBLY</span><button id="resetCodeBtn" class="tool-btn">↺ Reset</button></div></div>
+        <div class="editor-caption"><span><i class="status-dot"></i> EDITOR</span><span id="editorStatus">Draft tersimpan lokal</span></div>
+        <div id="editorHost" class="editor-host"><textarea id="codeFallback" spellcheck="false" aria-label="Editor kode C++"></textarea><div id="sessionLockOverlay" class="session-lock-overlay"><div class="session-lock-card"><span class="session-lock-icon">◷</span><strong id="sessionLockTitle">Sesi belum dimulai</strong><p id="sessionLockMessage">Baca tantangan terlebih dahulu. Editor akan terbuka setelah menekan Mulai Sesi.</p><small>Waktu pengerjaan dimulai saat sesi dibuka.</small></div></div></div>
+        <div class="editor-footer"><span>Ln <b id="lineCount">1</b>, Col <b id="columnCount">1</b></span><span>UTF-8 · C++17</span><span class="shortcut-hint"><kbd>Tab</kbd> Indent · <kbd>Ctrl</kbd>+<kbd>Enter</kbd> Run</span></div>
+        <div class="console-panel"><div class="console-header"><div class="console-tabs"><button class="console-tab active" data-console-tab="input">STDIN</button><button class="console-tab" data-console-tab="output">OUTPUT</button><button class="console-tab" data-console-tab="tests">TEST RESULTS <span class="console-count" id="testResultCount">—</span></button></div><div class="console-actions"><span id="runDuration"></span><button class="clear-btn" id="clearOutputBtn">Clear</button></div></div>
+          <div id="inputView" class="console-view stdin-view"><div class="stdin-toolbar"><div><strong>STANDARD INPUT</strong><small>Input dibaca melalui cin / getline sesuai urutan soal.</small></div><button id="useSampleInputBtn" class="clear-btn">Gunakan contoh</button></div><textarea id="stdinInput" class="stdin-input" rows="4" spellcheck="false" placeholder="Masukkan data setiap baris..."></textarea><div class="stdin-help">Input diberikan sekaligus seperti berkas stdin. Gunakan cin.ignore() saat berpindah dari cin ke getline().</div></div>
+          <div id="outputView" class="console-view hidden"><div class="empty-console"><span class="terminal-glyph">›_</span><div><strong>Terminal output</strong><p>Jalankan program untuk melihat output.</p></div></div></div>
+          <div id="testsView" class="console-view hidden"><div class="empty-console"><span class="terminal-glyph">✓</span><div><strong>Belum ada hasil test</strong><p>Gunakan Check Tests untuk menjalankan tiga skenario penilaian.</p></div></div></div>
+        </div>
+        <div class="runbar"><div class="runbar-note"><span class="shield-icon">⬡</span> Compiled &amp; executed locally in WebAssembly</div><div class="run-actions"><button id="runBtn" class="btn btn-secondary">▶ Run Code</button><button id="checkTestsBtn" class="btn btn-secondary">✓ Check Tests</button><button id="submitBtn" class="btn btn-primary" disabled>✓ Submit Mission</button></div></div>
+        <div class="student-submit"><label for="studentName">NAMA LENGKAP SISWA</label><input id="studentName" type="text" maxlength="120" placeholder="Masukkan nama lengkap" autocomplete="name"><span id="scorePreview">Jalankan Check Tests sebelum submit.</span></div>
+      </section>
+    </div>
+    <footer class="page-footer"><span>ICT CLASS · SMPIT AL FIRDAUS PURWODADI</span><span>POWERED BY <strong>WEBASSEMBLY</strong> · C++17</span></footer>
+  </div>
+  <div id="toastRegion" class="toast-region" aria-live="polite"></div>
+  <div id="clipboardWarningModal" class="clipboard-modal hidden" role="dialog" aria-modal="true" aria-labelledby="clipboardWarningTitle" aria-hidden="true">
+    <div class="clipboard-modal-backdrop"></div><div class="clipboard-modal-card"><div class="clipboard-modal-icon">!</div><p class="clipboard-modal-eyebrow">ATURAN MISSION LAB</p><h2 id="clipboardWarningTitle">Peringatan</h2><p id="clipboardWarningMessage" class="clipboard-modal-message"></p><button id="clipboardWarningAcknowledge" class="btn btn-primary clipboard-modal-button" type="button">Saya Mengerti</button></div>
+  </div>
+  <div id="loadingOverlay" class="loading-overlay hidden"><div class="loading-card"><div class="loader-ring"></div><p class="eyebrow">WASM COMPILER</p><h2 id="loadingTitle">Menyiapkan compiler...</h2><p id="loadingMessage">Menginisialisasi C++ di browser.</p><div class="loading-progress"><span id="loadingProgress"></span></div><small>Proses pertama kali bisa membutuhkan waktu lebih lama.</small></div></div>
+  <script src="./js/config.js"></script>
+  <script type="module" src="./js/app.js"></script>
+</body></html>
