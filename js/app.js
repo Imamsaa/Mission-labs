@@ -5,6 +5,25 @@ import { indentMore, indentLess, toggleComment } from '@codemirror/commands';
 import { Compartment } from '@codemirror/state';
 
 const $ = s => document.querySelector(s);
+const ICON_PATHS = Object.freeze({
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  coffee: '<path d="M4 8h13v7a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V8Z"/><path d="M17 10h2a2 2 0 0 1 0 4h-2M8 3v2m5-2v2"/>',
+  circle: '<circle cx="12" cy="12" r="8"/>',
+  checkCircle: '<circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/>',
+  terminal: '<path d="m5 7 5 5-5 5M13 17h6"/>',
+  check: '<path d="m5 12 4 4L19 6"/>',
+  x: '<path d="m18 6-12 12M6 6l12 12"/>',
+  play: '<path d="m8 5 12 7-12 7V5Z"/>',
+  reset: '<path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5"/>',
+  shield: '<path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"/><path d="m9 12 2 2 4-4"/>',
+  upload: '<path d="M12 16V4m-5 5 5-5 5 5M4 20h16"/>',
+  alert: '<path d="M10.3 3.9 2.5 17.4A2 2 0 0 0 4.2 20h15.6a2 2 0 0 0 1.7-2.6L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4m0 3h.01"/>'
+});
+function icon(name,size=14,className='') {
+  const shape=ICON_PATHS[name]||ICON_PATHS.terminal;
+  return `<svg class="ui-icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${shape}</svg>`;
+}
+
 const SESSION_SECONDS = 90 * 60;
 const START_KEY = 'cppMissionLab_sessionStart_v3';
 const FINISHED_KEY = 'cppMissionLab_sessionFinished_v3';
@@ -98,7 +117,7 @@ function toast(message,type='good') { const node=document.createElement('div');n
 function escapeHTML(value) { return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function saveProgress() { localStorage.setItem(PROGRESS_KEY,JSON.stringify(progress));renderProgress(); }
 function saveBreakState() { localStorage.setItem(BREAK_KEY,JSON.stringify(breakState)); }
-function renderProgress() { const done=progress.solved.length;$('#solvedCount').textContent=done;$('#xpTotal').textContent=done*500;$('#progressPercent').textContent=`${done*50}%`;$('#progressBar').style.width=`${done*50}%`;tasks.forEach((task,i)=>{const el=$(`#done${i}`);if(el)el.textContent=progress.solved.includes(task.id)?'✓':'○';}); }
+function renderProgress() { const done=progress.solved.length;$('#solvedCount').textContent=done;$('#xpTotal').textContent=done*500;$('#progressPercent').textContent=`${done*50}%`;$('#progressBar').style.width=`${done*50}%`;tasks.forEach((task,i)=>{const el=$(`#done${i}`);if(el){const solved=progress.solved.includes(task.id);el.innerHTML=icon(solved?'checkCircle':'circle',15,solved?'is-done':'is-pending');el.setAttribute('aria-label',solved?'Selesai':'Belum selesai');}}); }
 function getCode() { return editor.state.doc.toString(); }
 function setCode(value) { editor.dispatch({changes:{from:0,to:editor.state.doc.length,insert:value}}); }
 function saveDraft() { progress.drafts=progress.drafts||{};progress.drafts[tasks[currentTask].id]=getCode();localStorage.setItem(PROGRESS_KEY,JSON.stringify(progress));$('#editorStatus').textContent='Draft tersimpan';if(lastSubmission&&lastSubmission.code!==getCode()){lastSubmission=null;$('#submitBtn').disabled=true;$('#scorePreview').textContent='Kode berubah · Jalankan Check Tests kembali.';}updateCursorInfo(); }
@@ -110,8 +129,8 @@ function renderTask(index) {
   $('#descriptionTab').innerHTML=task.brief;$('#rubricTab').innerHTML=task.rubric;$('#materialsTab').innerHTML=task.materials;
   document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab==='description'));['description','rubric','materials'].forEach(t=>$(`#${t}Tab`).classList.toggle('hidden',t!=='description'));
   setCode(progress.drafts?.[task.id]||starterCode);$('#stdinInput').value=task.sampleInput;$('#testResultCount').textContent='—';$('#runDuration').textContent='';$('#scorePreview').textContent='Jalankan Check Tests sebelum submit.';$('#submitBtn').disabled=true;lastSubmission=null;compiledSource='';compiledModule=null;
-  $('#outputView').innerHTML='<div class="empty-console"><span class="terminal-glyph">›_</span><div><strong>Terminal output</strong><p>Jalankan kode C++ untuk melihat hasilnya.</p></div></div>';
-  $('#testsView').innerHTML='<div class="empty-console"><span class="terminal-glyph">✓</span><div><strong>Belum ada hasil test</strong><p>Tekan Check Tests untuk menjalankan tiga skenario pengujian.</p></div></div>';showConsole('input');updateSessionLock();
+  $('#outputView').innerHTML=`<div class="empty-console"><span class="terminal-glyph">${icon('terminal',18)}</span><div><strong>Terminal output</strong><p>Jalankan kode C++ untuk melihat hasilnya.</p></div></div>`;
+  $('#testsView').innerHTML=`<div class="empty-console"><span class="terminal-glyph">${icon('checkCircle',18)}</span><div><strong>Belum ada hasil test</strong><p>Tekan Check Tests untuk menjalankan tiga skenario pengujian.</p></div></div>`;showConsole('input');updateSessionLock();
 }
 function showConsole(name) { ['input','output','tests'].forEach(k=>{$(`#${k}View`).classList.toggle('hidden',k!==name);document.querySelector(`[data-console-tab="${k}"]`).classList.toggle('active',k===name);}); }
 function baseRemaining() { if(sessionFinished)return 0;if(breakState.active&&Number.isFinite(breakState.pausedRemaining))return Math.max(0,breakState.pausedRemaining);const start=Number(localStorage.getItem(START_KEY));return start?Math.max(0,SESSION_SECONDS-Math.floor((Date.now()-start)/1000)):SESSION_SECONDS; }
@@ -136,7 +155,7 @@ function endBreak() {
 function updateSessionLock() {
   const preStart=!sessionStarted&&!sessionFinished,onBreak=sessionStarted&&breakState.active&&!sessionFinished,finished=sessionFinished,locked=preStart||onBreak||finished;
   $('#startTimerBtn').textContent=finished?'Waktu Habis':preStart?'Mulai Sesi':'Sesi Aktif';$('#startTimerBtn').disabled=!preStart;
-  $('#breakBtn').hidden=preStart||finished;$('#breakBtn').disabled=finished||(!onBreak&&breakState.used>=2);$('#breakBtn').textContent=onBreak?'▶ Akhiri Istirahat':'☕ Mulai Istirahat';$('#breakBtn').classList.toggle('is-resume',onBreak);
+  $('#breakBtn').hidden=preStart||finished;$('#breakBtn').disabled=finished||(!onBreak&&breakState.used>=2);$('#breakBtn').innerHTML=onBreak?`${icon('play',14)}<span>Akhiri Istirahat</span>`:`${icon('coffee',14)}<span>Mulai Istirahat</span>`;$('#breakBtn').classList.toggle('is-resume',onBreak);
   $('#breakCountChip').hidden=preStart||finished;$('#breakCountChip').textContent=`Istirahat ${breakState.used}/2`;
   editor.dispatch({effects:editorCompartment.reconfigure(EditorView.editable.of(!locked))});
   ['runBtn','checkTestsBtn','submitBtn','resetCodeBtn','stdinInput','useSampleInputBtn','studentName'].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=locked||(id==='submitBtn'&&!lastSubmission);});
@@ -166,7 +185,7 @@ function parseLabel(output,label) { const escaped=label.replace(/[.*+?^${}()|[\]
 function compareValue(actual,expected) { if(actual===null)return false;if(typeof expected==='number'){const value=Number(actual.replace(/,/g,'.'));return Number.isFinite(value)&&Math.abs(value-expected)<=0.011;}return actual.trim().toLowerCase()===String(expected).trim().toLowerCase(); }
 function renderTests(rows,total) {
   const passed=rows.filter(row=>row.ok).length;$('#testResultCount').textContent=`${passed}/${total}`;
-  $('#testsView').innerHTML=`<div class="result-summary ${passed===total?'pass':'fail'}"><div class="result-score">${passed}/${total}</div><div><strong>${passed===total?'Semua test berhasil':'Masih ada test gagal'}</strong><br><small>SUBMISSION TEST · ${total} TEST CASE</small></div></div>`+rows.map((row,i)=>`<details class="test-detail" ${i===0?'open':''}><summary><span>${escapeHTML(row.hidden?'Hidden test':row.name)}</span><b class="${row.ok?'pass':'fail'}">${row.ok?'✓ PASS':'× FAIL'}</b></summary>${row.hidden?'':`<div class="check-list">${row.checks.map(c=>`<div class="check-line"><span>${escapeHTML(c.label)}</span><span class="${c.ok?'pass':'fail'}">${c.ok?'✓':'×'} ${escapeHTML(c.actual??'Label tidak ditemukan')}</span></div>`).join('')}</div><pre class="test-output">${escapeHTML(row.output||'(Tidak ada output)')}</pre>`}</details>`).join('');return passed;
+  $('#testsView').innerHTML=`<div class="result-summary ${passed===total?'pass':'fail'}"><div class="result-score">${passed}/${total}</div><div><strong>${passed===total?'Semua test berhasil':'Masih ada test gagal'}</strong><br><small>SUBMISSION TEST · ${total} TEST CASE</small></div></div>`+rows.map((row,i)=>`<details class="test-detail" ${i===0?'open':''}><summary><span>${escapeHTML(row.hidden?'Hidden test':row.name)}</span><b class="${row.ok?'pass':'fail'} status-inline">${icon(row.ok?'check':'x',12)}<span>${row.ok?'PASS':'FAIL'}</span></b></summary>${row.hidden?'':`<div class="check-list">${row.checks.map(c=>`<div class="check-line"><span>${escapeHTML(c.label)}</span><span class="${c.ok?'pass':'fail'} status-inline">${icon(c.ok?'check':'x',12)}<span>${escapeHTML(c.actual??'Label tidak ditemukan')}</span></span></div>`).join('')}</div><pre class="test-output">${escapeHTML(row.output||'(Tidak ada output)')}</pre>`}</details>`).join('');return passed;
 }
 async function execute(mode) {
   if(!sessionStarted||sessionFinished||breakState.active||compileBusy){toast('Mulai sesi atau tunggu proses selesai.','bad');return;}
@@ -197,12 +216,12 @@ async function submitMission() {
   if(!sessionStarted||sessionFinished||breakState.active||remainingSeconds()<=0){if(sessionStarted&&remainingSeconds()<=0)finishSession();toast('Sesi belum aktif atau sudah berakhir.','bad');return;}
   const name=$('#studentName').value.trim();if(!name){toast('Isi nama lengkap siswa terlebih dahulu.','bad');$('#studentName').focus();return;}if(!lastSubmission||lastSubmission.code!==getCode()||lastSubmission.task!==tasks[currentTask].title){toast('Jalankan Check Tests kembali sebelum submit.','bad');return;}
   if(!APPS_SCRIPT_URL||APPS_SCRIPT_URL.includes('PASTE_APPS_SCRIPT')){toast('URL Apps Script belum diatur pada config.js.','bad');return;}
-  const button=$('#submitBtn');button.disabled=true;button.textContent='Mengirim...';
+  const button=$('#submitBtn');button.disabled=true;button.innerHTML='<span class="button-spinner" aria-hidden="true"></span><span>Mengirim...</span>';
   try{const details=lastSubmission.rows.map(row=>({name:row.name,ok:row.ok,checks:row.checks}));const result=await sendSubmission({name,task:lastSubmission.task,code:lastSubmission.code,passed:lastSubmission.passed,total:3,score:lastSubmission.score,details:JSON.stringify(details)});
-    progress.scores=progress.scores||{};progress.scores[tasks[currentTask].id]=lastSubmission.score;if(lastSubmission.score===100){progress.solved=Array.from(new Set([...(progress.solved||[]),tasks[currentTask].id]));}saveProgress();button.textContent='✓ Terkirim';toast(`Tugas berhasil dikirim. Nilai: ${result.score??lastSubmission.score}/100.`);
-  }catch(error){button.disabled=false;button.textContent='✓ Submit Mission';toast(error.message||'Pengiriman gagal.','bad');}
+    progress.scores=progress.scores||{};progress.scores[tasks[currentTask].id]=lastSubmission.score;if(lastSubmission.score===100){progress.solved=Array.from(new Set([...(progress.solved||[]),tasks[currentTask].id]));}saveProgress();button.innerHTML=`${icon('checkCircle',14)}<span>Terkirim</span>`;toast(`Tugas berhasil dikirim. Nilai: ${result.score??lastSubmission.score}/100.`);
+  }catch(error){button.disabled=false;button.innerHTML=`${icon('upload',14)}<span>Submit Mission</span>`;toast(error.message||'Pengiriman gagal.','bad');}
 }
-function clearConsole(){ $('#outputView').innerHTML='<div class="empty-console"><span class="terminal-glyph">›_</span><div><strong>Terminal output</strong><p>Jalankan kode.</p></div></div>';$('#testsView').innerHTML='<div class="empty-console"><div><strong>Belum ada hasil test</strong></div></div>';$('#testResultCount').textContent='—';$('#runDuration').textContent='';showConsole('output'); }
+function clearConsole(){ $('#outputView').innerHTML=`<div class="empty-console"><span class="terminal-glyph">${icon('terminal',18)}</span><div><strong>Terminal output</strong><p>Jalankan kode.</p></div></div>`;$('#testsView').innerHTML=`<div class="empty-console"><span class="terminal-glyph">${icon('checkCircle',18)}</span><div><strong>Belum ada hasil test</strong></div></div>`;$('#testResultCount').textContent='—';$('#runDuration').textContent='';showConsole('output'); }
 function showWarning(title,message){const modal=$('#clipboardWarningModal');$('#clipboardWarningTitle').textContent=title;$('#clipboardWarningMessage').textContent=message;modal.classList.remove('hidden');modal.setAttribute('aria-hidden','false');document.body.classList.add('modal-open');$('#clipboardWarningAcknowledge').focus();}
 function closeWarning(){const modal=$('#clipboardWarningModal');modal.classList.add('hidden');modal.setAttribute('aria-hidden','true');document.body.classList.remove('modal-open');}
 function initEditor(){
