@@ -33,7 +33,8 @@ function icon(name,size=14,className='') {
   return `<svg class="ui-icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${shape}</svg>`;
 }
 
-const SESSION_SECONDS = 90 * 60;
+const SESSION_SECONDS = Math.max(1, Number(RULES.sessionMinutes) || 70) * 60;
+const DEADLINE_TIMESTAMP = Date.parse(RULES.deadlineAt || '2026-11-03T14:50:00+07:00');
 const START_KEY = 'cppMissionLab_sessionStart_v3';
 const FINISHED_KEY = 'cppMissionLab_sessionFinished_v3';
 const PENALTY_KEY = 'cppMissionLab_penaltySeconds_v1';
@@ -125,6 +126,17 @@ function formatClock(totalSeconds) {
   const seconds = String(safe % 60).padStart(2, '0');
   return minutes + ':' + seconds;
 }
+function formatCountdown(totalSeconds) {
+  const safe = Math.max(0, Math.floor(totalSeconds));
+  const hours = String(Math.floor(safe / 3600)).padStart(2, '0');
+  const minutes = String(Math.floor((safe % 3600) / 60)).padStart(2, '0');
+  const seconds = String(safe % 60).padStart(2, '0');
+  return hours + ':' + minutes + ':' + seconds;
+}
+function deadlineRemainingSeconds() {
+  if (!Number.isFinite(DEADLINE_TIMESTAMP)) return 0;
+  return Math.max(0, Math.ceil((DEADLINE_TIMESTAMP - Date.now()) / 1000));
+}
 function renderPenalty() {
   const total = getPenaltySeconds();
   const chip = $('#penaltyChip');
@@ -142,10 +154,26 @@ function baseRemaining() {
 function remainingSeconds() { return baseRemaining(); }
 function updateTimer() {
   const seconds = remainingSeconds();
+  const deadlineSeconds = deadlineRemainingSeconds();
+  const deadlineText = formatCountdown(deadlineSeconds);
   $('#timerDisplay').textContent = formatClock(seconds);
   $('#timerDisplay').style.color = seconds === 0 ? '#ff8997' : '';
+  const deadlineDisplay = $('#deadlineDisplay');
+  const deadlineModalCountdown = $('#deadlineModalCountdown');
+  if (deadlineDisplay) deadlineDisplay.textContent = deadlineText;
+  if (deadlineModalCountdown) deadlineModalCountdown.textContent = deadlineText;
+  const startButton = $('#startSessionSubmit');
+  if (startButton) startButton.disabled = deadlineSeconds <= 0 || sessionFinished;
+  const deadlineMessage = $('#deadlineModalMessage');
+  if (deadlineMessage && deadlineSeconds <= 0) {
+    deadlineMessage.textContent = 'Batas akhir pukul ' + (RULES.deadlineLabel || '14.50 WIB') + ' telah tercapai. Sesi baru tidak dapat dimulai.';
+  }
   renderPenalty();
-  if (seconds <= 0 && sessionStarted) finishSession(true);
+  if (sessionStarted && deadlineSeconds <= 0) {
+    finishSession(true, 'Batas akhir pengerjaan pukul ' + (RULES.deadlineLabel || '14.50 WIB') + ' telah tercapai.');
+  } else if (sessionStarted && seconds <= 0) {
+    finishSession(true, 'Waktu pengerjaan ' + SESSION_SECONDS / 60 + ' menit telah habis.');
+  }
 }
 function recordViolation(reason) {
   if (!sessionStarted || sessionFinished) return false;
@@ -163,21 +191,26 @@ function recordViolation(reason) {
   toast('Pelanggaran dicatat · −' + penaltyLabel + ' · Sisa waktu ' + formatClock(after), 'bad');
   return true;
 }
-function finishSession(notify=true) {
+function finishSession(notify=true, reason='Waktu pengerjaan habis. Semua tantangan dikunci.') {
   if(sessionFinished)return;sessionFinished=true;localStorage.setItem(FINISHED_KEY,'1');if(timerInterval){clearInterval(timerInterval);timerInterval=null;}
-  if(compileWorker)compileWorker.terminate();if(runtimeWorker)runtimeWorker.terminate();if(cancelActive)cancelActive(new Error('Waktu pengerjaan habis. Proses dibatalkan.'));
-  updateSessionLock();if(notify)toast('Waktu pengerjaan habis. Semua tantangan dikunci.','bad');
+  if(compileWorker)compileWorker.terminate();if(runtimeWorker)runtimeWorker.terminate();if(cancelActive)cancelActive(new Error(reason));
+  updateSessionLock();if(notify)toast(reason,'bad');
 }
 function startSession() {
-  if(sessionStarted||sessionFinished)return;
+  if(sessionStarted||sessionFinished)return false;
+  if (deadlineRemainingSeconds() <= 0) {
+    finishSession(true, 'Batas akhir pengerjaan pukul ' + (RULES.deadlineLabel || '14.50 WIB') + ' telah tercapai.');
+    return false;
+  }
   localStorage.setItem(PENALTY_KEY,'0');
   renderPenalty();
   localStorage.setItem(START_KEY,String(Date.now()));
   sessionStarted=true;
   updateSessionLock();
-  toast('Sesi dimulai. Waktu 90 menit berjalan.');
+  toast('Sesi dimulai. Waktu ' + SESSION_SECONDS / 60 + ' menit berjalan.');
   updateTimer();
-  timerInterval=setInterval(updateTimer,1000);
+  if (!timerInterval) timerInterval=setInterval(updateTimer,1000);
+  return true;
 }
 function openStartSessionModal() {
   const modal=$('#startSessionModal');
@@ -465,6 +498,7 @@ function bindEvents(){
 }
 
 initEditor();initEditorResizer();bindEvents();renderProgress();renderTask(0);updateSessionLock();renderPenalty();
-if(sessionStarted&&!sessionFinished){updateTimer();timerInterval=setInterval(updateTimer,1000);}
+if(sessionStarted&&!sessionFinished){updateTimer();}
 else if(sessionFinished)updateTimer();
-else openStartSessionModal();
+else {openStartSessionModal();updateTimer();}
+if(!sessionFinished)timerInterval=setInterval(updateTimer,1000);
