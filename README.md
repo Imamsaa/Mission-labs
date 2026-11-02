@@ -8,6 +8,7 @@ Web tugas praktik C++ dengan satu challenge praktik gabungan materi. Mekanisme p
 2. Siswa mengisi nama lengkap dan menekan **Mulai Sesi**. Timer 90 menit berjalan setelah itu.
 3. Tidak ada mode istirahat. Setiap pelanggaran aturan yang terdeteksi mengurangi sisa waktu sebanyak 5 menit.
 4. Editor CodeMirror 6 menyediakan syntax highlighting C++, nomor baris, autocomplete dasar, auto-indent, comment shortcut, Tab indent, dan Ctrl+Enter.
+4a. Tinggi editor dapat diperbesar atau diperkecil dengan menarik handle di bawah area kode; pilihan tinggi disimpan di browser.
 5. Tab STDIN menerima input berbaris untuk program yang menggunakan `cin`, `getline`, dan `cin.ignore()`.
 6. **Run Code** mengompilasi lalu menjalankan kode terhadap STDIN yang dimasukkan siswa.
 7. **Check Tests** menjalankan tiga skenario terpisah untuk tiap misi. Pemeriksaan membaca nilai pada baris output yang memiliki label wajib. Nilai otomatis = `test lolos / 3 × 100`.
