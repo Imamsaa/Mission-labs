@@ -12,7 +12,7 @@ Web tugas praktik C++ dengan satu challenge praktik gabungan materi. Mekanisme p
 6. Tab STDIN menerima input berbaris untuk program yang menggunakan `cin`, `getline`, dan `cin.ignore()`.
 7. **Run Code** mengompilasi lalu menjalankan kode terhadap STDIN yang dimasukkan siswa.
 8. **Check Tests** menjalankan tiga skenario terpisah untuk tiap misi. Pemeriksaan membaca nilai pada baris output yang memiliki label wajib. Nilai otomatis = `test lolos / 3 × 100`.
-9. **Submit Mission** baru aktif setelah pengujian. Submission mengirim nama, tugas, source code, jumlah test lolos, nilai, dan rincian pemeriksaan ke Google Spreadsheet.
+9. **Submit Mission** baru aktif setelah pengujian. Submission mengirim nama, tugas, tanggal/jam submit, keberhasilan test, source code, waktu mulai, sisa waktu, lama pengerjaan, jumlah dan rincian pelanggaran ke Google Spreadsheet.
 10. Draft, identitas nama, progres, waktu sesi, dan total penalti disimpan di localStorage.
 11. Pelanggaran yang diberi penalti meliputi copy, cut, paste, drag-and-drop kode, menyeleksi/menyalin soal atau membuka menu konteks pada area soal, shortcut screenshot/print, shortcut Developer Tools/View Source, dan berpindah tab. Setiap kejadian mengurangi 300 detik; akumulasi penalti disimpan di localStorage dan ditampilkan di header.
 12. Saat waktu habis, editor, Run, Check Tests, navigasi misi, dan Submit dikunci pada browser tersebut.
@@ -60,7 +60,7 @@ Pengiriman menggunakan JSONP chunk agar kode sumber yang panjang dapat dikirim m
 
 ## Kolom spreadsheet
 
-Nama Peserta · Tugas · Waktu Submit · Kode C++ · Status · Test Lolos · Total Test · Nilai Akhir · Rincian Pengujian.
+Nama Peserta · Tugas · Waktu Submit · Tanggal Submit · Jam Submit · Status · Keberhasilan · Test Lolos · Total Test · Nilai Akhir · Kode C++ · Waktu Mulai · Sisa Waktu Saat Submit · Lama Pengerjaan · Jumlah Pelanggaran · Rincian Pelanggaran · Rincian Pengujian.
 
 ## Batasan integritas dan keamanan
 
@@ -89,3 +89,9 @@ Catatan: konfigurasi ini mengendalikan perilaku halaman. Browser tidak dapat men
 - Countdown batas akhir tampil di modal pembuka dan header saat siswa mengerjakan.
 - Sesi otomatis dikunci ketika salah satu countdown mencapai nol.
 - Kedua pengaturan dapat diubah di `js/rules.config.js` melalui `sessionMinutes` dan `deadlineAt`.
+
+
+### Data sesi dan pelanggaran
+Setiap submit menyimpan waktu mulai, sisa waktu saat submit, lama pengerjaan (format HH:MM:SS), jumlah pelanggaran, dan daftar pelanggaran yang terdeteksi. Timestamp submit dihasilkan oleh Apps Script dan diformat dengan zona waktu `Asia/Jakarta`. Perubahan skema bersifat aditif: `setup()` menambahkan header yang belum ada tanpa menghapus kolom atau baris lama.
+
+**Penting setelah mengganti `Code.gs`:** salin kode terbaru ke Apps Script. Buka **Deploy → Manage deployments → Edit → New version → Deploy** agar Web App yang aktif menggunakan skema baru. Jalankan `setup()` sekali untuk menambahkan header baru ke sheet.
