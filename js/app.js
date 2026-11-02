@@ -319,6 +319,48 @@ function bindEvents(){
   editorHost.addEventListener('dragover', event => {
     if (sessionStarted && !sessionFinished) event.preventDefault();
   }, true);
+  const problemPanel = $('.problem-panel');
+  // Focus the non-editable question surface when a student interacts with its text.
+  problemPanel.addEventListener('pointerdown', event => {
+    if (!event.target.closest('button')) problemPanel.focus({preventScroll:true});
+  });
+  // Text selection is disabled with CSS; this also blocks keyboard/context selection paths.
+  problemPanel.addEventListener('selectstart', event => {
+    event.preventDefault();
+  }, true);
+  problemPanel.addEventListener('contextmenu', event => {
+    if (!sessionStarted || sessionFinished) return;
+    event.preventDefault();
+    event.stopPropagation();
+    recordViolation('Membuka menu konteks pada area soal');
+  }, true);
+  document.addEventListener('keydown', event => {
+    if (!sessionStarted || sessionFinished || !problemPanel.contains(document.activeElement)) return;
+    const key = String(event.key || '').toLowerCase();
+    if ((event.ctrlKey || event.metaKey) && ['c','x','v','a'].includes(key)) {
+      event.preventDefault();
+      event.stopPropagation();
+      const action = key === 'c' ? 'Menyalin teks soal' : key === 'x' ? 'Memotong teks soal' : key === 'v' ? 'Menempelkan konten ke area soal' : 'Memilih seluruh teks soal';
+      recordViolation(action);
+    }
+  }, true);
+  // Catch clipboard actions even when the browser reports document/body as the event target.
+  function selectionTouchesProblemPanel() {
+    const selection = window.getSelection();
+    if (!selection || selection.isCollapsed || selection.rangeCount === 0) return false;
+    try {
+      for (let i = 0; i < selection.rangeCount; i++) {
+        if (selection.getRangeAt(i).intersectsNode(problemPanel)) return true;
+      }
+    } catch (error) { /* Ignore stale selection ranges. */ }
+    return false;
+  }
+  ['copy','cut'].forEach(type => document.addEventListener(type, event => {
+    if (!sessionStarted || sessionFinished || !selectionTouchesProblemPanel()) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    recordViolation(type === 'copy' ? 'Menyalin teks soal' : 'Memotong teks soal');
+  }, true));
   let leftTab=false;document.addEventListener('visibilitychange',()=>{
     if(document.hidden){leftTab=sessionStarted&&!sessionFinished;return;}
     if(leftTab){leftTab=false;recordViolation('Berpindah atau meninggalkan tab Mission Lab');}
