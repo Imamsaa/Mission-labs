@@ -290,7 +290,8 @@ function renderTests(rows,total) {
   $('#testsView').innerHTML=`<div class="result-summary ${passed===total?'pass':'fail'}"><div class="result-score">${passed}/${total}</div><div><strong>${passed===total?'Semua test berhasil':'Masih ada test gagal'}</strong><br><small>SUBMISSION TEST · ${total} TEST CASE</small></div></div>`+rows.map((row,i)=>`<details class="test-detail" ${i===0?'open':''}><summary><span>${escapeHTML(row.hidden?'Hidden test':row.name)}</span><b class="${row.ok?'pass':'fail'} status-inline">${icon(row.ok?'check':'x',12)}<span>${row.ok?'PASS':'FAIL'}</span></b></summary>${row.hidden?'':`<div class="check-list">${row.checks.map(c=>`<div class="check-line"><span>${escapeHTML(c.label)}</span><span class="${c.ok?'pass':'fail'} status-inline">${icon(c.ok?'check':'x',12)}<span>${escapeHTML(c.actual??'Label tidak ditemukan')}</span></span></div>`).join('')}</div><pre class="test-output">${escapeHTML(row.output||'(Tidak ada output)')}</pre>`}</details>`).join('');return passed;
 }
 async function execute(mode) {
-  if(!sessionStarted||sessionFinished||compileBusy){toast('Mulai sesi atau tunggu proses selesai.','bad');return;}
+  if (sessionStarted && (remainingSeconds() <= 0 || deadlineRemainingSeconds() <= 0)) updateTimer();
+  if(!sessionStarted||sessionFinished||compileBusy){toast('Sesi belum aktif, batas waktu telah tercapai, atau proses masih berjalan.','bad');return;}
   const source=getCode();if(!source.trim()){toast('Editor masih kosong.','bad');return;}if(!/\bmain\s*\(/.test(source)){toast('Program harus memiliki fungsi main().','bad');return;}
   compileBusy=true;['runBtn','checkTestsBtn','submitBtn'].forEach(id=>$( '#' + id).disabled=true);const started=performance.now();$('#runDuration').textContent='Compiling';
   try {
@@ -315,7 +316,8 @@ function jsonpRequest(parameters) {
 }
 async function sendSubmission(payload) { const encoded=toBase64Url(JSON.stringify(payload));const chunks=encoded.match(/.{1,650}/g)||[''];const session=(crypto.randomUUID?crypto.randomUUID():`${Date.now()}_${Math.random().toString(36).slice(2)}`).replace(/-/g,'');let result;for(let i=0;i<chunks.length;i++)result=await jsonpRequest({action:'chunk',session,index:i,total:chunks.length,data:chunks[i]});if(!result?.complete)throw new Error('Submission belum diterima lengkap.');return result; }
 async function submitMission() {
-  if(!sessionStarted||sessionFinished||remainingSeconds()<=0){if(sessionStarted&&remainingSeconds()<=0)finishSession();toast('Sesi belum aktif atau sudah berakhir.','bad');return;}
+  if (sessionStarted && (remainingSeconds() <= 0 || deadlineRemainingSeconds() <= 0)) updateTimer();
+  if(!sessionStarted||sessionFinished){toast('Sesi belum aktif atau batas waktu pengerjaan telah berakhir.','bad');return;}
   const name=$('#studentName').value.trim();if(!name){toast('Isi nama lengkap siswa terlebih dahulu.','bad');$('#studentName').focus();return;}if(!lastSubmission||lastSubmission.code!==getCode()||lastSubmission.task!==tasks[currentTask].title){toast('Jalankan Check Tests kembali sebelum submit.','bad');return;}
   if(!APPS_SCRIPT_URL||APPS_SCRIPT_URL.includes('PASTE_APPS_SCRIPT')){toast('URL Apps Script belum diatur pada config.js.','bad');return;}
   const button=$('#submitBtn');button.disabled=true;button.innerHTML='<span class="button-spinner" aria-hidden="true"></span><span>Mengirim...</span>';
