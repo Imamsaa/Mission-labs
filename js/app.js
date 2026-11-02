@@ -248,6 +248,73 @@ function initEditor(){
   $('#editorHost').classList.add('editor-ready');
   $('#codeFallback')?.remove();
 }
+const EDITOR_HEIGHT_KEY = 'cppMissionLab_editorHeight_v1';
+function initEditorResizer() {
+  const host = $('#editorHost');
+  const handle = $('#editorResizeHandle');
+  if (!host || !handle) return;
+  const minHeight = 240;
+  const maxHeight = () => Math.max(560, Math.min(1100, Math.floor(window.innerHeight * 0.9)));
+  const clampHeight = value => Math.max(minHeight, Math.min(maxHeight(), Math.round(value)));
+  const applyHeight = value => {
+    const height = clampHeight(value);
+    host.style.height = height + 'px';
+    handle.setAttribute('aria-valuenow', String(height));
+    handle.setAttribute('aria-valuemax', String(maxHeight()));
+    editor?.requestMeasure();
+    return height;
+  };
+  const saved = Number(localStorage.getItem(EDITOR_HEIGHT_KEY));
+  if (Number.isFinite(saved) && saved >= minHeight) applyHeight(saved);
+  else {
+    const initial = Math.round(host.getBoundingClientRect().height || 360);
+    handle.setAttribute('aria-valuenow', String(initial));
+    handle.setAttribute('aria-valuemax', String(maxHeight()));
+  }
+  let drag = null;
+  const stopDrag = event => {
+    if (!drag || (event && event.pointerId !== drag.pointerId)) return;
+    window.removeEventListener('pointermove', moveDrag);
+    window.removeEventListener('pointerup', stopDrag);
+    window.removeEventListener('pointercancel', stopDrag);
+    handle.classList.remove('is-dragging');
+    document.body.classList.remove('editor-resizing');
+    localStorage.setItem(EDITOR_HEIGHT_KEY, String(Math.round(host.getBoundingClientRect().height)));
+    drag = null;
+  };
+  const moveDrag = event => {
+    if (!drag || event.pointerId !== drag.pointerId) return;
+    event.preventDefault();
+    applyHeight(drag.startHeight + event.clientY - drag.startY);
+  };
+  handle.addEventListener('pointerdown', event => {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    drag = {pointerId:event.pointerId,startY:event.clientY,startHeight:host.getBoundingClientRect().height};
+    handle.classList.add('is-dragging');
+    document.body.classList.add('editor-resizing');
+    window.addEventListener('pointermove', moveDrag, {passive:false});
+    window.addEventListener('pointerup', stopDrag);
+    window.addEventListener('pointercancel', stopDrag);
+  });
+  handle.addEventListener('keydown', event => {
+    const current = host.getBoundingClientRect().height;
+    const step = event.shiftKey ? 80 : 24;
+    let next = current;
+    if (event.key === 'ArrowDown') next = current + step;
+    else if (event.key === 'ArrowUp') next = current - step;
+    else if (event.key === 'Home') next = 360;
+    else if (event.key === 'End') next = maxHeight();
+    else return;
+    event.preventDefault();
+    const height = applyHeight(next);
+    localStorage.setItem(EDITOR_HEIGHT_KEY, String(height));
+  });
+  window.addEventListener('resize', () => {
+    handle.setAttribute('aria-valuemax', String(maxHeight()));
+    if (host.style.height) applyHeight(Number.parseFloat(host.style.height));
+  });
+}
 function bindEvents(){
   $('#startTimerBtn').addEventListener('click',startSession);
   document.querySelectorAll('.challenge-item').forEach(button=>button.addEventListener('click',()=>renderTask(Number(button.dataset.task))));
@@ -340,5 +407,5 @@ function bindEvents(){
   });
 }
 
-initEditor();bindEvents();renderProgress();renderTask(0);updateSessionLock();renderPenalty();
+initEditor();initEditorResizer();bindEvents();renderProgress();renderTask(0);updateSessionLock();renderPenalty();
 if(sessionStarted&&!sessionFinished){updateTimer();timerInterval=setInterval(updateTimer,1000);}else if(sessionFinished)updateTimer();
