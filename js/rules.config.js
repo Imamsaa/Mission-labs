@@ -28,5 +28,12 @@ window.MISSION_RULES = Object.freeze({
   penalizeSystemShortcuts: true,
 
   // Besar potongan untuk setiap pelanggaran yang terdeteksi.
-  penaltyMinutes: 5
+  penaltyMinutes: 5,
+
+  // Durasi kerja tiap siswa sejak menekan Mulai Sesi.
+  sessionMinutes: 70,
+
+  // Batas akhir bersama: 3 November 2026, pukul 14.50 WIB (UTC+7).
+  deadlineAt: '2026-11-03T14:50:00+07:00',
+  deadlineLabel: '14.50 WIB'
 });
