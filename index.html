@@ -29,7 +29,7 @@
     <header class="topbar">
       <a class="brand" href="./"><span class="brand-mark" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 4l-4 16"/></svg></span><span class="brand-title">C++ MISSION LAB</span></a>
       <div class="event-label"><span class="live-dot"></span> ICT CLASS <span class="event-divider">/</span> PRACTICAL CHALLENGE</div>
-      <div class="top-actions"><div class="timer-chip"><span class="timer-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span id="timerDisplay">90:00</span><span class="timer-label">REMAINING</span></div><span class="penalty-chip" id="penaltyChip" hidden title="Total pengurangan waktu"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3.9 2.5 17.4A2 2 0 0 0 4.2 20h15.6a2 2 0 0 0 1.7-2.6L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4m0 3h.01"/></svg><span id="penaltyDisplay">−05:00</span></span><button id="startTimerBtn" class="btn btn-quiet btn-small">Mulai Sesi</button></div>
+      <div class="top-actions"><div class="timer-chip"><span class="timer-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span id="timerDisplay">90:00</span><span class="timer-label">REMAINING</span></div><span class="penalty-chip" id="penaltyChip" hidden title="Total pengurangan waktu"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3.9 2.5 17.4A2 2 0 0 0 4.2 20h15.6a2 2 0 0 0 1.7-2.6L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4m0 3h.01"/></svg><span id="penaltyDisplay">−05:00</span></span></div>
     </header>
     <div class="workspace">
       <aside class="sidebar panel">
@@ -63,12 +63,29 @@
           <div id="testsView" class="console-view hidden"><div class="empty-console"><span class="terminal-glyph"><svg class="ui-icon" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></span><div><strong>Belum ada hasil test</strong><p>Gunakan Check Tests untuk menjalankan tiga skenario penilaian.</p></div></div></div>
         </div>
         <div class="runbar"><div class="runbar-note"><span class="shield-icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"/><path d="m9 12 2 2 4-4"/></svg></span> Compiled &amp; executed locally in WebAssembly</div><div class="run-actions"><button id="runBtn" class="btn btn-secondary"><svg class="ui-icon" viewBox="0 0 24 24"><path d="m8 5 12 7-12 7V5Z"/></svg><span>Run Code</span></button><button id="checkTestsBtn" class="btn btn-secondary"><svg class="ui-icon" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg><span>Check Tests</span></button><button id="submitBtn" class="btn btn-primary" disabled><svg class="ui-icon" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M5 20h14"/></svg><span>Submit Mission</span></button></div></div>
-        <div class="student-submit"><label for="studentName">NAMA LENGKAP SISWA</label><input id="studentName" type="text" maxlength="120" placeholder="Masukkan nama lengkap" autocomplete="name"><span id="scorePreview">Jalankan Check Tests sebelum submit.</span></div>
+        <input id="studentName" type="hidden" value=""><div class="student-submit"><span id="scorePreview">Jalankan Check Tests sebelum submit.</span></div>
       </section>
     </div>
     <footer class="page-footer"><span>ICT CLASS · SMPIT AL FIRDAUS PURWODADI</span><span>POWERED BY <strong>WEBASSEMBLY</strong> · C++17</span></footer>
   </div>
   <div id="toastRegion" class="toast-region" aria-live="polite"></div>
+  <div id="startSessionModal" class="start-session-modal hidden" role="dialog" aria-modal="true" aria-labelledby="startSessionTitle" aria-hidden="true">
+    <div class="start-session-backdrop"></div>
+    <form id="startSessionForm" class="start-session-card" novalidate>
+      <div class="start-session-brand">
+        <span class="start-session-mark" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 4l-4 16"/></svg></span>
+        <span>ICT CLASS <i>/</i> PRACTICAL CHALLENGE</span>
+      </div>
+      <p class="start-session-eyebrow">C++ MISSION LAB</p>
+      <h2 id="startSessionTitle">Siap memulai tantangan?</h2>
+      <p class="start-session-description">Masukkan nama lengkap sebelum mengerjakan Smart Canteen. Timer 90 menit akan langsung berjalan setelah kamu menekan tombol mulai.</p>
+      <label for="startStudentName">NAMA LENGKAP</label>
+      <input id="startStudentName" type="text" maxlength="120" placeholder="Contoh: Ahmad Fulan" autocomplete="name" required>
+      <p id="startSessionError" class="start-session-error" role="alert" hidden>Nama lengkap wajib diisi.</p>
+      <div class="start-session-note"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>90 menit · 1 tantangan · Waktu tidak dapat dijeda</span></div>
+      <button id="startSessionSubmit" class="btn btn-primary start-session-button" type="submit"><span>Mulai Sesi</span><svg class="ui-icon" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
+    </form>
+  </div>
   <div id="clipboardWarningModal" class="clipboard-modal hidden" role="dialog" aria-modal="true" aria-labelledby="clipboardWarningTitle" aria-hidden="true">
     <div class="clipboard-modal-backdrop"></div><div class="clipboard-modal-card"><div class="clipboard-modal-icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M10.3 3.9 2.5 17.4A2 2 0 0 0 4.2 20h15.6a2 2 0 0 0 1.7-2.6L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4m0 3h.01"/></svg></div><p class="clipboard-modal-eyebrow">ATURAN MISSION LAB</p><h2 id="clipboardWarningTitle">Peringatan</h2><p id="clipboardWarningMessage" class="clipboard-modal-message"></p><button id="clipboardWarningAcknowledge" class="btn btn-primary clipboard-modal-button" type="button">Saya Mengerti</button></div>
   </div>
