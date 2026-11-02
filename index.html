@@ -22,7 +22,7 @@
       "w3c-keyname":"https://esm.sh/w3c-keyname"
     }}
   </script>
-  <link rel="stylesheet" href="./css/style.css?v=compact-mission-card-20261103" />
+  <link rel="stylesheet" href="./css/style.css?v=flexible-editor-height-20261103" />
 </head>
 <body>
   <div class="app-shell">
@@ -52,6 +52,10 @@
         <div class="editor-topbar"><div class="file-tab"><span class="file-dot"></span><span>main.cpp</span></div><div class="editor-tools"><span class="editor-policy-chip">C++17 · WEBASSEMBLY</span><button id="resetCodeBtn" class="tool-btn"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5"/></svg><span>Reset</span></button></div></div>
         <div class="editor-caption"><span><i class="status-dot"></i> EDITOR</span><span id="editorStatus">Draft tersimpan lokal</span></div>
         <div id="editorHost" class="editor-host"><textarea id="codeFallback" spellcheck="false" aria-label="Editor kode C++"></textarea><div id="sessionLockOverlay" class="session-lock-overlay"><div class="session-lock-card"><span class="session-lock-icon"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><strong id="sessionLockTitle">Sesi belum dimulai</strong><p id="sessionLockMessage">Baca tantangan terlebih dahulu. Editor akan terbuka setelah menekan Mulai Sesi.</p><small>Waktu pengerjaan dimulai saat sesi dibuka.</small></div></div></div>
+        <div id="editorResizeHandle" class="editor-resize-handle" role="separator" aria-orientation="horizontal" aria-label="Tarik untuk mengubah tinggi editor" aria-controls="editorHost" aria-valuemin="240" aria-valuemax="900" aria-valuenow="360" tabindex="0">
+          <span class="editor-resize-grip" aria-hidden="true"></span>
+          <small>DRAG UNTUK MEMPERBESAR EDITOR</small>
+        </div>
         <div class="editor-footer"><span>Ln <b id="lineCount">1</b>, Col <b id="columnCount">1</b></span><span>UTF-8 · C++17</span><span class="shortcut-hint"><kbd>Tab</kbd> Indent · <kbd>Ctrl</kbd>+<kbd>Enter</kbd> Run</span></div>
         <div class="console-panel"><div class="console-header"><div class="console-tabs"><button class="console-tab active" data-console-tab="input">STDIN</button><button class="console-tab" data-console-tab="output">OUTPUT</button><button class="console-tab" data-console-tab="tests">TEST RESULTS <span class="console-count" id="testResultCount">—</span></button></div><div class="console-actions"><span id="runDuration"></span><button class="clear-btn" id="clearOutputBtn">Clear</button></div></div>
           <div id="inputView" class="console-view stdin-view"><div class="stdin-toolbar"><div><strong>STANDARD INPUT</strong><small>Input dibaca melalui cin / getline sesuai urutan soal.</small></div><button id="useSampleInputBtn" class="clear-btn">Gunakan contoh</button></div><textarea id="stdinInput" class="stdin-input" rows="4" spellcheck="false" placeholder="Masukkan data setiap baris..."></textarea><div class="stdin-help">Input diberikan sekaligus seperti berkas stdin. Gunakan cin.ignore() saat berpindah dari cin ke getline().</div></div>
