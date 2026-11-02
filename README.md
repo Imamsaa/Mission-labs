@@ -5,7 +5,7 @@ Web tugas praktik C++ dengan satu challenge praktik gabungan materi. Mekanisme p
 ## Fitur dan alur siswa
 
 1. Siswa dapat membaca challenge brief, rubrik penilaian, dan cakupan materi sebelum sesi dimulai.
-2. Saat pertama membuka halaman, modal meminta nama lengkap siswa. Setelah menekan **Mulai Sesi**, nama tersimpan dan timer 90 menit langsung berjalan.
+2. Saat pertama membuka halaman, modal meminta nama lengkap siswa. Setelah menekan **Mulai Sesi**, nama tersimpan dan timer individu 70 menit langsung berjalan. Sesi juga dibatasi deadline bersama pukul 14.50 WIB.
 3. Tidak ada mode istirahat. Setiap pelanggaran aturan yang terdeteksi mengurangi sisa waktu sebanyak 5 menit.
 4. Editor CodeMirror 6 menyediakan syntax highlighting C++, nomor baris, autocomplete dasar, auto-indent, comment shortcut, Tab indent, dan Ctrl+Enter.
 5. Tinggi editor dapat diperbesar atau diperkecil dengan menarik handle di bawah area kode; pilihan tinggi disimpan di browser.
