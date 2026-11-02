@@ -22,14 +22,14 @@
       "w3c-keyname":"https://esm.sh/w3c-keyname"
     }}
   </script>
-  <link rel="stylesheet" href="./css/style.css?v=ui-ux-final-polish-20261103" />
+  <link rel="stylesheet" href="./css/style.css?v=five-minute-penalty-20261103" />
 </head>
 <body>
   <div class="app-shell">
     <header class="topbar">
       <a class="brand" href="./"><span class="brand-mark" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 4l-4 16"/></svg></span><span class="brand-title">C++ MISSION LAB</span></a>
       <div class="event-label"><span class="live-dot"></span> ICT CLASS <span class="event-divider">/</span> PRACTICAL CHALLENGE</div>
-      <div class="top-actions"><div class="timer-chip"><span class="timer-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span id="timerDisplay">90:00</span><span class="timer-label">REMAINING</span></div><button id="startTimerBtn" class="btn btn-quiet btn-small">Mulai Sesi</button><span id="breakCountChip" class="break-count" hidden>Istirahat 0/2</span><button id="breakBtn" class="btn btn-break btn-small" hidden disabled><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h13v7a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V8Z"/><path d="M17 10h2a2 2 0 0 1 0 4h-2M8 3v2m5-2v2"/></svg><span>Mulai Istirahat</span></button></div>
+      <div class="top-actions"><div class="timer-chip"><span class="timer-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span id="timerDisplay">90:00</span><span class="timer-label">REMAINING</span></div><span class="penalty-chip" id="penaltyChip" hidden title="Total pengurangan waktu"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3.9 2.5 17.4A2 2 0 0 0 4.2 20h15.6a2 2 0 0 0 1.7-2.6L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4m0 3h.01"/></svg><span id="penaltyDisplay">−05:00</span></span><button id="startTimerBtn" class="btn btn-quiet btn-small">Mulai Sesi</button><span id="breakCountChip" class="break-count" hidden>Istirahat 0/2</span><button id="breakBtn" class="btn btn-break btn-small" hidden disabled><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h13v7a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V8Z"/><path d="M17 10h2a2 2 0 0 1 0 4h-2M8 3v2m5-2v2"/></svg><span>Mulai Istirahat</span></button></div>
     </header>
     <div class="workspace">
       <aside class="sidebar panel">
@@ -40,7 +40,7 @@
         </div>
         <div class="sidebar-bottom">
           <div class="progress-card"><div class="progress-top"><span>PROGRESS KAMU</span><strong id="progressPercent">0%</strong></div><div class="progress-track"><span id="progressBar"></span></div><p><strong id="solvedCount">0</strong> dari 2 misi selesai · <strong id="xpTotal">0</strong> XP</p></div>
-          <div class="sidebar-note"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.4 5.2L20 10l-5.6 1.8L12 17l-2.4-5.2L4 10l5.6-1.8L12 3Z"/><path d="m19 16 .9 2.1L22 19l-2.1.9L19 22l-.9-2.1L16 19l2.1-.9L19 16Z"/></svg><span>Kerjakan mandiri. Uji sebelum mengirim.</span></div>
+          <div class="sidebar-note"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.4 5.2L20 10l-5.6 1.8L12 17l-2.4-5.2L4 10l5.6-1.8L12 3Z"/><path d="m19 16 .9 2.1L22 19l-2.1.9L19 22l-.9-2.1L16 19l2.1-.9L19 16Z"/></svg><span>Setiap pelanggaran aturan mengurangi waktu 5 menit.</span></div>
         </div>
       </aside>
       <main class="problem-panel panel">
@@ -71,5 +71,5 @@
   </div>
   <div id="loadingOverlay" class="loading-overlay hidden"><div class="loading-card"><div class="loader-ring"></div><p class="eyebrow">WASM COMPILER</p><h2 id="loadingTitle">Menyiapkan compiler...</h2><p id="loadingMessage">Menginisialisasi C++ di browser.</p><div class="loading-progress"><span id="loadingProgress"></span></div><small>Proses pertama kali bisa membutuhkan waktu lebih lama.</small></div></div>
   <script src="./js/config.js"></script>
-  <script type="module" src="./js/app.js?v=ui-ux-icons-polish-20261103"></script>
+  <script type="module" src="./js/app.js?v=five-minute-penalty-20261103"></script>
 </body></html>
