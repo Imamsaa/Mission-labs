@@ -67,39 +67,6 @@ Total Bayar: 76500</pre><p class="hint">Prompt tambahan boleh ditampilkan, tetap
       { name: 'Test 3 · Kode tidak valid', input: '1\n2 3\n9 1\n4 1\n0 0\n1', hidden:true, checks: [['Jumlah Transaksi',2],['Jumlah Barang',4],['Subtotal',28000],['Diskon',2800],['Biaya Admin',0],['Total Bayar',25200]] },
     ],
   },
-  {
-    id: 'student-analytics', title: 'Student Analytics', subtitle: 'Bangun aplikasi pengolah nilai kelas, predikat, kelulusan, dan laporan statistik.', category: 'DATA PROCESSING & REPORTING', sampleInput: '3\nAndi Pratama\n90 80 90 100\nBudi Santoso\n70 70 70 90\nCitra Lestari\n80 90 100 75\n1\n0',
-    brief: `<p class="problem-description">Wali kelas ingin mengolah nilai siswa secara otomatis. Program harus menerima data satu kelas, menghitung nilai akhir berbobot, menentukan predikat dan kelulusan, lalu menyediakan beberapa jenis laporan yang dapat dipilih berulang kali.</p>
-      <div class="section-block"><h3>Komponen nilai akhir</h3><table class="task-table"><thead><tr><th>Komponen</th><th>Bobot</th></tr></thead><tbody><tr><td>Nilai Tugas</td><td>20%</td></tr><tr><td>Nilai PTS</td><td>30%</td></tr><tr><td>Nilai PAS</td><td>50%</td></tr></tbody></table><p>Rumus: <code>nilaiAkhir = tugas × 0.20 + PTS × 0.30 + PAS × 0.50</code>.</p></div>
-      <div class="section-block"><h3>Ketentuan program</h3><ol><li>Minta jumlah siswa antara 1–30. Gunakan <code>while</code> untuk meminta ulang jika jumlah di luar rentang.</li><li>Gunakan <code>for</code> untuk memproses seluruh siswa.</li><li>Masukkan nama lengkap menggunakan <code>getline</code>. Atur perpindahan input menggunakan <code>cin.ignore()</code>.</li><li>Masukkan nilai Tugas, PTS, PAS, dan kehadiran (0–100). Gunakan <code>while</code> untuk memvalidasi semua rentang.</li><li>Hitung nilai akhir. Predikat A ≥90, B ≥80, C ≥70, D ≥60, dan E &lt;60.</li><li>Siswa lulus jika nilai akhir ≥75 <b>dan</b> kehadiran ≥80%. Gunakan operator logika.</li><li>Gunakan nested <code>if</code> untuk menentukan status. Hitung rata-rata kelas, nilai tertinggi, jumlah lulus, jumlah remedial, serta distribusi predikat.</li><li>Setelah semua data diproses, sediakan menu laporan berulang dengan <code>do-while</code> dan <code>switch-case</code>.</li></ol></div>
-      <div class="callout"><b>Menu laporan</b><br>1 = Ringkasan kelas<br>2 = Distribusi predikat A–E<br>3 = Siswa terbaik dan persentase kelulusan<br>0 = Keluar dari menu</div>
-      <div class="section-block"><h3>Format input</h3><pre class="sample-block">3                 // jumlah siswa
-Andi Pratama      // nama lengkap
-90 80 90 100      // tugas, PTS, PAS, kehadiran
-Budi Santoso
-70 70 70 90
-Citra Lestari
-80 90 100 75
-1                 // pilih laporan ringkasan
-0                 // keluar</pre><h3>Format laporan wajib</h3><b>Menu 1 – Ringkasan kelas</b><pre class="sample-block">Jumlah Siswa: 3
-Rata-rata Kelas: 83.33
-Nilai Tertinggi: 93.00
-Siswa Lulus: 1
-Siswa Remedial: 2</pre><b>Menu 2 – Distribusi predikat</b><pre class="sample-block">Predikat A: 1
-Predikat B: 1
-Predikat C: 1
-Predikat D: 0
-Predikat E: 0</pre><b>Menu 3 – Siswa terbaik</b><pre class="sample-block">Siswa Terbaik: Citra Lestari
-Nilai Tertinggi: 93.00
-Persentase Lulus: 33.33</pre><p class="hint">Prompt boleh berbeda. Label laporan harus sama. Gunakan <code>fixed</code> dan <code>setprecision(2)</code> untuk angka desimal.</p></div>`,
-    rubric: `<h3>Rubrik penilaian · 100 poin</h3><div class="rubric-list"><div><span>getline, cin.ignore, dan validasi input</span><b>15</b></div><div><span>Perulangan for dan while</span><b>15</b></div><div><span>Nilai akhir berbobot, rata-rata, dan maksimum</span><b>20</b></div><div><span>Predikat, nested if, dan logika kelulusan</span><b>20</b></div><div><span>Menu do-while dan switch-case</span><b>15</b></div><div><span>Statistik dan format laporan</span><b>15</b></div></div><div class="callout">Nilai otomatis berasal dari 3 skenario input. Guru dapat meninjau kode untuk memeriksa cara siswa memproses data.</div>`,
-    materials: `<h3>Materi yang harus tampak dalam kode</h3><ul><li>Variabel integer, double, string.</li><li><code>cin</code>, <code>cout</code>, <code>getline</code>, dan <code>cin.ignore()</code>.</li><li>Operator aritmatika, perbandingan, dan logika.</li><li><code>if / else if / else</code> dan nested <code>if</code>.</li><li><code>for</code> untuk pengolahan data siswa.</li><li><code>while</code> untuk validasi input.</li><li><code>do-while</code> dan <code>switch-case</code> untuk menu laporan.</li></ul><p class="hint">Array, vector, function, struct, dan pointer tidak diperlukan.</p>`,
-    tests: [
-      { name:'Test 1 · Ringkasan kelas', input:'3\nAndi Pratama\n90 80 90 100\nBudi Santoso\n70 70 70 90\nCitra Lestari\n80 90 100 75\n1\n0', checks:[['Jumlah Siswa',3],['Rata-rata Kelas',83.33],['Nilai Tertinggi',93],['Siswa Lulus',1],['Siswa Remedial',2]] },
-      { name:'Test 2 · Distribusi predikat', input:'3\nDina Putri\n100 100 100 90\nEko Saputra\n80 70 60 100\nFina Aulia\n75 80 70 70\n2\n0', hidden:true, checks:[['Predikat A',1],['Predikat B',0],['Predikat C',1],['Predikat D',1],['Predikat E',0]] },
-      { name:'Test 3 · Siswa terbaik', input:'2\nAmir Hakim\n90 90 80 85\nBella Zahra\n60 60 60 90\n3\n0', hidden:true, checks:[['Siswa Terbaik','Amir Hakim'],['Nilai Tertinggi',85],['Persentase Lulus',50]] },
-    ],
-  },
 ];
 
 let currentTask = 0, editor, editorCompartment, timerInterval = null, compileBusy = false;
@@ -123,7 +90,7 @@ try { progress=JSON.parse(localStorage.getItem(PROGRESS_KEY)||'{"solved":[],"dra
 function toast(message,type='good') { const node=document.createElement('div');node.className=`toast ${type}`;node.textContent=message;$('#toastRegion').append(node);setTimeout(()=>node.remove(),3600); }
 function escapeHTML(value) { return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function saveProgress() { localStorage.setItem(PROGRESS_KEY,JSON.stringify(progress));renderProgress(); }
-function renderProgress() { const done=progress.solved.length;$('#solvedCount').textContent=done;$('#xpTotal').textContent=done*500;$('#progressPercent').textContent=`${done*50}%`;$('#progressBar').style.width=`${done*50}%`;tasks.forEach((task,i)=>{const el=$(`#done${i}`);if(el){const solved=progress.solved.includes(task.id);el.innerHTML=icon(solved?'checkCircle':'circle',15,solved?'is-done':'is-pending');el.setAttribute('aria-label',solved?'Selesai':'Belum selesai');}}); }
+function renderProgress() { const validIds=tasks.map(task=>task.id);progress.solved=(progress.solved||[]).filter(id=>validIds.includes(id));const done=progress.solved.length;const percent=tasks.length?Math.round(done/tasks.length*100):0;$('#solvedCount').textContent=done;$('#xpTotal').textContent=done*500;$('#progressPercent').textContent=`${percent}%`;$('#progressBar').style.width=`${percent}%`;tasks.forEach((task,i)=>{const el=$(`#done${i}`);if(el){const solved=progress.solved.includes(task.id);el.innerHTML=icon(solved?'checkCircle':'circle',15,solved?'is-done':'is-pending');el.setAttribute('aria-label',solved?'Selesai':'Belum selesai');}}); }
 function getCode() { return editor.state.doc.toString(); }
 function setCode(value) { editor.dispatch({changes:{from:0,to:editor.state.doc.length,insert:value}}); }
 function saveDraft() { progress.drafts=progress.drafts||{};progress.drafts[tasks[currentTask].id]=getCode();localStorage.setItem(PROGRESS_KEY,JSON.stringify(progress));$('#editorStatus').textContent='Draft tersimpan';if(lastSubmission&&lastSubmission.code!==getCode()){lastSubmission=null;$('#submitBtn').disabled=true;$('#scorePreview').textContent='Kode berubah · Jalankan Check Tests kembali.';}updateCursorInfo(); }
