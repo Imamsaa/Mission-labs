@@ -307,19 +307,107 @@ function updateSessionLock() {
 function showOutput(text,kind='') { $('#outputView').innerHTML=`<pre class="console-output ${kind}">${escapeHTML(text)}</pre>`;showConsole('output'); }
 function showLoading(title,message,percent=15) { $('#loadingTitle').textContent=title;$('#loadingMessage').textContent=message;$('#loadingProgress').style.width=`${percent}%` ;$('#loadingOverlay').classList.remove('hidden'); }
 function hideLoading() { $('#loadingOverlay').classList.add('hidden'); }
-function compileSource(source) {
-  return new Promise((resolve,reject)=>{const worker=new Worker(new URL('./compiler-worker.js',import.meta.url),{type:'module'});compileWorker=worker;cancelActive=reject;
-    const timeout=setTimeout(()=>{worker.terminate();compileWorker=null;cancelActive=null;reject(new Error('Compiler timeout. Periksa koneksi internet lalu coba lagi.'));},180000);
-    worker.onmessage=e=>{clearTimeout(timeout);worker.terminate();compileWorker=null;cancelActive=null;const d=e.data||{};if(d.ok&&d.module)resolve(d.module);else reject(new Error(d.error||'Kompilasi gagal.'));};
-    worker.onerror=e=>{clearTimeout(timeout);worker.terminate();compileWorker=null;cancelActive=null;reject(new Error(e.message||'Compiler worker gagal dimuat.'));};worker.postMessage({source});});
+function runCompilerWorker(source, options = {}) {
+  const mode = options.mode === 'tests' ? 'tests' : 'run';
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(new URL('./compiler-worker.js?v=compiler-parity-20261103', import.meta.url), { type: 'module' });
+    compileWorker = worker;
+    let settled = false;
+    let timeout = null;
+
+    function cleanup() {
+      if (timeout) clearTimeout(timeout);
+      worker.terminate();
+      if (compileWorker === worker) compileWorker = null;
+      if (cancelActive === cancel) cancelActive = null;
+    }
+    function cancel(error) {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(error instanceof Error ? error : new Error(String(error || 'Proses dibatalkan.')));
+    }
+    function finish(value) {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      resolve(value);
+    }
+    function armTimeout(milliseconds, message) {
+      if (timeout) clearTimeout(timeout);
+      timeout = setTimeout(() => cancel(new Error(message)), milliseconds);
+    }
+
+    cancelActive = cancel;
+    armTimeout(180000, 'Compiler timeout. Periksa koneksi internet lalu coba lagi.');
+
+    worker.onmessage = event => {
+      const data = event.data || {};
+
+      if (data.type === 'status') {
+        showLoading('Menyiapkan compiler C++17...', data.message || 'Memuat Clang WebAssembly.', 20);
+        return;
+      }
+
+      if (data.type === 'compile-success') {
+        armTimeout(5000, 'TIME LIMIT EXCEEDED: program berjalan lebih dari 5 detik. Periksa kemungkinan infinite loop.');
+        if (mode === 'run') {
+          showLoading('Menjalankan program...', 'Program dieksekusi pada worker WebAssembly.', 75);
+        }
+        return;
+      }
+
+      if (data.type === 'test-case-start') {
+        armTimeout(5000, 'TIME LIMIT EXCEEDED: test case berjalan lebih dari 5 detik. Periksa kemungkinan infinite loop.');
+        showLoading('Pengujian ' + (data.index + 1) + '/' + data.total, data.message || 'Menjalankan test case...', 35 + ((data.index + 1) / data.total) * 60);
+        return;
+      }
+
+      if (data.type === 'result' && !data.ok) {
+        cancel(new Error(data.compileOutput || data.error || 'Kompilasi gagal. Compiler tidak menghasilkan modul WebAssembly.'));
+        return;
+      }
+
+      if (data.type === 'stdin-result') {
+        finish({
+          stdout: data.stdout || '',
+          stderr: data.stderr || '',
+          runtimeError: data.runtimeError || '',
+          compileOutput: data.compileOutput || ''
+        });
+        return;
+      }
+
+      if (data.type === 'mission-tests-result') {
+        finish({
+          tests: Array.isArray(data.tests) ? data.tests : [],
+          compileOutput: data.compileOutput || ''
+        });
+      }
+    };
+
+    worker.onerror = event => {
+      cancel(new Error(event.message || 'Compiler worker gagal dimuat. Periksa console browser untuk detail.'));
+    };
+
+    try {
+      worker.postMessage({
+        source,
+        runMode: mode === 'run' ? 'stdin' : 'tests',
+        standard: 'c++17',
+        stdin: options.stdin || '',
+        testCases: (options.tests || []).map(test => ({
+          label: test.name,
+          input: test.input || '',
+          hidden: !!test.hidden
+        }))
+      });
+    } catch (error) {
+      cancel(error);
+    }
+  });
 }
-function runModule(module,input,limit=4000) {
-  return new Promise((resolve,reject)=>{const worker=new Worker(new URL('./runtime-worker.js',import.meta.url),{type:'module'});runtimeWorker=worker;cancelActive=reject;
-    const timeout=setTimeout(()=>{worker.terminate();runtimeWorker=null;cancelActive=null;reject(new Error('TIME LIMIT EXCEEDED: program berjalan lebih dari 4 detik. Periksa kemungkinan infinite loop.'));},limit);
-    worker.onmessage=e=>{clearTimeout(timeout);worker.terminate();runtimeWorker=null;cancelActive=null;const d=e.data||{};if(!d.ok)reject(new Error([d.error,d.stderr].filter(Boolean).join('\n')||'Runtime error'));else resolve({stdout:d.stdout||'',stderr:d.stderr||''});};
-    worker.onerror=e=>{clearTimeout(timeout);worker.terminate();runtimeWorker=null;cancelActive=null;reject(new Error(e.message||'Runtime worker gagal.'));};worker.postMessage({module,input});});
-}
-async function getCompiled(source) { if(compiledSource===source&&compiledModule)return compiledModule;showLoading('Mengompilasi C++17...','Menyiapkan Clang WebAssembly.',20);compiledModule=await compileSource(source);compiledSource=source;return compiledModule; }
+
 function parseLabel(output,label) { const escaped=label.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');const match=output.match(new RegExp(`^\\s*${escaped}\\s*:\\s*(.*?)\\s*$`,'mi'));return match?match[1].trim():null; }
 function compareValue(actual,expected) { if(actual===null)return false;if(typeof expected==='number'){const value=Number(actual.replace(/,/g,'.'));return Number.isFinite(value)&&Math.abs(value-expected)<=0.011;}return actual.trim().toLowerCase()===String(expected).trim().toLowerCase(); }
 function renderTests(rows,total) {
@@ -328,23 +416,97 @@ function renderTests(rows,total) {
 }
 async function execute(mode) {
   if (sessionStarted && (remainingSeconds() <= 0 || deadlineRemainingSeconds() <= 0)) updateTimer();
-  if(!sessionStarted||sessionFinished||compileBusy){toast('Sesi belum aktif, batas waktu telah tercapai, atau proses masih berjalan.','bad');return;}
-  const source=getCode();if(!source.trim()){toast('Editor masih kosong.','bad');return;}if(!/\bmain\s*\(/.test(source)){toast('Program harus memiliki fungsi main().','bad');return;}
-  compileBusy=true;['runBtn','checkTestsBtn','submitBtn'].forEach(id=>$( '#' + id).disabled=true);const started=performance.now();$('#runDuration').textContent='Compiling';
+  if (!sessionStarted || sessionFinished || compileBusy) {
+    toast('Sesi belum aktif, batas waktu telah tercapai, atau proses masih berjalan.', 'bad');
+    return;
+  }
+
+  const source = getCode();
+  if (!source.trim()) { toast('Editor masih kosong.', 'bad'); return; }
+  if (!/\bmain\s*\(/.test(source)) { toast('Program harus memiliki fungsi main().', 'bad'); return; }
+
+  compileBusy = true;
+  ['runBtn', 'checkTestsBtn', 'submitBtn'].forEach(id => { $('#' + id).disabled = true; });
+  const started = performance.now();
+  $('#runDuration').textContent = 'Compiling';
+
   try {
-    const module=await getCompiled(source);if(sessionFinished)throw new Error('Sesi terkunci. Proses dibatalkan.');
-    if(mode==='run'){showLoading('Menjalankan program...','Program dieksekusi pada worker terpisah.',75);const result=await runModule(module,$('#stdinInput').value);hideLoading();showOutput((result.stdout||'(Program selesai tanpa output)')+(result.stderr?`\n[STDERR]\n${result.stderr}`:''),'success');toast('Program berhasil dijalankan.');}
-    else {
-      const rows=[];for(let i=0;i<tasks[currentTask].tests.length;i++){if(sessionFinished)throw new Error('Sesi terkunci. Pengujian dibatalkan.');const test=tasks[currentTask].tests[i];showLoading(`Pengujian ${i+1}/3`,test.hidden?'Menjalankan hidden test…':test.name,35+(i+1)/3*60);
-        try{const result=await runModule(module,test.input);const checks=test.checks.map(([label,expected])=>{const actual=parseLabel(result.stdout,label);return{label,expected,actual,ok:compareValue(actual,expected)};});rows.push({name:test.name,hidden:!!test.hidden,ok:checks.every(c=>c.ok),checks,output:result.stdout});}
-        catch(error){rows.push({name:test.name,hidden:!!test.hidden,ok:false,checks:test.checks.map(([label])=>({label,actual:error.message,ok:false})),output:error.message});}
-      }
-      hideLoading();const passed=renderTests(rows,3);const score=Math.round(passed/3*100);lastSubmission={task:tasks[currentTask].title,code:source,rows,passed,total:3,score};$('#scorePreview').textContent=`${passed}/3 test lolos · Nilai ${score}/100`;$('#submitBtn').disabled=false;showOutput(rows.map(r=>r.hidden?'[Hidden test] selesai':r.output).join('\n\n'),passed===3?'success':'');toast(`Pengujian selesai: ${passed}/3 test lolos.`,passed===3?'good':'bad');
+    if (mode === 'run') {
+      showLoading('Mengompilasi C++17...', 'Menyiapkan Clang WebAssembly.', 15);
+      const result = await runCompilerWorker(source, {
+        mode: 'run',
+        stdin: $('#stdinInput').value
+      });
+      hideLoading();
+
+      const sections = [];
+      if (result.stdout) sections.push(result.stdout);
+      else sections.push('(Program selesai tanpa menghasilkan output.)');
+      if (result.stderr) sections.push('[STDERR]\n' + result.stderr);
+      if (result.runtimeError) sections.push('[RUNTIME ERROR]\n' + result.runtimeError);
+      showOutput(sections.join('\n\n'), result.runtimeError ? 'error' : 'success');
+      toast(result.runtimeError ? 'Program mengalami runtime error.' : 'Program berhasil dijalankan.', result.runtimeError ? 'bad' : 'good');
+    } else {
+      const currentTests = tasks[currentTask].tests;
+      showLoading('Mengompilasi C++17...', 'Menyiapkan Clang WebAssembly.', 15);
+      const result = await runCompilerWorker(source, {
+        mode: 'tests',
+        tests: currentTests
+      });
+
+      const rows = currentTests.map((test, index) => {
+        const execution = result.tests[index] || {};
+        const checks = test.checks.map(([label, expected]) => {
+          const actual = execution.runtimeError
+            ? 'RUNTIME ERROR: ' + execution.runtimeError
+            : parseLabel(execution.stdout || '', label);
+          return {
+            label,
+            expected,
+            actual,
+            ok: !execution.runtimeError && compareValue(actual, expected)
+          };
+        });
+        const outputParts = [];
+        if (execution.stdout) outputParts.push(execution.stdout);
+        if (execution.stderr) outputParts.push('[STDERR]\n' + execution.stderr);
+        if (execution.runtimeError) outputParts.push('[RUNTIME ERROR]\n' + execution.runtimeError);
+
+        return {
+          name: test.name,
+          hidden: !!test.hidden,
+          ok: checks.every(check => check.ok),
+          checks,
+          output: outputParts.join('\n\n') || '(Tidak ada output)'
+        };
+      });
+
+      hideLoading();
+      const total = currentTests.length;
+      const passed = renderTests(rows, total);
+      const score = total ? Math.round(passed / total * 100) : 0;
+      lastSubmission = { task: tasks[currentTask].title, code: source, rows, passed, total, score };
+      $('#scorePreview').textContent = passed + '/' + total + ' test lolos · Nilai ' + score + '/100';
+      $('#submitBtn').disabled = false;
+      showOutput(rows.map(row => row.hidden ? '[Hidden test] selesai' : row.output).join('\n\n'), passed === total ? 'success' : '');
+      toast('Pengujian selesai: ' + passed + '/' + total + ' test lolos.', passed === total ? 'good' : 'bad');
     }
-    $('#runDuration').textContent=`${Math.round(performance.now()-started)} ms`;
-  } catch(error){hideLoading();showOutput(error.message||String(error),'error');$('#runDuration').textContent='Compile / runtime error';toast('Program gagal dijalankan. Periksa terminal.','bad');}
-  finally {compileBusy=false;const locked=!sessionStarted||sessionFinished;$('#runBtn').disabled=locked;$('#checkTestsBtn').disabled=locked;$('#submitBtn').disabled=locked||!lastSubmission||lastSubmission.task!==tasks[currentTask].title||lastSubmission.code!==getCode();}
+
+    $('#runDuration').textContent = Math.round(performance.now() - started) + ' ms';
+  } catch (error) {
+    hideLoading();
+    showOutput(error.message || String(error), 'error');
+    $('#runDuration').textContent = 'Compile / runtime error';
+    toast('Program gagal dijalankan. Periksa terminal.', 'bad');
+  } finally {
+    compileBusy = false;
+    const locked = !sessionStarted || sessionFinished;
+    $('#runBtn').disabled = locked;
+    $('#checkTestsBtn').disabled = locked;
+    $('#submitBtn').disabled = locked || !lastSubmission || lastSubmission.task !== tasks[currentTask].title || lastSubmission.code !== getCode();
+  }
 }
+
 function toBase64Url(text) { const bytes=new TextEncoder().encode(text);let binary='';for(let i=0;i<bytes.length;i+=0x8000)binary+=String.fromCharCode(...bytes.subarray(i,i+0x8000));return btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/g,''); }
 function jsonpRequest(parameters) {
   return new Promise((resolve,reject)=>{const callback=`__cppMission_${Date.now()}_${Math.random().toString(36).slice(2)}`;const script=document.createElement('script');const url=new URL(APPS_SCRIPT_URL);Object.entries(parameters).forEach(([k,v])=>url.searchParams.set(k,String(v)));url.searchParams.set('callback',callback);
