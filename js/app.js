@@ -1565,8 +1565,46 @@ async function submitMission() {
   }catch(error){button.disabled=false;button.innerHTML=`${icon('upload',14)}<span>Submit Mission</span>`;toast(error.message||'Pengiriman gagal.','bad');}
 }
 function clearConsole(){ $('#outputView').innerHTML=`<div class="empty-console stdout-empty"><span class="terminal-glyph">${icon('terminal',18)}</span><div><strong>Standard Output (STDOUT)</strong><p>Hasil dari cout akan tampil di sini setelah Run Code.</p></div></div>`;$('#testsView').innerHTML=`<div class="empty-console"><span class="terminal-glyph">${icon('checkCircle',18)}</span><div><strong>Belum ada hasil test</strong></div></div>`;$('#testResultCount').textContent='—';$('#runDuration').textContent='';showConsole('output'); }
-function showWarning(title,message){const modal=$('#clipboardWarningModal');$('#clipboardWarningTitle').textContent=title;$('#clipboardWarningMessage').textContent=message;modal.classList.remove('hidden');modal.setAttribute('aria-hidden','false');document.body.classList.add('modal-open');$('#clipboardWarningAcknowledge').focus();}
-function closeWarning(){const modal=$('#clipboardWarningModal');modal.classList.add('hidden');modal.setAttribute('aria-hidden','true');document.body.classList.remove('modal-open');}
+let clipboardWarningReturnFocus = null;
+function showWarning(title,message){
+  const modal=$('#clipboardWarningModal');
+  // Remember the element that opened the dialog, but do not replace it
+  // if another warning is raised while this dialog is already visible.
+  if(modal.classList.contains('hidden')){
+    const active=document.activeElement;
+    clipboardWarningReturnFocus=active && active!==document.body && !modal.contains(active) ? active : null;
+  }
+  $('#clipboardWarningTitle').textContent=title;
+  $('#clipboardWarningMessage').textContent=message;
+  modal.inert=false;
+  modal.classList.remove('hidden');
+  modal.setAttribute('aria-hidden','false');
+  document.body.classList.add('modal-open');
+  $('#clipboardWarningAcknowledge').focus();
+}
+function closeWarning(){
+  const modal=$('#clipboardWarningModal');
+  if(modal.classList.contains('hidden'))return;
+
+  // Move focus out before setting aria-hidden/inert. This prevents an
+  // active descendant from remaining inside an inaccessible dialog.
+  let target=clipboardWarningReturnFocus;
+  if(!target || !target.isConnected || modal.contains(target) || target.disabled){
+    target=document.querySelector('#editorHost .cm-content[contenteditable="true"]')
+      || document.querySelector('#editorHost textarea')
+      || $('#editorHost');
+  }
+  if(target && typeof target.focus==='function'){
+    if(target===$('#editorHost') && !target.hasAttribute('tabindex'))target.setAttribute('tabindex','-1');
+    target.focus({preventScroll:true});
+  }
+
+  modal.inert=true;
+  modal.setAttribute('aria-hidden','true');
+  modal.classList.add('hidden');
+  document.body.classList.remove('modal-open');
+  clipboardWarningReturnFocus=null;
+}
 function initEditor(){
   editorCompartment=new Compartment();editor=new EditorView({doc:starterCode,parent:$('#editorHost'),extensions:[basicSetup,cpp(),oneDark,editorCompartment.of(EditorView.editable.of(false)),EditorView.theme({'&':{height:'100%',fontSize:'12px',backgroundColor:'#0b121c'},'.cm-scroller':{fontFamily:'DM Mono, Consolas, monospace',lineHeight:'1.7'},'.cm-content':{padding:'12px 0'},'.cm-line':{padding:'0 12px'},'.cm-gutters':{backgroundColor:'#0b121c',borderRight:'1px solid #1c2a3b',color:'#53667c'}}),EditorView.domEventHandlers({keydown(event,view){if(event.key==='Tab'){event.preventDefault();event.shiftKey?indentLess(view):indentMore(view);return true;}if((event.ctrlKey||event.metaKey)&&event.key==='/'){event.preventDefault();toggleComment(view);return true;}if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){event.preventDefault();saveDraft();toast('Draft tersimpan di browser.');return true;}return false;}}),EditorView.updateListener.of(update=>{if(update.docChanged){saveDraft();lastSubmission=null;$('#submitBtn').disabled=true;$('#scorePreview').textContent='Kode berubah · Jalankan Check Tests kembali.';}if(update.docChanged||update.selectionSet)updateCursorInfo();})]});
   // Remove the plain-text fallback after CodeMirror mounts. Keeping both
