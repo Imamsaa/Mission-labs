@@ -889,3 +889,41 @@ body.modal-open{overflow:hidden}
     font-size:11px;
   }
 }
+
+
+/* System-provided public input and expected output reference. */
+.stdin-toolbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.stdin-toolbar>div{display:flex;flex-direction:column;gap:4px;min-width:0}
+.stdin-toolbar strong{font:600 10px var(--mono);letter-spacing:.8px;color:#d6e3ef}
+.stdin-toolbar small{font:9px/1.5 var(--mono);color:#788ca2}
+.stdin-toolbar .clear-btn{
+  flex:none;border:1px solid #2a3d50;border-radius:5px;padding:6px 8px;
+  color:#b5c5d5;background:#132133;
+}
+.standard-output-reference{
+  margin-top:13px;border:1px solid #29394d;border-radius:7px;overflow:hidden;background:#0b1521;
+}
+.standard-output-heading{
+  display:flex;justify-content:space-between;align-items:center;gap:8px;
+  padding:8px 10px;border-bottom:1px solid #223247;
+}
+.standard-output-heading strong{font:600 9px var(--mono);letter-spacing:.7px;color:#9ccf78}
+.standard-output-heading span{font:9px var(--mono);color:#74889e;text-align:right}
+.standard-output-reference pre{
+  margin:0;padding:10px;color:#c7d5e3;font:10px/1.7 var(--mono);
+  white-space:pre-wrap;overflow-wrap:anywhere;
+}
+.standard-output-reference p{
+  margin:0;padding:7px 10px;border-top:1px solid #1d2b3c;
+  color:#778ba0;font:9px/1.5 var(--mono);
+}
+@media(max-width:680px){
+  .stdin-toolbar strong{font-size:9px}
+  .stdin-toolbar small{font-size:8px}
+  .standard-output-reference pre{font-size:9px}
+}
