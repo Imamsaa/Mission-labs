@@ -42,6 +42,7 @@ const VIOLATION_LOG_KEY = 'cppMissionLab_violationLog_v1';
 const AUTO_PENDING_KEY = 'cppMissionLab_autoSubmissionPending_v1';
 const SENT_PREFIX = 'cppMissionLab_sent_';
 const PROGRESS_KEY = 'cppMissionLab_progress_v3';
+const DRAFT_PREFIX = 'cppMissionLab_draft_v1_';
 const NAME_KEY = 'cppMissionLab_studentName_v3';
 const APPS_SCRIPT_URL = window.CPP_MISSION_APPS_SCRIPT_URL || '';
 const starterCode = `#include <iostream>
@@ -1017,7 +1018,50 @@ function renderProgress() {
 }
 function getCode() { return editor.state.doc.toString(); }
 function setCode(value) { editor.dispatch({changes:{from:0,to:editor.state.doc.length,insert:value}}); }
-function saveDraft() { progress.drafts=progress.drafts||{};progress.drafts[tasks[currentTask].id]=getCode();localStorage.setItem(PROGRESS_KEY,JSON.stringify(progress));$('#editorStatus').textContent='Draft tersimpan';if(lastSubmission&&lastSubmission.code!==getCode()){lastSubmission=null;$('#submitBtn').disabled=true;$('#scorePreview').textContent='Kode berubah · Jalankan Check Tests kembali.';}updateCursorInfo(); }
+function getStoredDraft(taskId) {
+  try {
+    const standaloneDraft = localStorage.getItem(DRAFT_PREFIX + taskId);
+    if (standaloneDraft !== null) return standaloneDraft;
+  } catch (error) {
+    console.warn('Standalone draft lookup failed:', error);
+  }
+  const legacyDraft = progress.drafts?.[taskId];
+  return typeof legacyDraft === 'string' ? legacyDraft : null;
+}
+function saveDraft() {
+  if (!editor || !tasks[currentTask]) return false;
+  const taskId = tasks[currentTask].id;
+  const code = getCode();
+  let standaloneSaved = false;
+  let progressSaved = false;
+
+  try {
+    localStorage.setItem(DRAFT_PREFIX + taskId, code);
+    standaloneSaved = true;
+  } catch (error) {
+    console.error('Could not save standalone code draft:', error);
+  }
+
+  try {
+    progress.drafts = progress.drafts || {};
+    progress.drafts[taskId] = code;
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
+    progressSaved = true;
+  } catch (error) {
+    console.error('Could not save progress record:', error);
+  }
+
+  const saved = standaloneSaved || progressSaved;
+  const status = $('#editorStatus');
+  if (status) status.textContent = saved ? 'Draft tersimpan otomatis' : 'Draft gagal disimpan';
+  if (lastSubmission && lastSubmission.code !== code) {
+    lastSubmission = null;
+    $('#submitBtn').disabled = true;
+    $('#scorePreview').textContent = 'Kode berubah · Jalankan Check Tests kembali.';
+  }
+  updateCursorInfo();
+  return saved;
+}
 function updateCursorInfo() { if(!editor?.state)return;const pos=editor.state.selection.main.head;const line=editor.state.doc.lineAt(pos);$('#lineCount').textContent=line.number;$('#columnCount').textContent=pos-line.from+1; }
 
 function getPublicStandardTest(task) {
@@ -1051,7 +1095,7 @@ function renderTask(index) {
   $('#problemNumber').textContent=String(index+1).padStart(2,'0');$('#problemStage').textContent=task.category;$('#problemTitle').textContent=task.title;$('#problemSubtitle').textContent=task.subtitle;$('#problemDifficulty').textContent=task.difficulty;$('#problemDifficulty').className='difficulty '+task.difficulty.toLowerCase();
   $('#descriptionTab').innerHTML=task.brief;$('#rubricTab').innerHTML=task.rubric;$('#materialsTab').innerHTML=task.materials;
   document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab==='description'));['description','rubric','materials'].forEach(t=>$(`#${t}Tab`).classList.toggle('hidden',t!=='description'));
-  setCode(progress.drafts?.[task.id]||starterCode);renderStandardIO(task);$('#testResultCount').textContent='—';$('#runDuration').textContent='';$('#scorePreview').textContent='Jalankan Check Tests sebelum submit.';$('#submitBtn').disabled=true;lastSubmission=null;compiledSource='';compiledModule=null;
+  setCode(getStoredDraft(task.id) ?? starterCode);renderStandardIO(task);$('#testResultCount').textContent='—';$('#runDuration').textContent='';$('#scorePreview').textContent='Jalankan Check Tests sebelum submit.';$('#submitBtn').disabled=true;lastSubmission=null;compiledSource='';compiledModule=null;
   $('#outputView').innerHTML=`<div class="empty-console stdout-empty"><span class="terminal-glyph">${icon('terminal',18)}</span><div><strong>Standard Output (STDOUT)</strong><p>Hasil dari cout akan tampil di sini setelah kamu menekan Run Code.</p></div></div>`;
   $('#testsView').innerHTML=`<div class="empty-console"><span class="terminal-glyph">${icon('checkCircle',18)}</span><div><strong>Belum ada hasil test</strong><p>Tekan Check Tests untuk menjalankan tiga skenario pengujian.</p></div></div>`;showConsole('input');updateSessionLock();
 }
@@ -1592,6 +1636,13 @@ function initEditorResizer() {
   });
 }
 function bindEvents(){
+  // Persist the current editor contents at every lifecycle boundary as an extra safety net.
+  window.addEventListener('pagehide', () => saveDraft());
+  window.addEventListener('beforeunload', () => saveDraft());
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') saveDraft();
+  });
+
   $('#stdinInput').addEventListener('input', () => {
     const task = tasks[currentTask];
     fitStandardInput();
