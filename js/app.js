@@ -34,12 +34,13 @@ function icon(name,size=14,className='') {
 }
 
 const SESSION_SECONDS = Math.max(1, Number(RULES.sessionMinutes) || 60) * 60;
-const DEADLINE_TIMESTAMP = Date.parse(RULES.deadlineAt || '2026-11-03T14:50:00+07:00');
 const START_KEY = 'cppMissionLab_sessionStart_v3';
 const FINISHED_KEY = 'cppMissionLab_sessionFinished_v3';
 const PENALTY_KEY = 'cppMissionLab_penaltySeconds_v1';
 const VIOLATION_COUNT_KEY = 'cppMissionLab_violationCount_v1';
 const VIOLATION_LOG_KEY = 'cppMissionLab_violationLog_v1';
+const AUTO_PENDING_KEY = 'cppMissionLab_autoSubmissionPending_v1';
+const SENT_PREFIX = 'cppMissionLab_sent_';
 const PROGRESS_KEY = 'cppMissionLab_progress_v3';
 const NAME_KEY = 'cppMissionLab_studentName_v3';
 const APPS_SCRIPT_URL = window.CPP_MISSION_APPS_SCRIPT_URL || '';
@@ -988,13 +989,42 @@ try {
 } catch (error) { console.warn('Legacy session migration skipped:', error); }
 localStorage.removeItem('cppMissionLab_breakState_v3');
 let lastSubmission = null, compiledSource = '', compiledModule = null;
+let autoSubmissionInFlight = false;
 let progress;
 try { progress=JSON.parse(localStorage.getItem(PROGRESS_KEY)||'{"solved":[],"drafts":{},"scores":{}}'); } catch { progress={solved:[],drafts:{},scores:{}}; }
 
 function toast(message,type='good') { const node=document.createElement('div');node.className=`toast ${type}`;node.textContent=message;$('#toastRegion').append(node);setTimeout(()=>node.remove(),3600); }
 function escapeHTML(value) { return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function saveProgress() { localStorage.setItem(PROGRESS_KEY,JSON.stringify(progress));renderProgress(); }
-function renderProgress() { const validIds=tasks.map(task=>task.id);progress.solved=(progress.solved||[]).filter(id=>validIds.includes(id));const done=progress.solved.length;const percent=tasks.length?Math.round(done/tasks.length*100):0;$('#solvedCount').textContent=done;$('#xpTotal').textContent=done*500;$('#progressPercent').textContent=`${percent}%`;$('#progressBar').style.width=`${percent}%`;tasks.forEach((task,i)=>{const el=$(`#done${i}`);if(el){const solved=progress.solved.includes(task.id);el.innerHTML=icon(solved?'checkCircle':'circle',15,solved?'is-done':'is-pending');el.setAttribute('aria-label',solved?'Selesai':'Belum selesai');}}); }
+function renderTaskList() {
+  $('#challengeCount').textContent = String(tasks.length).padStart(2, '0');
+  $('#challengeList').innerHTML = tasks.map((task, index) => {
+    const solved = (progress.solved || []).includes(task.id);
+    return '<button class="challenge-item" data-task="' + index + '">' +
+      '<span class="challenge-number">' + String(index + 1).padStart(2, '0') + '</span>' +
+      '<span class="challenge-copy"><b class="challenge-name">' + escapeHTML(task.title) + '</b><small>' + escapeHTML(task.difficulty) + ' · ' + escapeHTML(task.category) + '</small></span>' +
+      '<span class="challenge-check" id="done' + index + '" aria-label="' + (solved ? 'Selesai' : 'Belum selesai') + '">' + icon(solved ? 'checkCircle' : 'circle', 14, solved ? 'is-done' : 'is-pending') + '</span>' +
+      '</button>';
+  }).join('');
+}
+function renderProgress() {
+  const validIds = tasks.map(task => task.id);
+  progress.solved = (progress.solved || []).filter(id => validIds.includes(id));
+  const done = progress.solved.length;
+  const percent = tasks.length ? Math.round(done / tasks.length * 100) : 0;
+  $('#solvedCount').textContent = done;
+  $('#challengeTotal').textContent = tasks.length;
+  $('#xpTotal').textContent = done * 500;
+  $('#progressPercent').textContent = percent + '%';
+  $('#progressBar').style.width = percent + '%';
+  tasks.forEach((task, index) => {
+    const el = document.getElementById('done' + index);
+    if (!el) return;
+    const solved = progress.solved.includes(task.id);
+    el.innerHTML = icon(solved ? 'checkCircle' : 'circle', 14, solved ? 'is-done' : 'is-pending');
+    el.setAttribute('aria-label', solved ? 'Selesai' : 'Belum selesai');
+  });
+}
 function getCode() { return editor.state.doc.toString(); }
 function setCode(value) { editor.dispatch({changes:{from:0,to:editor.state.doc.length,insert:value}}); }
 function saveDraft() { progress.drafts=progress.drafts||{};progress.drafts[tasks[currentTask].id]=getCode();localStorage.setItem(PROGRESS_KEY,JSON.stringify(progress));$('#editorStatus').textContent='Draft tersimpan';if(lastSubmission&&lastSubmission.code!==getCode()){lastSubmission=null;$('#submitBtn').disabled=true;$('#scorePreview').textContent='Kode berubah · Jalankan Check Tests kembali.';}updateCursorInfo(); }
@@ -1002,7 +1032,7 @@ function updateCursorInfo() { if(!editor?.state)return;const pos=editor.state.se
 function renderTask(index) {
   if(compileBusy){toast('Tunggu proses kompilasi selesai sebelum berpindah tugas.','bad');return;}saveDraft();currentTask=index;const task=tasks[index];
   document.querySelectorAll('.challenge-item').forEach((b,i)=>b.classList.toggle('active',i===index));
-  $('#problemNumber').textContent=String(index+1).padStart(2,'0');$('#problemStage').textContent=task.category;$('#problemTitle').textContent=task.title;$('#problemSubtitle').textContent=task.subtitle;$('#problemDifficulty').textContent='CHALLENGE';
+  $('#problemNumber').textContent=String(index+1).padStart(2,'0');$('#problemStage').textContent=task.category;$('#problemTitle').textContent=task.title;$('#problemSubtitle').textContent=task.subtitle;$('#problemDifficulty').textContent=task.difficulty;$('#problemDifficulty').className='difficulty '+task.difficulty.toLowerCase();
   $('#descriptionTab').innerHTML=task.brief;$('#rubricTab').innerHTML=task.rubric;$('#materialsTab').innerHTML=task.materials;
   document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab==='description'));['description','rubric','materials'].forEach(t=>$(`#${t}Tab`).classList.toggle('hidden',t!=='description'));
   setCode(progress.drafts?.[task.id]||starterCode);$('#stdinInput').value=task.sampleInput;$('#testResultCount').textContent='—';$('#runDuration').textContent='';$('#scorePreview').textContent='Jalankan Check Tests sebelum submit.';$('#submitBtn').disabled=true;lastSubmission=null;compiledSource='';compiledModule=null;
@@ -1041,17 +1071,6 @@ function formatClock(totalSeconds) {
   const seconds = String(safe % 60).padStart(2, '0');
   return minutes + ':' + seconds;
 }
-function formatCountdown(totalSeconds) {
-  const safe = Math.max(0, Math.floor(totalSeconds));
-  const hours = String(Math.floor(safe / 3600)).padStart(2, '0');
-  const minutes = String(Math.floor((safe % 3600) / 60)).padStart(2, '0');
-  const seconds = String(safe % 60).padStart(2, '0');
-  return hours + ':' + minutes + ':' + seconds;
-}
-function deadlineRemainingSeconds() {
-  if (!Number.isFinite(DEADLINE_TIMESTAMP)) return 0;
-  return Math.max(0, Math.ceil((DEADLINE_TIMESTAMP - Date.now()) / 1000));
-}
 function renderPenalty() {
   const total = getPenaltySeconds();
   const chip = $('#penaltyChip');
@@ -1069,25 +1088,11 @@ function baseRemaining() {
 function remainingSeconds() { return baseRemaining(); }
 function updateTimer() {
   const seconds = remainingSeconds();
-  const deadlineSeconds = deadlineRemainingSeconds();
-  const deadlineText = formatCountdown(deadlineSeconds);
   $('#timerDisplay').textContent = formatClock(seconds);
   $('#timerDisplay').style.color = seconds === 0 ? '#ff8997' : '';
-  const deadlineDisplay = $('#deadlineDisplay');
-  const deadlineModalCountdown = $('#deadlineModalCountdown');
-  if (deadlineDisplay) deadlineDisplay.textContent = deadlineText;
-  if (deadlineModalCountdown) deadlineModalCountdown.textContent = deadlineText;
-  const startButton = $('#startSessionSubmit');
-  if (startButton) startButton.disabled = deadlineSeconds <= 0 || sessionFinished;
-  const deadlineMessage = $('#deadlineModalMessage');
-  if (deadlineMessage && deadlineSeconds <= 0) {
-    deadlineMessage.textContent = 'Batas akhir pukul ' + (RULES.deadlineLabel || '15.00 WIB') + ' telah tercapai. Sesi baru tidak dapat dimulai.';
-  }
   renderPenalty();
-  if (sessionStarted && deadlineSeconds <= 0) {
-    finishSession(true, 'Batas akhir pengerjaan pukul ' + (RULES.deadlineLabel || '15.00 WIB') + ' telah tercapai.');
-  } else if (sessionStarted && seconds <= 0) {
-    finishSession(true, 'Waktu pengerjaan ' + SESSION_SECONDS / 60 + ' menit telah habis.');
+  if (sessionStarted && seconds <= 0) {
+    finishSession(true, 'Waktu latihan ' + SESSION_SECONDS / 60 + ' menit telah habis. Jawaban terakhir sedang dikirim otomatis.');
   }
 }
 function recordViolation(reason) {
@@ -1119,26 +1124,32 @@ function recordViolation(reason) {
   return true;
 }
 function finishSession(notify=true, reason='Waktu pengerjaan habis. Semua tantangan dikunci.') {
-  if(sessionFinished)return;sessionFinished=true;localStorage.setItem(FINISHED_KEY,'1');if(timerInterval){clearInterval(timerInterval);timerInterval=null;}
-  if(compileWorker)compileWorker.terminate();if(runtimeWorker)runtimeWorker.terminate();if(cancelActive)cancelActive(new Error(reason));
-  updateSessionLock();if(notify)toast(reason,'bad');
+  if (sessionFinished) return;
+  sessionFinished = true;
+  localStorage.setItem(FINISHED_KEY, '1');
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  if (compileWorker) compileWorker.terminate();
+  if (runtimeWorker) runtimeWorker.terminate();
+  if (cancelActive) cancelActive(new Error(reason));
+  updateSessionLock();
+  if (notify) toast(reason, 'bad');
+  autoSubmitTimedOutTask();
 }
 function startSession() {
-  if(sessionStarted||sessionFinished)return false;
-  if (deadlineRemainingSeconds() <= 0) {
-    finishSession(true, 'Batas akhir pengerjaan pukul ' + (RULES.deadlineLabel || '15.00 WIB') + ' telah tercapai.');
-    return false;
-  }
-  localStorage.setItem(PENALTY_KEY,'0');
-  localStorage.setItem(VIOLATION_COUNT_KEY,'0');
-  localStorage.setItem(VIOLATION_LOG_KEY,'[]');
+  if (sessionStarted && !sessionFinished) return false;
+  localStorage.setItem(PENALTY_KEY, '0');
+  localStorage.setItem(VIOLATION_COUNT_KEY, '0');
+  localStorage.setItem(VIOLATION_LOG_KEY, '[]');
+  localStorage.setItem(FINISHED_KEY, '0');
+  localStorage.setItem(START_KEY, String(Date.now()));
+  sessionStarted = true;
+  sessionFinished = false;
+  lastSubmission = null;
   renderPenalty();
-  localStorage.setItem(START_KEY,String(Date.now()));
-  sessionStarted=true;
   updateSessionLock();
-  toast('Sesi dimulai. Waktu ' + SESSION_SECONDS / 60 + ' menit berjalan.');
+  toast('Sesi latihan dimulai. Waktu ' + SESSION_SECONDS / 60 + ' menit berjalan.');
   updateTimer();
-  if (!timerInterval) timerInterval=setInterval(updateTimer,1000);
+  if (!timerInterval) timerInterval = setInterval(updateTimer, 1000);
   return true;
 }
 function openStartSessionModal() {
@@ -1194,6 +1205,8 @@ function updateSessionLock() {
     : 'Isi nama lengkap pada layar pembuka untuk memulai sesi pengerjaan.';
   $('#editorStatus').textContent = finished ? 'Sesi berakhir · Editor terkunci' : preStart ? 'Terkunci · Mulai sesi untuk coding' : 'Draft tersimpan';
   $('#editorHost').classList.toggle('session-locked', locked);
+  const resetSessionButton = $('#resetSessionBtn');
+  if (resetSessionButton) resetSessionButton.hidden = !sessionStarted && !sessionFinished;
   updateTimer();
 }
 function showOutput(text,kind='') { $('#outputView').innerHTML=`<pre class="console-output ${kind}">${escapeHTML(text)}</pre>`;showConsole('output'); }
@@ -1306,97 +1319,135 @@ function renderTests(rows,total) {
   const passed=rows.filter(row=>row.ok).length;$('#testResultCount').textContent=`${passed}/${total}`;
   $('#testsView').innerHTML=`<div class="result-summary ${passed===total?'pass':'fail'}"><div class="result-score">${passed}/${total}</div><div><strong>${passed===total?'Semua test berhasil':'Masih ada test gagal'}</strong><br><small>SUBMISSION TEST · ${total} TEST CASE</small></div></div>`+rows.map((row,i)=>`<details class="test-detail" ${i===0?'open':''}><summary><span>${escapeHTML(row.hidden?'Hidden test':row.name)}</span><b class="${row.ok?'pass':'fail'} status-inline">${icon(row.ok?'check':'x',12)}<span>${row.ok?'PASS':'FAIL'}</span></b></summary>${row.hidden?'':`<div class="check-list">${row.checks.map(c=>`<div class="check-line"><span>${escapeHTML(c.label)}</span><span class="${c.ok?'pass':'fail'} status-inline">${icon(c.ok?'check':'x',12)}<span>${escapeHTML(c.actual??'Label tidak ditemukan')}</span></span></div>`).join('')}</div><pre class="test-output">${escapeHTML(row.output||'(Tidak ada output)')}</pre>`}</details>`).join('');return passed;
 }
+async function evaluateTaskSource(source, task) {
+  const result = await runCompilerWorker(source, { mode: 'tests', tests: task.tests });
+  const rows = task.tests.map((test, index) => {
+    const execution = result.tests[index] || {};
+    const checks = test.checks.map(([label, expected]) => {
+      const actual = execution.runtimeError ? 'RUNTIME ERROR: ' + execution.runtimeError : parseLabel(execution.stdout || '', label);
+      return { label, expected, actual, ok: !execution.runtimeError && compareValue(actual, expected) };
+    });
+    const outputParts = [];
+    if (execution.stdout) outputParts.push(execution.stdout);
+    if (execution.stderr) outputParts.push('[STDERR]\n' + execution.stderr);
+    if (execution.runtimeError) outputParts.push('[RUNTIME ERROR]\n' + execution.runtimeError);
+    return { name:test.name, hidden:!!test.hidden, ok:checks.every(check=>check.ok), checks, output:outputParts.join('\n\n') || '(Tidak ada output)' };
+  });
+  const total = task.tests.length;
+  const passed = rows.filter(row=>row.ok).length;
+  return { task:task.title, code:source, rows, passed, total, score:total?Math.round(passed/total*100):0 };
+}
 async function execute(mode) {
-  if (sessionStarted && (remainingSeconds() <= 0 || deadlineRemainingSeconds() <= 0)) updateTimer();
-  if (!sessionStarted || sessionFinished || compileBusy) {
-    toast('Sesi belum aktif, batas waktu telah tercapai, atau proses masih berjalan.', 'bad');
-    return;
-  }
-
-  const source = getCode();
-  if (!source.trim()) { toast('Editor masih kosong.', 'bad'); return; }
-  if (!/\bmain\s*\(/.test(source)) { toast('Program harus memiliki fungsi main().', 'bad'); return; }
-
-  compileBusy = true;
-  ['runBtn', 'checkTestsBtn', 'submitBtn'].forEach(id => { $('#' + id).disabled = true; });
-  const started = performance.now();
-  $('#runDuration').textContent = 'Compiling';
-
+  if (sessionStarted && remainingSeconds() <= 0) updateTimer();
+  if (!sessionStarted || sessionFinished || compileBusy) { toast('Sesi belum aktif, waktu telah habis, atau proses masih berjalan.','bad'); return; }
+  const source=getCode();
+  if (!source.trim()) { toast('Editor masih kosong.','bad'); return; }
+  if (!source.includes('main(') && !source.includes('main (')) { toast('Program harus memiliki fungsi main().','bad'); return; }
+  compileBusy=true;
+  ['runBtn','checkTestsBtn','submitBtn'].forEach(id=>$('#'+id).disabled=true);
+  const started=performance.now();
+  $('#runDuration').textContent='Compiling';
   try {
-    if (mode === 'run') {
-      showLoading('Mengompilasi C++17...', 'Menyiapkan Clang WebAssembly.', 15);
-      const result = await runCompilerWorker(source, {
-        mode: 'run',
-        stdin: $('#stdinInput').value
-      });
+    if (mode==='run') {
+      showLoading('Mengompilasi C++17...','Menyiapkan Clang WebAssembly.',15);
+      const result=await runCompilerWorker(source,{mode:'run',stdin:$('#stdinInput').value});
       hideLoading();
-
-      const sections = [];
-      if (result.stdout) sections.push(result.stdout);
-      else sections.push('(Program selesai tanpa menghasilkan output.)');
-      if (result.stderr) sections.push('[STDERR]\n' + result.stderr);
-      if (result.runtimeError) sections.push('[RUNTIME ERROR]\n' + result.runtimeError);
-      showOutput(sections.join('\n\n'), result.runtimeError ? 'error' : 'success');
-      toast(result.runtimeError ? 'Program mengalami runtime error.' : 'Program berhasil dijalankan.', result.runtimeError ? 'bad' : 'good');
+      const sections=[];
+      sections.push(result.stdout || '(Program selesai tanpa menghasilkan output.)');
+      if(result.stderr)sections.push('[STDERR]\n'+result.stderr);
+      if(result.runtimeError)sections.push('[RUNTIME ERROR]\n'+result.runtimeError);
+      showOutput(sections.join('\n\n'),result.runtimeError?'error':'success');
+      toast(result.runtimeError?'Program mengalami runtime error.':'Program berhasil dijalankan.',result.runtimeError?'bad':'good');
     } else {
-      const currentTests = tasks[currentTask].tests;
-      showLoading('Mengompilasi C++17...', 'Menyiapkan Clang WebAssembly.', 15);
-      const result = await runCompilerWorker(source, {
-        mode: 'tests',
-        tests: currentTests
-      });
-
-      const rows = currentTests.map((test, index) => {
-        const execution = result.tests[index] || {};
-        const checks = test.checks.map(([label, expected]) => {
-          const actual = execution.runtimeError
-            ? 'RUNTIME ERROR: ' + execution.runtimeError
-            : parseLabel(execution.stdout || '', label);
-          return {
-            label,
-            expected,
-            actual,
-            ok: !execution.runtimeError && compareValue(actual, expected)
-          };
-        });
-        const outputParts = [];
-        if (execution.stdout) outputParts.push(execution.stdout);
-        if (execution.stderr) outputParts.push('[STDERR]\n' + execution.stderr);
-        if (execution.runtimeError) outputParts.push('[RUNTIME ERROR]\n' + execution.runtimeError);
-
-        return {
-          name: test.name,
-          hidden: !!test.hidden,
-          ok: checks.every(check => check.ok),
-          checks,
-          output: outputParts.join('\n\n') || '(Tidak ada output)'
-        };
-      });
-
-      hideLoading();
-      const total = currentTests.length;
-      const passed = renderTests(rows, total);
-      const score = total ? Math.round(passed / total * 100) : 0;
-      lastSubmission = { task: tasks[currentTask].title, code: source, rows, passed, total, score };
-      $('#scorePreview').textContent = passed + '/' + total + ' test lolos · Nilai ' + score + '/100';
-      $('#submitBtn').disabled = false;
-      showOutput(rows.map(row => row.hidden ? '[Hidden test] selesai' : row.output).join('\n\n'), passed === total ? 'success' : '');
-      toast('Pengujian selesai: ' + passed + '/' + total + ' test lolos.', passed === total ? 'good' : 'bad');
+      showLoading('Menjalankan test case...','Memeriksa tiga skenario misi.',25);
+      lastSubmission=await evaluateTaskSource(source,tasks[currentTask]);
+      const passed=renderTests(lastSubmission.rows,lastSubmission.total);
+      $('#scorePreview').textContent=passed+'/'+lastSubmission.total+' test lolos · Nilai '+lastSubmission.score+'/100';
+      $('#submitBtn').disabled=false;
+      showOutput(lastSubmission.rows.map(row=>row.hidden?'[Hidden test] selesai':row.output).join('\n\n'),passed===lastSubmission.total?'success':'');
+      toast('Pengujian selesai: '+passed+'/'+lastSubmission.total+' test lolos.',passed===lastSubmission.total?'good':'bad');
     }
-
-    $('#runDuration').textContent = Math.round(performance.now() - started) + ' ms';
-  } catch (error) {
-    hideLoading();
-    showOutput(error.message || String(error), 'error');
-    $('#runDuration').textContent = 'Compile / runtime error';
-    toast('Program gagal dijalankan. Periksa terminal.', 'bad');
+    $('#runDuration').textContent=Math.round(performance.now()-started)+' ms';
+  } catch(error) {
+    hideLoading();showOutput(error.message||String(error),'error');$('#runDuration').textContent='Compile / runtime error';toast('Program gagal dijalankan. Periksa terminal.','bad');
   } finally {
-    compileBusy = false;
-    const locked = !sessionStarted || sessionFinished;
-    $('#runBtn').disabled = locked;
-    $('#checkTestsBtn').disabled = locked;
-    $('#submitBtn').disabled = locked || !lastSubmission || lastSubmission.task !== tasks[currentTask].title || lastSubmission.code !== getCode();
+    compileBusy=false;
+    const locked=!sessionStarted||sessionFinished;
+    $('#runBtn').disabled=locked;$('#checkTestsBtn').disabled=locked;
+    $('#submitBtn').disabled=locked||!lastSubmission||lastSubmission.task!==tasks[currentTask].title||lastSubmission.code!==getCode();
   }
+}
+function codeFingerprint(value) {
+  let hash=2166136261;const source=String(value||'');
+  for(let i=0;i<source.length;i++){hash^=source.charCodeAt(i);hash=Math.imul(hash,16777619);}
+  return (hash>>>0).toString(36);
+}
+function captureSubmissionSnapshot(submitType) {
+  const startedAtMs=Number(localStorage.getItem(START_KEY))||Date.now();
+  const task=tasks[currentTask];const code=getCode();
+  return {
+    name:($('#studentName').value||localStorage.getItem(NAME_KEY)||'').trim(),
+    task:task.title,taskId:task.id,code,startedAtMs,
+    elapsedSeconds:elapsedSessionSeconds(),remainingSeconds:remainingSeconds(),
+    violationCount:getViolationCount(),violations:getViolationLog(),
+    submissionId:String(startedAtMs)+'_'+task.id+'_'+codeFingerprint(code),submitType
+  };
+}
+function buildSubmissionPayload(snapshot,result) {
+  return {
+    submissionId:snapshot.submissionId,submitType:snapshot.submitType,
+    name:snapshot.name,task:snapshot.task,code:snapshot.code,
+    passed:result.passed,total:result.total,score:result.score,
+    details:JSON.stringify(result.rows.map(row=>({name:row.name,ok:row.ok,checks:row.checks}))),
+    submittedAtClient:new Date().toISOString(),startedAtMs:snapshot.startedAtMs,
+    remainingSeconds:snapshot.remainingSeconds,elapsedSeconds:snapshot.elapsedSeconds,
+    violationCount:snapshot.violationCount,violations:JSON.stringify(snapshot.violations)
+  };
+}
+function markSubmissionSent(snapshot){localStorage.setItem(SENT_PREFIX+snapshot.submissionId,'1');}
+async function processAutoSubmission(snapshot) {
+  if(localStorage.getItem(SENT_PREFIX+snapshot.submissionId)==='1'){localStorage.removeItem(AUTO_PENDING_KEY);toast('Jawaban sesi ini sudah pernah tersimpan di spreadsheet.');return;}
+  if(!APPS_SCRIPT_URL||APPS_SCRIPT_URL.includes('PASTE_APPS_SCRIPT'))throw new Error('URL Google Apps Script belum dikonfigurasi.');
+  const task=tasks.find(item=>item.id===snapshot.taskId);
+  if(!task)throw new Error('Misi untuk pengiriman otomatis tidak ditemukan.');
+  let result;
+  if(lastSubmission&&lastSubmission.task===snapshot.task&&lastSubmission.code===snapshot.code)result=lastSubmission;
+  else {showLoading('Waktu habis · Menguji jawaban...','Menjalankan test case otomatis sebelum pengiriman.',40);result=await evaluateTaskSource(snapshot.code,task);}
+  await sendSubmission(buildSubmissionPayload(snapshot,result));
+  markSubmissionSent(snapshot);localStorage.removeItem(AUTO_PENDING_KEY);
+  progress.scores=progress.scores||{};progress.scores[task.id]=result.score;
+  if(result.score===100)progress.solved=Array.from(new Set([...(progress.solved||[]),task.id]));
+  saveProgress();hideLoading();
+  showOutput('Waktu habis. Jawaban terakhir berhasil dikirim otomatis.\nNilai: '+result.score+'/100','success');
+  toast('Jawaban otomatis berhasil dikirim ke spreadsheet: '+task.title+'.','good');
+}
+async function autoSubmitTimedOutTask() {
+  if(autoSubmissionInFlight||localStorage.getItem(AUTO_PENDING_KEY))return;
+  const snapshot=captureSubmissionSnapshot('OTOMATIS - WAKTU HABIS');
+  if(!snapshot.name||!snapshot.code.trim()){toast('Waktu habis. Nama atau kode kosong, sehingga jawaban tidak dapat dikirim otomatis.','bad');return;}
+  if(localStorage.getItem(SENT_PREFIX+snapshot.submissionId)==='1'){toast('Waktu habis. Jawaban terakhir sudah pernah dikirim ke spreadsheet.');return;}
+  localStorage.setItem(AUTO_PENDING_KEY,JSON.stringify(snapshot));autoSubmissionInFlight=true;
+  try{await processAutoSubmission(snapshot);}
+  catch(error){hideLoading();toast('Waktu habis, tetapi pengiriman otomatis belum berhasil. Salinan jawaban disimpan untuk dicoba kembali saat halaman dibuka.','bad');console.error('Automatic submission failed:',error);}
+  finally{autoSubmissionInFlight=false;}
+}
+async function retryPendingAutoSubmission() {
+  let snapshot=null;try{snapshot=JSON.parse(localStorage.getItem(AUTO_PENDING_KEY)||'null');}catch{}
+  if(!snapshot||autoSubmissionInFlight)return;autoSubmissionInFlight=true;
+  try{await processAutoSubmission(snapshot);}catch(error){console.warn('Pending automatic submission could not be delivered:',error);}
+  finally{autoSubmissionInFlight=false;}
+}
+function resetSession() {
+  if(compileBusy||autoSubmissionInFlight){toast('Tunggu proses yang sedang berjalan sebelum mereset sesi.','bad');return;}
+  if(!confirm('Mulai sesi latihan baru dengan waktu 60 menit? Penalti dan catatan pelanggaran sesi ini akan direset. Draft kode dan progres misi tetap disimpan.'))return;
+  sessionStarted=true;sessionFinished=false;
+  localStorage.setItem(FINISHED_KEY,'0');localStorage.setItem(START_KEY,String(Date.now()));
+  localStorage.setItem(PENALTY_KEY,'0');localStorage.setItem(VIOLATION_COUNT_KEY,'0');localStorage.setItem(VIOLATION_LOG_KEY,'[]');
+  lastSubmission=null;$('#scorePreview').textContent='Jalankan Check Tests sebelum submit.';$('#submitBtn').disabled=true;
+  $('#startSessionModal').classList.add('hidden');$('#startSessionModal').setAttribute('aria-hidden','true');
+  document.body.classList.remove('modal-open');renderPenalty();updateSessionLock();
+  if(!timerInterval)timerInterval=setInterval(updateTimer,1000);
+  toast('Sesi baru dimulai. Semua aturan tetap aktif; draft kode tersimpan.');
 }
 
 function toBase64Url(text) { const bytes=new TextEncoder().encode(text);let binary='';for(let i=0;i<bytes.length;i+=0x8000)binary+=String.fromCharCode(...bytes.subarray(i,i+0x8000));return btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/g,''); }
@@ -1407,31 +1458,16 @@ function jsonpRequest(parameters) {
 }
 async function sendSubmission(payload) { const encoded=toBase64Url(JSON.stringify(payload));const chunks=encoded.match(/.{1,650}/g)||[''];const session=(crypto.randomUUID?crypto.randomUUID():`${Date.now()}_${Math.random().toString(36).slice(2)}`).replace(/-/g,'');let result;for(let i=0;i<chunks.length;i++)result=await jsonpRequest({action:'chunk',session,index:i,total:chunks.length,data:chunks[i]});if(!result?.complete)throw new Error('Submission belum diterima lengkap.');return result; }
 async function submitMission() {
-  if (sessionStarted && (remainingSeconds() <= 0 || deadlineRemainingSeconds() <= 0)) updateTimer();
-  if(!sessionStarted||sessionFinished){toast('Sesi belum aktif atau batas waktu pengerjaan telah berakhir.','bad');return;}
+  if (sessionStarted && remainingSeconds() <= 0) updateTimer();
+  if(!sessionStarted||sessionFinished){toast('Sesi latihan belum aktif atau sudah berakhir.','bad');return;}
   const name=$('#studentName').value.trim();if(!name){toast('Isi nama lengkap siswa terlebih dahulu.','bad');$('#studentName').focus();return;}if(!lastSubmission||lastSubmission.code!==getCode()||lastSubmission.task!==tasks[currentTask].title){toast('Jalankan Check Tests kembali sebelum submit.','bad');return;}
   if(!APPS_SCRIPT_URL||APPS_SCRIPT_URL.includes('PASTE_APPS_SCRIPT')){toast('URL Apps Script belum diatur pada config.js.','bad');return;}
   const button=$('#submitBtn');button.disabled=true;button.innerHTML='<span class="button-spinner" aria-hidden="true"></span><span>Mengirim...</span>';
   try{
-    const details=lastSubmission.rows.map(row=>({name:row.name,ok:row.ok,checks:row.checks}));
-    const startedAtMs=Number(localStorage.getItem(START_KEY))||Date.now();
-    const violationLog=getViolationLog();
-    const submissionPayload={
-      name,
-      task:lastSubmission.task,
-      code:lastSubmission.code,
-      passed:lastSubmission.passed,
-      total:lastSubmission.total||3,
-      score:lastSubmission.score,
-      details:JSON.stringify(details),
-      submittedAtClient:new Date().toISOString(),
-      startedAtMs,
-      remainingSeconds:remainingSeconds(),
-      elapsedSeconds:elapsedSessionSeconds(),
-      violationCount:getViolationCount(),
-      violations:JSON.stringify(violationLog)
-    };
-    const result=await sendSubmission(submissionPayload);
+    const snapshot=captureSubmissionSnapshot('MANUAL');
+    snapshot.name=name;snapshot.task=lastSubmission.task;snapshot.code=lastSubmission.code;
+    const result=await sendSubmission(buildSubmissionPayload(snapshot,lastSubmission));
+    markSubmissionSent(snapshot);
     progress.scores=progress.scores||{};progress.scores[tasks[currentTask].id]=lastSubmission.score;if(lastSubmission.score===100){progress.solved=Array.from(new Set([...(progress.solved||[]),tasks[currentTask].id]));}saveProgress();button.innerHTML=`${icon('checkCircle',14)}<span>Terkirim</span>`;toast(`Tugas berhasil dikirim. Nilai: ${result.score??lastSubmission.score}/100.`);
   }catch(error){button.disabled=false;button.innerHTML=`${icon('upload',14)}<span>Submit Mission</span>`;toast(error.message||'Pengiriman gagal.','bad');}
 }
@@ -1519,7 +1555,11 @@ function bindEvents(){
     $('#startSessionError').hidden=true;
     $('#startStudentName').removeAttribute('aria-invalid');
   });
-  document.querySelectorAll('.challenge-item').forEach(button=>button.addEventListener('click',()=>renderTask(Number(button.dataset.task))));
+  $('#challengeList').addEventListener('click', event => {
+    const button = event.target.closest('.challenge-item');
+    if (button && !button.disabled) renderTask(Number(button.dataset.task));
+  });
+  $('#resetSessionBtn').addEventListener('click', resetSession);
   document.querySelectorAll('[data-tab]').forEach(button=>button.addEventListener('click',()=>{document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b===button));['description','rubric','materials'].forEach(t=>$(`#${t}Tab`).classList.toggle('hidden',t!==button.dataset.tab));}));
   document.querySelectorAll('[data-console-tab]').forEach(button=>button.addEventListener('click',()=>showConsole(button.dataset.consoleTab)));
   $('#runBtn').addEventListener('click',()=>execute('run'));$('#checkTestsBtn').addEventListener('click',()=>execute('submit'));$('#submitBtn').addEventListener('click',submitMission);
@@ -1609,8 +1649,9 @@ function bindEvents(){
   });
 }
 
-initEditor();initEditorResizer();bindEvents();renderProgress();renderTask(0);updateSessionLock();renderPenalty();
+initEditor();initEditorResizer();bindEvents();renderTaskList();renderProgress();renderTask(0);updateSessionLock();renderPenalty();
 if(sessionStarted&&!sessionFinished){updateTimer();}
 else if(sessionFinished)updateTimer();
 else {openStartSessionModal();updateTimer();}
 if(!sessionFinished)timerInterval=setInterval(updateTimer,1000);
+retryPendingAutoSubmission();
