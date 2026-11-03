@@ -33,7 +33,7 @@ function icon(name,size=14,className='') {
   return `<svg class="ui-icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${shape}</svg>`;
 }
 
-const SESSION_SECONDS = Math.max(1, Number(RULES.sessionMinutes) || 70) * 60;
+const SESSION_SECONDS = Math.max(1, Number(RULES.sessionMinutes) || 60) * 60;
 const DEADLINE_TIMESTAMP = Date.parse(RULES.deadlineAt || '2026-11-03T14:50:00+07:00');
 const START_KEY = 'cppMissionLab_sessionStart_v3';
 const FINISHED_KEY = 'cppMissionLab_sessionFinished_v3';
@@ -189,11 +189,11 @@ function updateTimer() {
   if (startButton) startButton.disabled = deadlineSeconds <= 0 || sessionFinished;
   const deadlineMessage = $('#deadlineModalMessage');
   if (deadlineMessage && deadlineSeconds <= 0) {
-    deadlineMessage.textContent = 'Batas akhir pukul ' + (RULES.deadlineLabel || '14.50 WIB') + ' telah tercapai. Sesi baru tidak dapat dimulai.';
+    deadlineMessage.textContent = 'Batas akhir pukul ' + (RULES.deadlineLabel || '15.00 WIB') + ' telah tercapai. Sesi baru tidak dapat dimulai.';
   }
   renderPenalty();
   if (sessionStarted && deadlineSeconds <= 0) {
-    finishSession(true, 'Batas akhir pengerjaan pukul ' + (RULES.deadlineLabel || '14.50 WIB') + ' telah tercapai.');
+    finishSession(true, 'Batas akhir pengerjaan pukul ' + (RULES.deadlineLabel || '15.00 WIB') + ' telah tercapai.');
   } else if (sessionStarted && seconds <= 0) {
     finishSession(true, 'Waktu pengerjaan ' + SESSION_SECONDS / 60 + ' menit telah habis.');
   }
@@ -234,7 +234,7 @@ function finishSession(notify=true, reason='Waktu pengerjaan habis. Semua tantan
 function startSession() {
   if(sessionStarted||sessionFinished)return false;
   if (deadlineRemainingSeconds() <= 0) {
-    finishSession(true, 'Batas akhir pengerjaan pukul ' + (RULES.deadlineLabel || '14.50 WIB') + ' telah tercapai.');
+    finishSession(true, 'Batas akhir pengerjaan pukul ' + (RULES.deadlineLabel || '15.00 WIB') + ' telah tercapai.');
     return false;
   }
   localStorage.setItem(PENALTY_KEY,'0');
