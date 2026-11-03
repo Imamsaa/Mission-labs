@@ -1028,10 +1028,17 @@ function renderStandardIO(task) {
   const inputKey = 'cppMissionLab_stdin_' + task.id;
   const savedInput = localStorage.getItem(inputKey);
   $('#stdinInput').value = savedInput !== null ? savedInput : (test.input || '');
-  const expectedOutput = (test.checks || [])
-    .map(([label, expected]) => label + ': ' + expected)
-    .join('\n');
-  $('#standardOutputPreview').textContent = expectedOutput || 'Output standar belum tersedia.';
+
+  const checks = Array.isArray(test.checks) ? test.checks : [];
+  const preview = $('#standardOutputPreview');
+  if (checks.length) {
+    preview.innerHTML = checks.map(([label, expected]) =>
+      '<div class="expected-output-line"><span>' + escapeHTML(String(label)) +
+      '</span><strong>' + escapeHTML(String(expected)) + '</strong></div>'
+    ).join('');
+  } else {
+    preview.innerHTML = '<div class="expected-output-empty">Output standar belum tersedia untuk misi ini.</div>';
+  }
   $('#standardInputCaseName').textContent = test.name ? '· ' + test.name : '';
 }
 function restoreStandardInput() {
