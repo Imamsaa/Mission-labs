@@ -1405,8 +1405,24 @@ function buildSubmissionPayload(snapshot,result) {
   };
 }
 function markSubmissionSent(snapshot){localStorage.setItem(SENT_PREFIX+snapshot.submissionId,'1');}
+function readPendingSubmissions() {
+  try {
+    const value = JSON.parse(localStorage.getItem(AUTO_PENDING_KEY) || '[]');
+    return Array.isArray(value) ? value : value ? [value] : [];
+  } catch { return []; }
+}
+function addPendingSubmission(snapshot) {
+  const queue = readPendingSubmissions();
+  if (!queue.some(item => item.submissionId === snapshot.submissionId)) queue.push(snapshot);
+  localStorage.setItem(AUTO_PENDING_KEY, JSON.stringify(queue));
+}
+function removePendingSubmission(snapshot) {
+  const queue = readPendingSubmissions().filter(item => item.submissionId !== snapshot.submissionId);
+  if (queue.length) localStorage.setItem(AUTO_PENDING_KEY, JSON.stringify(queue));
+  else localStorage.removeItem(AUTO_PENDING_KEY);
+}
 async function processAutoSubmission(snapshot) {
-  if(localStorage.getItem(SENT_PREFIX+snapshot.submissionId)==='1'){localStorage.removeItem(AUTO_PENDING_KEY);toast('Jawaban sesi ini sudah pernah tersimpan di spreadsheet.');return;}
+  if(localStorage.getItem(SENT_PREFIX+snapshot.submissionId)==='1'){removePendingSubmission(snapshot);toast('Jawaban sesi ini sudah pernah tersimpan di spreadsheet.');return;}
   if(!APPS_SCRIPT_URL||APPS_SCRIPT_URL.includes('PASTE_APPS_SCRIPT'))throw new Error('URL Google Apps Script belum dikonfigurasi.');
   const task=tasks.find(item=>item.id===snapshot.taskId);
   if(!task)throw new Error('Misi untuk pengiriman otomatis tidak ditemukan.');
@@ -1414,7 +1430,7 @@ async function processAutoSubmission(snapshot) {
   if(lastSubmission&&lastSubmission.task===snapshot.task&&lastSubmission.code===snapshot.code)result=lastSubmission;
   else {showLoading('Waktu habis · Menguji jawaban...','Menjalankan test case otomatis sebelum pengiriman.',40);result=await evaluateTaskSource(snapshot.code,task);}
   await sendSubmission(buildSubmissionPayload(snapshot,result));
-  markSubmissionSent(snapshot);localStorage.removeItem(AUTO_PENDING_KEY);
+  markSubmissionSent(snapshot);removePendingSubmission(snapshot);
   progress.scores=progress.scores||{};progress.scores[task.id]=result.score;
   if(result.score===100)progress.solved=Array.from(new Set([...(progress.solved||[]),task.id]));
   saveProgress();hideLoading();
@@ -1422,20 +1438,30 @@ async function processAutoSubmission(snapshot) {
   toast('Jawaban otomatis berhasil dikirim ke spreadsheet: '+task.title+'.','good');
 }
 async function autoSubmitTimedOutTask() {
-  if(autoSubmissionInFlight||localStorage.getItem(AUTO_PENDING_KEY))return;
+  if(autoSubmissionInFlight)return;
   const snapshot=captureSubmissionSnapshot('OTOMATIS - WAKTU HABIS');
   if(!snapshot.name||!snapshot.code.trim()){toast('Waktu habis. Nama atau kode kosong, sehingga jawaban tidak dapat dikirim otomatis.','bad');return;}
   if(localStorage.getItem(SENT_PREFIX+snapshot.submissionId)==='1'){toast('Waktu habis. Jawaban terakhir sudah pernah dikirim ke spreadsheet.');return;}
-  localStorage.setItem(AUTO_PENDING_KEY,JSON.stringify(snapshot));autoSubmissionInFlight=true;
+  addPendingSubmission(snapshot);autoSubmissionInFlight=true;
   try{await processAutoSubmission(snapshot);}
   catch(error){hideLoading();toast('Waktu habis, tetapi pengiriman otomatis belum berhasil. Salinan jawaban disimpan untuk dicoba kembali saat halaman dibuka.','bad');console.error('Automatic submission failed:',error);}
   finally{autoSubmissionInFlight=false;}
 }
 async function retryPendingAutoSubmission() {
-  let snapshot=null;try{snapshot=JSON.parse(localStorage.getItem(AUTO_PENDING_KEY)||'null');}catch{}
-  if(!snapshot||autoSubmissionInFlight)return;autoSubmissionInFlight=true;
-  try{await processAutoSubmission(snapshot);}catch(error){console.warn('Pending automatic submission could not be delivered:',error);}
-  finally{autoSubmissionInFlight=false;}
+  const queue = readPendingSubmissions();
+  if (!queue.length || autoSubmissionInFlight) return;
+  autoSubmissionInFlight = true;
+  try {
+    for (const snapshot of queue) {
+      try { await processAutoSubmission(snapshot); }
+      catch (error) {
+        console.warn('Pending automatic submission could not be delivered:', error);
+        break;
+      }
+    }
+  } finally {
+    autoSubmissionInFlight = false;
+  }
 }
 function resetSession() {
   if(compileBusy||autoSubmissionInFlight){toast('Tunggu proses yang sedang berjalan sebelum mereset sesi.','bad');return;}
