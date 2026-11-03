@@ -55,7 +55,7 @@ Proteksi browser adalah deterrent, bukan jaminan anti-cheat mutlak. Screenshot s
 - Compiler: `browsercc@0.1.1` (Clang C++17 → WebAssembly).
 - Runtime: `@bjorn3/browser_wasi_shim@0.4.2`.
 - Compile dan eksekusi berjalan pada Web Worker.
-- Run Code mendukung STDIN untuk `cin`, `getline`, dan `cin.ignore()`.
+- Run Code mendukung STDIN untuk `cin`, `getline`, dan `cin.ignore()`. Format input fleksibel: siswa boleh menulis nilai dalam satu baris atau banyak baris, menggunakan `cin` tunggal maupun berantai, selama urutan pembacaan data sesuai instruksi misi. Spasi dan baris baru diperlakukan sebagai pemisah input.
 - Setiap test case dijalankan dalam instance WebAssembly terpisah.
 - Batas runtime per program/test case: lima detik untuk mencegah infinite loop.
 - Kunjungan pertama memerlukan koneksi internet untuk memuat dependensi CDN.
