@@ -12,7 +12,7 @@ const HEADERS = [
   'Test Lolos', 'Total Test', 'Nilai Akhir', 'Rincian Pengujian',
   'Tanggal Submit', 'Jam Submit', 'Keberhasilan', 'Waktu Mulai',
   'Sisa Waktu Saat Submit', 'Lama Pengerjaan', 'Jumlah Pelanggaran',
-  'Rincian Pelanggaran'
+  'Rincian Pelanggaran', 'Jenis Submit', 'ID Pengiriman'
 ];
 const MAX_SUBMISSION_CHARS = 110000;
 const MAX_CHUNKS = 240;
@@ -80,7 +80,9 @@ function setup() {
     'Sisa Waktu Saat Submit': 155,
     'Lama Pengerjaan': 135,
     'Jumlah Pelanggaran': 125,
-    'Rincian Pelanggaran': 360
+    'Rincian Pelanggaran': 360,
+    'Jenis Submit': 170,
+    'ID Pengiriman': 260
   };
   Object.keys(widths).forEach(function (header) {
     if (headerMap[header]) sheet.setColumnWidth(headerMap[header], widths[header]);
@@ -191,7 +193,17 @@ function saveSubmission_(payload) {
   if (!name || !task || !code.trim()) throw new Error('Nama, tugas, dan kode wajib diisi.');
   if (name.length > 120) throw new Error('Nama terlalu panjang.');
   if (code.length > 45000) throw new Error('Kode C++ melebihi batas 45.000 karakter.');
-  if (task !== 'Smart Canteen') throw new Error('Nama tugas tidak valid.');
+  const allowedTasks = [
+    'Smart Canteen', 'Smart Parking Gate', 'Rekap Nilai Akademik', 'ATM Simulator',
+    'Smart Courier', 'Theme Park Ticketing', 'Robot Tournament Scoring',
+    'Warehouse Stock Control', 'Internet Plan Billing', 'Festival Ticketing System'
+  ];
+  if (allowedTasks.indexOf(task) === -1) throw new Error('Nama tugas tidak valid.');
+
+  const submissionId = String(payload.submissionId || '').trim();
+  if (submissionId && !/^[a-zA-Z0-9_-]{8,180}$/.test(submissionId)) {
+    throw new Error('ID pengiriman tidak valid.');
+  }
 
   const passed = Math.max(0, Math.min(3, Number(payload.passed) || 0));
   const total = Math.max(1, Math.min(3, Number(payload.total) || 1));
@@ -257,16 +269,34 @@ function saveSubmission_(payload) {
     'Sisa Waktu Saat Submit': formatDuration_(remainingSeconds),
     'Lama Pengerjaan': formatDuration_(elapsedSeconds),
     'Jumlah Pelanggaran': violationCount,
-    'Rincian Pelanggaran': safeCellText_(violationText.slice(0, 20000))
+    'Rincian Pelanggaran': safeCellText_(violationText.slice(0, 20000)),
+    'Jenis Submit': safeCellText_(String(payload.submitType || 'MANUAL').slice(0, 80)),
+    'ID Pengiriman': submissionId
   };
 
   const row = headers.map(function (header) {
     return Object.prototype.hasOwnProperty.call(data, header) ? data[header] : '';
   });
-  sheet.appendRow(row);
+  const idColumn = headers.indexOf('ID Pengiriman') + 1;
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    if (submissionId && idColumn > 0 && sheet.getLastRow() > 1) {
+      const duplicate = sheet.getRange(2, idColumn, sheet.getLastRow() - 1, 1)
+        .createTextFinder(submissionId)
+        .matchEntireCell(true)
+        .findNext();
+      if (duplicate) {
+        return { ok: true, complete: true, duplicate: true, score: score, violationCount: violationCount, message: 'Submission sudah pernah tersimpan.' };
+      }
+    }
+    sheet.appendRow(row);
+  } finally {
+    lock.releaseLock();
+  }
   return { ok: true, complete: true, score: score, violationCount: violationCount, message: 'Submission tersimpan.' };
 }
 
 function SESSION_SECONDS_LIMIT_() {
-  return 70 * 60 + 60 * 60;
+  return 60 * 60;
 }
