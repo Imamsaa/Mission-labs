@@ -93,3 +93,8 @@ Draft, progres, nama, timer, penalti, dan antrean pengiriman otomatis tertunda d
 - **STDIN (Standard Input):** tempat siswa mengisi data yang akan dibaca oleh program melalui `cin` atau `getline()`. Format spasi dan baris baru sama-sama diterima.
 - **STDOUT (Standard Output):** tempat melihat hasil yang ditampilkan program melalui `cout` setelah tombol **Run Code** ditekan.
 - **TEST RESULTS:** tempat melihat hasil tiga test case otomatis setelah tombol **Check Tests** ditekan. Output setiap test case yang ditampilkan tersedia pada detail pengujian.
+
+
+### Input/output standar dari sistem
+
+Saat siswa memilih sebuah misi, kolom STDIN otomatis diisi dengan input dari test case publik pertama untuk misi tersebut. Sistem juga menampilkan STDOUT yang diharapkan sebagai pembanding. Siswa dapat mengubah input secara bebas; input terakhir disimpan per misi di browser. Tombol **Pulihkan standar** mengembalikan input bawaan dari sistem.
