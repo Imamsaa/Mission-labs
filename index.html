@@ -56,7 +56,19 @@
         </div>
         <div class="editor-footer"><span>Ln <b id="lineCount">1</b>, Col <b id="columnCount">1</b></span><span>UTF-8 · C++17</span><span class="shortcut-hint"><kbd>Tab</kbd> Indent · <kbd>Ctrl</kbd>+<kbd>Enter</kbd> Run</span></div>
         <div class="console-panel"><div class="console-header"><div class="console-tabs"><button class="console-tab active" data-console-tab="input">STDIN</button><button class="console-tab" data-console-tab="output">STDOUT</button><button class="console-tab" data-console-tab="tests">TEST RESULTS <span class="console-count" id="testResultCount">—</span></button></div><div class="console-actions"><span id="runDuration"></span><button class="clear-btn" id="clearOutputBtn">Clear</button></div></div>
-          <div id="inputView" class="console-view stdin-view"><div class="stdin-toolbar"><div><strong>STANDARD INPUT</strong><small>Masukkan data sesuai urutan input pada soal. Format spasi atau baris baru bebas.</small></div></div><textarea id="stdinInput" class="stdin-input" rows="4" spellcheck="false" placeholder="Masukkan data input di sini..."></textarea><div class="stdin-help">Spasi dan Enter sama-sama menjadi pemisah input. Gunakan cin.ignore() saat berpindah dari cin ke getline().</div></div>
+          <div id="inputView" class="console-view stdin-view">
+            <div class="stdin-toolbar">
+              <div><strong>STANDARD INPUT (STDIN)</strong><small>Input standar dari sistem untuk menguji misi ini. Kamu boleh mengubahnya.</small></div>
+              <button id="restoreStandardInputBtn" class="clear-btn" type="button">Pulihkan standar</button>
+            </div>
+            <textarea id="stdinInput" class="stdin-input" rows="5" spellcheck="false" placeholder="Input standar akan dimuat otomatis..."></textarea>
+            <div class="stdin-help">Data awal berasal dari test case publik. Kamu bebas mengubah nilai, spasi, atau baris untuk mencoba program.</div>
+            <div class="standard-output-reference">
+              <div class="standard-output-heading"><strong>STANDARD OUTPUT (EXPECTED)</strong><span id="standardInputCaseName"></span></div>
+              <pre id="standardOutputPreview">Output standar akan tampil di sini.</pre>
+              <p>Ini adalah hasil yang diharapkan untuk input standar di atas. Bandingkan dengan STDOUT setelah menekan Run Code.</p>
+            </div>
+          </div>
           <div id="outputView" class="console-view hidden"><div class="empty-console stdout-empty"><span class="terminal-glyph"><svg class="ui-icon" viewBox="0 0 24 24"><path d="m5 7 5 5-5 5M13 17h6"/></svg></span><div><strong>STANDARD OUTPUT (STDOUT)</strong><p>Hasil dari cout akan tampil di sini setelah kamu menekan Run Code.</p></div></div></div>
           <div id="testsView" class="console-view hidden"><div class="empty-console"><span class="terminal-glyph"><svg class="ui-icon" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></span><div><strong>TEST RESULTS</strong><p>Tekan Check Tests untuk menjalankan tiga skenario pengujian. Hasil stdout setiap test terlihat pada detail test yang ditampilkan.</p></div></div></div>
         </div>
@@ -90,5 +102,5 @@
   <div id="loadingOverlay" class="loading-overlay hidden"><div class="loading-card"><div class="loader-ring"></div><p class="eyebrow">WASM COMPILER</p><h2 id="loadingTitle">Menyiapkan compiler...</h2><p id="loadingMessage">Menginisialisasi C++ di browser.</p><div class="loading-progress"><span id="loadingProgress"></span></div><small>Proses pertama kali bisa membutuhkan waktu lebih lama.</small></div></div>
   <script src="./js/config.js"></script>
   <script src="./js/rules.config.js?v=practice-no-deadline-20261103"></script>
-  <script type="module" src="./js/app.js?v=stdin-stdout-test-console-20261103"></script>
+  <script type="module" src="./js/app.js?v=system-stdin-stdout-reference-20261103"></script>
 </body></html>
