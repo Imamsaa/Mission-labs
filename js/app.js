@@ -1023,11 +1023,19 @@ function updateCursorInfo() { if(!editor?.state)return;const pos=editor.state.se
 function getPublicStandardTest(task) {
   return task.tests.find(test => !test.hidden) || task.tests[0] || { input: '', checks: [] };
 }
+function fitStandardInput() {
+  const input = $('#stdinInput');
+  if (!input) return;
+  input.style.height = 'auto';
+  input.style.overflowY = 'hidden';
+  input.style.height = Math.max(132, input.scrollHeight + 2) + 'px';
+}
 function renderStandardIO(task) {
   const test = getPublicStandardTest(task);
   const inputKey = 'cppMissionLab_stdin_' + task.id;
   const savedInput = localStorage.getItem(inputKey);
   $('#stdinInput').value = savedInput !== null ? savedInput : (test.input || '');
+  fitStandardInput();
 
   const checks = Array.isArray(test.checks) ? test.checks : [];
   const preview = $('#standardOutputPreview');
@@ -1045,6 +1053,7 @@ function restoreStandardInput() {
   const task = tasks[currentTask];
   const test = getPublicStandardTest(task);
   $('#stdinInput').value = test.input || '';
+  fitStandardInput();
   localStorage.setItem('cppMissionLab_stdin_' + task.id, $('#stdinInput').value);
   toast('Input standar untuk ' + task.title + ' dipulihkan.');
 }
@@ -1597,6 +1606,7 @@ function initEditorResizer() {
 function bindEvents(){
   $('#stdinInput').addEventListener('input', () => {
     const task = tasks[currentTask];
+    fitStandardInput();
     if (task) localStorage.setItem('cppMissionLab_stdin_' + task.id, $('#stdinInput').value);
   });
   $('#restoreStandardInputBtn').addEventListener('click', restoreStandardInput);
