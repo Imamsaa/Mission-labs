@@ -1192,3 +1192,17 @@ body.modal-open{overflow:hidden}
   .standard-output-reference{min-height:0}
   .expected-output-line{font-size:9px!important}
 }
+
+
+/* Keep both test reference cards visible on compact laptop/tablet widths. */
+@media(min-width:521px){
+  .stdin-testing-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important}
+}
+@media(max-width:680px){
+  .console-panel{min-height:310px!important}
+  #inputView.console-view{overflow:visible!important}
+}
+@media(max-width:520px){
+  .stdin-testing-grid{grid-template-columns:1fr!important}
+  .console-panel{min-height:0!important}
+}
