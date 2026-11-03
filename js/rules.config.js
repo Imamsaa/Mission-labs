@@ -16,13 +16,13 @@
  */
 window.MISSION_RULES = Object.freeze({
   // false = siswa/developer boleh copy, cut, paste dan memilih teks soal.
-  restrictClipboard: false,
+  restrictClipboard: true,
 
   // false = berpindah tab atau membuka tab lain tidak mengurangi waktu.
-  penalizeTabSwitch: false,
+  penalizeTabSwitch: true,
 
   // false = klik kanan / menu konteks tidak dikenai penalti.
-  penalizeContextMenu: false,
+  penalizeContextMenu: true,
 
   // false = shortcut screenshot, print, dan Developer Tools tidak dikenai penalti.
   penalizeSystemShortcuts: true,
@@ -35,5 +35,5 @@ window.MISSION_RULES = Object.freeze({
 
   // Batas akhir bersama: 3 November 2026, pukul 14.50 WIB (UTC+7).
   deadlineAt: '2026-11-03T14:50:00+07:00',
-  deadlineLabel: '14.50 WIB'
+  deadlineLabel: '15.00 WIB'
 });
