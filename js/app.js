@@ -62,13 +62,13 @@ const tasks = [
     "subtitle": "Kasir kantin dengan transaksi berulang, validasi produk, diskon bertingkat, dan metode pembayaran.",
     "category": "TRANSAKSI & LOGIKA",
     "difficulty": "MEDIUM",
-    "brief": "<p class=\"problem-description\">Bangun aplikasi kasir kantin yang melayani beberapa jenis produk dalam satu pembelian. Program harus mencatat transaksi valid, menghitung total barang dan subtotal, menerapkan diskon sesuai status pelanggan, serta menentukan biaya pembayaran.</p><div class=\"callout\"><b>Tujuan misi:</b> Seorang siswa dapat membeli beberapa jenis produk. Input transaksi terus dibaca sampai kode sentinel <code>0 0</code> dimasukkan. Setelah itu, program membaca metode pembayaran.</div><div class=\"section-block\"><h3>1. Format input</h3>\n<p>Format penempatan input <b>bebas</b>. Kamu boleh menulis semua nilai dalam satu baris, membaginya ke beberapa baris, atau menggunakan beberapa perintah <code>cin</code>. Spasi dan Enter sama-sama menjadi pemisah data. Yang wajib diperhatikan hanya <b>urutan nilai</b> yang dibaca oleh program.</p>\n<div class=\"callout\"><b>Urutan data:</b><p>status_member → (kode_produk, jumlah) berulang → 0 0 → metode_pembayaran</p></div>\n<p class=\"brief-note\">Setelah status member, program membaca pasangan kode produk dan jumlah berulang kali. Masukkan sentinel 0 0 untuk mengakhiri transaksi, lalu masukkan metode pembayaran.</p><div class=\"section-block\"><h3>2. Aturan dan ketentuan</h3><ul><li><b>Produk:</b> kode 1 Nasi Goreng = Rp12.000; kode 2 Roti Bakar = Rp8.000; kode 3 Jus Buah = Rp6.000; kode 4 Air Mineral = Rp4.000.</li><li>Status member: 1 = member, 0 = non-member.</li><li>Jumlah barang per baris transaksi harus 1–20. Kode produk tidak dikenal atau jumlah di luar batas diabaikan dan tidak mengubah akumulator.</li><li><b>Jumlah Transaksi</b> adalah jumlah baris pembelian valid. <b>Jumlah Barang</b> adalah total unit semua produk valid.</li><li><b>Diskon member:</b> subtotal ≥ Rp50.000 mendapat 15%; jika tidak, subtotal ≥ Rp25.000 mendapat 10%; selain itu 0%.</li><li><b>Diskon non-member:</b> subtotal ≥ Rp100.000 mendapat 10%; jika tidak, subtotal ≥ Rp50.000 mendapat 5%; selain itu 0%.</li><li>Pembayaran 1 = tunai tanpa admin. Pembayaran 2 = QRIS dengan admin 1% dari subtotal setelah diskon.</li><li>Total Bayar = Subtotal − Diskon + Biaya Admin. Gunakan bilangan bulat untuk nominal rupiah.</li></ul></div><div class=\"section-block\"><h3>3. Format output wajib</h3><p>Tampilkan semua label berikut persis seperti tertulis, satu label per baris, diikuti titik dua dan hasil perhitungan.</p><pre class=\"brief-code\">Jumlah Transaksi: ...\nJumlah Barang: ...\nSubtotal: ...\nDiskon: ...\nBiaya Admin: ...\nTotal Bayar: ...</pre></div><div class=\"section-block\"><h3>4. Validasi dan batasan</h3><ul><li>Sentinel <code>0 0</code> bukan transaksi dan tidak boleh dihitung.</li><li>Biaya QRIS dihitung setelah diskon.</li><li>Transaksi tidak valid tidak menambah subtotal, jumlah barang, ataupun jumlah transaksi.</li><li>Jika tidak ada transaksi valid, seluruh nilai akumulasi tetap 0.</li></ul></div>",
+    "brief": "<p class=\"problem-description\">Bangun aplikasi kasir kantin yang melayani sejumlah transaksi pembelian produk. Program harus mencatat transaksi valid, menghitung total barang dan subtotal, menerapkan diskon sesuai status pelanggan, serta menentukan biaya pembayaran.</p><div class=\"callout\"><b>Tujuan misi:</b> Jumlah transaksi dimasukkan di awal. Program kemudian membaca tepat sebanyak jumlah transaksi tersebut, lalu menerima metode pembayaran.</div><div class=\"section-block\"><h3>1. Format input</h3>\n<p>Format penempatan input <b>bebas</b>. Kamu boleh menulis semua nilai dalam satu baris, membaginya ke beberapa baris, atau menggunakan beberapa perintah <code>cin</code>. Spasi dan Enter sama-sama menjadi pemisah data. Yang wajib diperhatikan hanya <b>urutan nilai</b> yang dibaca oleh program.</p>\n<div class=\"callout\"><b>Urutan data:</b><p>status_member → jumlah_transaksi → (kode_produk, jumlah) sebanyak jumlah_transaksi kali → metode_pembayaran</p></div>\n<p class=\"brief-note\">Nilai <b>jumlah_transaksi</b> menentukan banyaknya pasangan kode produk dan jumlah yang harus dibaca. Setelah seluruh transaksi dibaca, masukkan metode pembayaran.</p></div><div class=\"section-block\"><h3>2. Aturan dan ketentuan</h3><ul><li><b>Produk:</b> kode 1 Nasi Goreng = Rp12.000; kode 2 Roti Bakar = Rp8.000; kode 3 Jus Buah = Rp6.000; kode 4 Air Mineral = Rp4.000.</li><li>Status member: 1 = member, 0 = non-member.</li><li>Jumlah transaksi yang dimasukkan di awal harus berada pada rentang 1–20.</li><li>Jumlah barang per transaksi harus 1–20. Kode produk tidak dikenal atau jumlah di luar batas diabaikan dan tidak mengubah akumulator.</li><li><b>Jumlah Transaksi</b> pada output adalah jumlah baris pembelian yang valid. <b>Jumlah Barang</b> adalah total unit semua produk valid.</li><li><b>Diskon member:</b> subtotal ≥ Rp50.000 mendapat 15%; jika tidak, subtotal ≥ Rp25.000 mendapat 10%; selain itu 0%.</li><li><b>Diskon non-member:</b> subtotal ≥ Rp100.000 mendapat 10%; jika tidak, subtotal ≥ Rp50.000 mendapat 5%; selain itu 0%.</li><li>Pembayaran 1 = tunai tanpa admin. Pembayaran 2 = QRIS dengan admin 1% dari subtotal setelah diskon.</li><li>Total Bayar = Subtotal − Diskon + Biaya Admin. Gunakan bilangan bulat untuk nominal rupiah.</li></ul></div><div class=\"section-block\"><h3>3. Format output wajib</h3><p>Tampilkan semua label berikut persis seperti tertulis, satu label per baris, diikuti titik dua dan hasil perhitungan.</p><pre class=\"brief-code\">Jumlah Transaksi: ...\nJumlah Barang: ...\nSubtotal: ...\nDiskon: ...\nBiaya Admin: ...\nTotal Bayar: ...</pre></div><div class=\"section-block\"><h3>4. Validasi dan batasan</h3><ul><li>Program membaca jumlah transaksi yang dimasukkan di awal dan memproses tepat sebanyak itu.</li><li>Kode produk tidak dikenal atau jumlah tidak valid tidak menambah subtotal, jumlah barang, maupun Jumlah Transaksi.</li><li>Biaya QRIS dihitung setelah diskon.</li><li>Jika tidak ada transaksi valid, seluruh nilai akumulasi tetap 0.</li></ul></div>",
     "rubric": "<h3>Rubrik penilaian · 100 poin</h3><div class=\"rubric-list\"><div><span>Validasi dan input</span><b>15</b></div><div><span>do-while transaksi</span><b>15</b></div><div><span>switch-case produk/pembayaran</span><b>15</b></div><div><span>Akumulasi subtotal</span><b>15</b></div><div><span>Diskon bertingkat</span><b>20</b></div><div><span>Biaya admin dan output</span><b>20</b></div></div>",
     "materials": "<h3>Materi yang dilatih</h3><ul><li>Variabel dan operasi aritmetika.</li><li>cin, cout, dan validasi input.</li><li>Operator perbandingan dan logika.</li><li>if/else if/else dan nested if.</li><li>switch-case dan do-while.</li></ul>",
     "tests": [
       {
         "name": "Member + tunai",
-        "input": "1\n1\n5\n3\n5\n0\n0\n1",
+        "input": "1\n2\n1\n5\n3\n5\n1",
         "hidden": false,
         "checks": [
           [
@@ -99,7 +99,7 @@ const tasks = [
       },
       {
         "name": "Non-member + QRIS",
-        "input": "0\n2\n4\n4\n5\n0\n0\n2",
+        "input": "0\n2\n2\n4\n4\n5\n2",
         "hidden": true,
         "checks": [
           [
@@ -130,7 +130,7 @@ const tasks = [
       },
       {
         "name": "Produk tidak valid",
-        "input": "1\n2\n3\n9\n1\n4\n1\n0\n0\n1",
+        "input": "1\n3\n2\n3\n9\n1\n4\n1\n1",
         "hidden": true,
         "checks": [
           [
@@ -329,13 +329,13 @@ const tasks = [
     "subtitle": "Simulasikan setoran dan penarikan berulang dengan validasi saldo.",
     "category": "DO-WHILE & SWITCH",
     "difficulty": "MEDIUM",
-    "brief": "<p class=\"problem-description\">Buat simulasi mesin ATM yang melayani setoran dan penarikan berulang. Mesin harus menjaga saldo agar tidak negatif dan hanya mencatat transaksi yang benar-benar berhasil.</p><div class=\"callout\"><b>Tujuan misi:</b> Program dimulai dengan saldo awal, lalu membaca pilihan transaksi sampai pengguna memasukkan pilihan 0 untuk selesai.</div><div class=\"section-block\"><h3>1. Format input</h3>\n<p>Format penempatan input <b>bebas</b>. Kamu boleh menulis semua nilai dalam satu baris, membaginya ke beberapa baris, atau menggunakan beberapa perintah <code>cin</code>. Spasi dan Enter sama-sama menjadi pemisah data. Yang wajib diperhatikan hanya <b>urutan nilai</b> yang dibaca oleh program.</p>\n<div class=\"callout\"><b>Urutan data:</b><p>saldo_awal → (pilihan_transaksi, nominal jika pilihan 1 atau 2) berulang → 0 untuk selesai</p></div>\n<p class=\"brief-note\">Setiap transaksi diawali pilihan. Jika pilihan 1 atau 2, masukkan nominal setelahnya. Pilihan 0 mengakhiri transaksi dan tidak diikuti nominal.</p><div class=\"section-block\"><h3>2. Aturan dan ketentuan</h3><ul><li>Pilihan transaksi: 1 = setoran, 2 = penarikan, 0 = selesai.</li><li>Setoran menambah saldo dan Total Setoran sebesar nominal transaksi.</li><li>Penarikan mengurangi saldo dan menambah Total Penarikan hanya jika saldo mencukupi.</li><li>Nominal transaksi harus lebih dari 0. Nominal 0 atau negatif tidak diproses.</li><li>Transaksi Berhasil hanya menghitung setoran atau penarikan yang berhasil.</li><li>Penarikan yang melebihi saldo ditolak dan tidak mengubah saldo maupun akumulator.</li><li>Pilihan 0 menghentikan proses dan tidak diikuti input nominal.</li></ul></div><div class=\"section-block\"><h3>3. Format output wajib</h3><p>Tampilkan semua label berikut persis seperti tertulis, satu label per baris, diikuti titik dua dan hasil perhitungan.</p><pre class=\"brief-code\">Saldo Akhir: ...\nTransaksi Berhasil: ...\nTotal Setoran: ...\nTotal Penarikan: ...</pre></div><div class=\"section-block\"><h3>4. Validasi dan batasan</h3><ul><li>Penarikan ditolak tidak boleh mengurangi saldo.</li><li>Pilihan menu tidak valid tidak dihitung sebagai transaksi.</li><li>Pilihan sentinel 0 tidak meminta nominal.</li></ul></div>",
+    "brief": "<p class=\"problem-description\">Buat simulasi mesin ATM yang melayani sejumlah setoran dan penarikan. Mesin harus menjaga saldo agar tidak negatif dan hanya mencatat transaksi yang benar-benar berhasil.</p><div class=\"callout\"><b>Tujuan misi:</b> Program menerima saldo awal dan jumlah transaksi. Setiap transaksi terdiri dari pilihan setoran atau penarikan serta nominalnya.</div><div class=\"section-block\"><h3>1. Format input</h3>\n<p>Format penempatan input <b>bebas</b>. Kamu boleh menulis semua nilai dalam satu baris, membaginya ke beberapa baris, atau menggunakan beberapa perintah <code>cin</code>. Spasi dan Enter sama-sama menjadi pemisah data. Yang wajib diperhatikan hanya <b>urutan nilai</b> yang dibaca oleh program.</p>\n<div class=\"callout\"><b>Urutan data:</b><p>saldo_awal → jumlah_transaksi → (pilihan_transaksi, nominal) sebanyak jumlah_transaksi kali</p></div>\n<p class=\"brief-note\">Masukkan jumlah transaksi setelah saldo awal. Untuk setiap transaksi, masukkan pilihan dan nominal. Program membaca tepat sebanyak jumlah transaksi yang ditentukan.</p></div><div class=\"section-block\"><h3>2. Aturan dan ketentuan</h3><ul><li>Jumlah transaksi yang dimasukkan di awal harus berada pada rentang 1–20.</li><li>Pilihan transaksi: 1 = setoran dan 2 = penarikan.</li><li>Setoran menambah saldo dan Total Setoran sebesar nominal transaksi.</li><li>Penarikan mengurangi saldo dan menambah Total Penarikan hanya jika saldo mencukupi.</li><li>Nominal transaksi harus lebih dari 0. Nominal 0 atau negatif tidak diproses.</li><li>Transaksi Berhasil hanya menghitung setoran atau penarikan yang berhasil.</li><li>Penarikan yang melebihi saldo ditolak dan tidak mengubah saldo maupun akumulator.</li><li>Pilihan selain 1 atau 2 tidak diproses sebagai transaksi berhasil.</li></ul></div><div class=\"section-block\"><h3>3. Format output wajib</h3><p>Tampilkan semua label berikut persis seperti tertulis, satu label per baris, diikuti titik dua dan hasil perhitungan.</p><pre class=\"brief-code\">Saldo Akhir: ...\nTransaksi Berhasil: ...\nTotal Setoran: ...\nTotal Penarikan: ...</pre></div><div class=\"section-block\"><h3>4. Validasi dan batasan</h3><ul><li>Program membaca tepat sebanyak jumlah transaksi yang dimasukkan di awal.</li><li>Penarikan yang ditolak tidak boleh mengurangi saldo atau menambah penghitung transaksi.</li><li>Pilihan transaksi selain 1 atau 2 tidak mengubah saldo.</li><li>Saldo akhir tidak boleh negatif.</li></ul></div>",
     "rubric": "<h3>Rubrik penilaian · 100 poin</h3><div class=\"rubric-list\"><div><span>Input transaksi</span><b>15</b></div><div><span>do-while dengan sentinel</span><b>20</b></div><div><span>switch-case</span><b>20</b></div><div><span>Validasi nominal dan saldo</span><b>25</b></div><div><span>Akumulasi dan ringkasan</span><b>20</b></div></div>",
     "materials": "<h3>Materi yang dilatih</h3><ul><li>do-while dan sentinel.</li><li>switch-case.</li><li>Nested if dan validasi saldo.</li><li>Akumulator dan operasi aritmetika.</li></ul>",
     "tests": [
       {
         "name": "Setor dan tarik",
-        "input": "50000\n1\n20000\n2\n30000\n0",
+        "input": "50000\n2\n1\n20000\n2\n30000",
         "hidden": false,
         "checks": [
           [
@@ -358,7 +358,7 @@ const tasks = [
       },
       {
         "name": "Penarikan ditolak",
-        "input": "50000\n2\n60000\n1\n10000\n0",
+        "input": "50000\n2\n2\n60000\n1\n10000",
         "hidden": true,
         "checks": [
           [
@@ -381,7 +381,7 @@ const tasks = [
       },
       {
         "name": "Beberapa transaksi",
-        "input": "100000\n1\n50000\n2\n25000\n2\n200000\n0",
+        "input": "100000\n3\n1\n50000\n2\n25000\n2\n200000",
         "hidden": true,
         "checks": [
           [
@@ -701,13 +701,13 @@ const tasks = [
     "subtitle": "Kelola stok masuk dan keluar dengan transaksi berulang serta validasi persediaan.",
     "category": "LOOP & SWITCH",
     "difficulty": "HARD",
-    "brief": "<p class=\"problem-description\">Buat sistem kontrol persediaan gudang. Operator dapat mencatat barang masuk dan barang keluar secara berulang. Sistem wajib menjaga stok agar tidak negatif dan hanya menghitung transaksi yang berhasil.</p><div class=\"callout\"><b>Tujuan misi:</b> Program dimulai dengan stok awal lalu membaca transaksi sampai operator memilih menu selesai.</div><div class=\"section-block\"><h3>1. Format input</h3>\n<p>Format penempatan input <b>bebas</b>. Kamu boleh menulis semua nilai dalam satu baris, membaginya ke beberapa baris, atau menggunakan beberapa perintah <code>cin</code>. Spasi dan Enter sama-sama menjadi pemisah data. Yang wajib diperhatikan hanya <b>urutan nilai</b> yang dibaca oleh program.</p>\n<div class=\"callout\"><b>Urutan data:</b><p>stok_awal → (pilihan_transaksi, jumlah_barang jika pilihan 1 atau 2) berulang → 0 untuk selesai</p></div>\n<p class=\"brief-note\">Setiap transaksi diawali pilihan. Untuk pilihan 1 atau 2, jumlah barang dibaca setelahnya. Pilihan 0 mengakhiri input dan tidak diikuti jumlah.</p><div class=\"section-block\"><h3>2. Aturan dan ketentuan</h3><ul><li>Stok awal harus 0–100.000 unit.</li><li>Pilihan 1 = barang masuk, 2 = barang keluar, 0 = selesai.</li><li>Barang masuk menambah stok dan Total Barang Masuk.</li><li>Barang keluar mengurangi stok hanya jika jumlah yang diminta tidak melebihi stok tersedia.</li><li>Jumlah tiap transaksi harus 1–1.000 unit.</li><li>Transaksi Valid hanya menghitung transaksi masuk atau keluar yang berhasil.</li><li>Transaksi keluar yang ditolak tidak mengubah stok, penghitung transaksi, maupun Total Barang Keluar.</li></ul></div><div class=\"section-block\"><h3>3. Format output wajib</h3><p>Tampilkan semua label berikut persis seperti tertulis, satu label per baris, diikuti titik dua dan hasil perhitungan.</p><pre class=\"brief-code\">Stok Akhir: ...\nTransaksi Valid: ...\nTotal Barang Masuk: ...\nTotal Barang Keluar: ...</pre></div><div class=\"section-block\"><h3>4. Validasi dan batasan</h3><ul><li>Barang keluar yang ditolak tidak boleh mengubah stok.</li><li>Sentinel 0 tidak diikuti jumlah barang.</li><li>Jaga agar stok tidak pernah negatif.</li></ul></div>",
+    "brief": "<p class=\"problem-description\">Buat sistem kontrol persediaan gudang. Operator menentukan jumlah transaksi terlebih dahulu, lalu mencatat barang masuk dan barang keluar. Sistem wajib menjaga stok agar tidak negatif dan hanya menghitung transaksi yang berhasil.</p><div class=\"callout\"><b>Tujuan misi:</b> Program dimulai dengan stok awal dan jumlah transaksi. Setiap transaksi berisi pilihan barang masuk/keluar dan jumlah barang.</div><div class=\"section-block\"><h3>1. Format input</h3>\n<p>Format penempatan input <b>bebas</b>. Kamu boleh menulis semua nilai dalam satu baris, membaginya ke beberapa baris, atau menggunakan beberapa perintah <code>cin</code>. Spasi dan Enter sama-sama menjadi pemisah data. Yang wajib diperhatikan hanya <b>urutan nilai</b> yang dibaca oleh program.</p>\n<div class=\"callout\"><b>Urutan data:</b><p>stok_awal → jumlah_transaksi → (pilihan_transaksi, jumlah_barang) sebanyak jumlah_transaksi kali</p></div>\n<p class=\"brief-note\">Jumlah transaksi menentukan berapa kali data transaksi dibaca. Setiap transaksi berisi pilihan dan jumlah barang.</p></div><div class=\"section-block\"><h3>2. Aturan dan ketentuan</h3><ul><li>Stok awal harus 0–100.000 unit.</li><li>Jumlah transaksi yang dimasukkan di awal harus berada pada rentang 1–20.</li><li>Pilihan 1 = barang masuk dan 2 = barang keluar.</li><li>Barang masuk menambah stok dan Total Barang Masuk.</li><li>Barang keluar mengurangi stok hanya jika jumlah yang diminta tidak melebihi stok tersedia.</li><li>Jumlah tiap transaksi harus 1–1.000 unit.</li><li>Transaksi Valid hanya menghitung transaksi masuk atau keluar yang berhasil.</li><li>Transaksi keluar yang ditolak tidak mengubah stok, penghitung transaksi, maupun Total Barang Keluar.</li></ul></div><div class=\"section-block\"><h3>3. Format output wajib</h3><p>Tampilkan semua label berikut persis seperti tertulis, satu label per baris, diikuti titik dua dan hasil perhitungan.</p><pre class=\"brief-code\">Stok Akhir: ...\nTransaksi Valid: ...\nTotal Barang Masuk: ...\nTotal Barang Keluar: ...</pre></div><div class=\"section-block\"><h3>4. Validasi dan batasan</h3><ul><li>Program membaca tepat sebanyak jumlah transaksi yang dimasukkan di awal.</li><li>Barang keluar yang ditolak tidak boleh mengubah stok atau penghitung transaksi.</li><li>Pilihan selain 1 atau 2 tidak mengubah persediaan.</li><li>Stok tidak boleh menjadi negatif.</li></ul></div>",
     "rubric": "<h3>Rubrik penilaian · 100 poin</h3><div class=\"rubric-list\"><div><span>Input stok dan validasi</span><b>15</b></div><div><span>do-while dan sentinel</span><b>20</b></div><div><span>switch-case transaksi</span><b>20</b></div><div><span>Validasi stok dan jumlah</span><b>25</b></div><div><span>Akumulasi dan ringkasan</span><b>20</b></div></div>",
     "materials": "<h3>Materi yang dilatih</h3><ul><li>do-while.</li><li>switch-case dan break.</li><li>Nested if untuk stok.</li><li>Akumulator dan operator logika.</li></ul>",
     "tests": [
       {
         "name": "Barang masuk dan keluar",
-        "input": "100\n1\n50\n2\n30\n0",
+        "input": "100\n2\n1\n50\n2\n30",
         "hidden": false,
         "checks": [
           [
@@ -730,7 +730,7 @@ const tasks = [
       },
       {
         "name": "Stok tidak cukup",
-        "input": "20\n2\n25\n1\n10\n0",
+        "input": "20\n2\n2\n25\n1\n10",
         "hidden": true,
         "checks": [
           [
@@ -753,7 +753,7 @@ const tasks = [
       },
       {
         "name": "Tiga transaksi valid",
-        "input": "0\n1\n10\n2\n5\n1\n7\n0",
+        "input": "0\n3\n1\n10\n2\n5\n1\n7",
         "hidden": true,
         "checks": [
           [
@@ -863,13 +863,13 @@ const tasks = [
     "subtitle": "Bangun kasir festival dengan banyak kategori tiket, transaksi berulang, diskon member, dan biaya QRIS.",
     "category": "FINAL CHALLENGE",
     "difficulty": "HARD",
-    "brief": "<p class=\"problem-description\">Bangun sistem kasir festival sekolah yang melayani beberapa kategori tiket dalam satu pembelian. Sistem menghitung transaksi dan jumlah tiket, menerapkan diskon berdasarkan status member, kemudian menambahkan biaya admin sesuai metode pembayaran.</p><div class=\"callout\"><b>Tujuan misi:</b> Program membaca status member, daftar pembelian tiket berulang sampai sentinel 0 0, lalu metode pembayaran.</div><div class=\"section-block\"><h3>1. Format input</h3>\n<p>Format penempatan input <b>bebas</b>. Kamu boleh menulis semua nilai dalam satu baris, membaginya ke beberapa baris, atau menggunakan beberapa perintah <code>cin</code>. Spasi dan Enter sama-sama menjadi pemisah data. Yang wajib diperhatikan hanya <b>urutan nilai</b> yang dibaca oleh program.</p>\n<div class=\"callout\"><b>Urutan data:</b><p>status_member → (kode_tiket, jumlah) berulang → 0 0 → metode_pembayaran</p></div>\n<p class=\"brief-note\">Setelah status member, baca pasangan kode tiket dan jumlah berulang kali. Sentinel 0 0 mengakhiri daftar tiket. Setelah itu baca metode pembayaran.</p><div class=\"section-block\"><h3>2. Aturan dan ketentuan</h3><ul><li>Kode tiket 1 Reguler = Rp25.000; kode 2 VIP = Rp60.000; kode 3 VVIP = Rp100.000.</li><li>Status member 1 = member dan 0 = non-member. Jumlah per transaksi 1–10.</li><li>Kode tiket tidak dikenal atau jumlah di luar rentang diabaikan.</li><li>Jumlah Transaksi menghitung baris pembelian valid. Jumlah Tiket menghitung total unit tiket.</li><li>Member: subtotal ≥ Rp150.000 mendapat diskon 10%; jika tidak, subtotal ≥ Rp75.000 mendapat 5%; selain itu 0%.</li><li>Non-member: subtotal ≥ Rp200.000 mendapat diskon 5%; selain itu 0%.</li><li>Metode pembayaran 1 = tunai tanpa admin; 2 = QRIS dengan admin 1,5% dari subtotal setelah diskon.</li><li>Total Bayar = Subtotal − Diskon + Biaya Admin.</li></ul></div><div class=\"section-block\"><h3>3. Format output wajib</h3><p>Tampilkan semua label berikut persis seperti tertulis, satu label per baris, diikuti titik dua dan hasil perhitungan.</p><pre class=\"brief-code\">Jumlah Transaksi: ...\nJumlah Tiket: ...\nSubtotal: ...\nDiskon: ...\nBiaya Admin: ...\nTotal Bayar: ...</pre></div><div class=\"section-block\"><h3>4. Validasi dan batasan</h3><ul><li>Sentinel 0 0 tidak dihitung sebagai transaksi.</li><li>Biaya admin QRIS dihitung setelah diskon.</li><li>Transaksi tidak valid tidak menambah subtotal maupun penghitung.</li><li>Bedakan jumlah baris transaksi dan jumlah unit tiket.</li></ul></div>",
+    "brief": "<p class=\"problem-description\">Bangun sistem kasir festival sekolah yang melayani sejumlah pembelian dari beberapa kategori tiket. Sistem menghitung transaksi dan jumlah tiket, menerapkan diskon berdasarkan status member, kemudian menambahkan biaya admin sesuai metode pembayaran.</p><div class=\"callout\"><b>Tujuan misi:</b> Program membaca status member dan jumlah transaksi terlebih dahulu. Setiap transaksi berisi kode tiket dan jumlah tiket, kemudian program membaca metode pembayaran.</div><div class=\"section-block\"><h3>1. Format input</h3>\n<p>Format penempatan input <b>bebas</b>. Kamu boleh menulis semua nilai dalam satu baris, membaginya ke beberapa baris, atau menggunakan beberapa perintah <code>cin</code>. Spasi dan Enter sama-sama menjadi pemisah data. Yang wajib diperhatikan hanya <b>urutan nilai</b> yang dibaca oleh program.</p>\n<div class=\"callout\"><b>Urutan data:</b><p>status_member → jumlah_transaksi → (kode_tiket, jumlah) sebanyak jumlah_transaksi kali → metode_pembayaran</p></div>\n<p class=\"brief-note\">Jumlah transaksi menentukan berapa banyak pasangan kode tiket dan jumlah yang harus dibaca. Setelah seluruh transaksi selesai dibaca, masukkan metode pembayaran.</p></div><div class=\"section-block\"><h3>2. Aturan dan ketentuan</h3><ul><li>Kode tiket 1 Reguler = Rp25.000; kode 2 VIP = Rp60.000; kode 3 VVIP = Rp100.000.</li><li>Status member 1 = member dan 0 = non-member. Jumlah per transaksi 1–10.</li><li>Jumlah transaksi yang dimasukkan di awal harus berada pada rentang 1–20.</li><li>Kode tiket tidak dikenal atau jumlah di luar rentang diabaikan.</li><li>Jumlah Transaksi menghitung baris pembelian valid. Jumlah Tiket menghitung total unit tiket yang valid.</li><li>Member: subtotal ≥ Rp150.000 mendapat diskon 10%; jika tidak, subtotal ≥ Rp75.000 mendapat 5%; selain itu 0%.</li><li>Non-member: subtotal ≥ Rp200.000 mendapat diskon 5%; selain itu 0%.</li><li>Metode pembayaran 1 = tunai tanpa admin; 2 = QRIS dengan admin 1,5% dari subtotal setelah diskon.</li><li>Total Bayar = Subtotal − Diskon + Biaya Admin.</li></ul></div><div class=\"section-block\"><h3>3. Format output wajib</h3><p>Tampilkan semua label berikut persis seperti tertulis, satu label per baris, diikuti titik dua dan hasil perhitungan.</p><pre class=\"brief-code\">Jumlah Transaksi: ...\nJumlah Tiket: ...\nSubtotal: ...\nDiskon: ...\nBiaya Admin: ...\nTotal Bayar: ...</pre></div><div class=\"section-block\"><h3>4. Validasi dan batasan</h3><ul><li>Program membaca tepat sebanyak jumlah transaksi yang dimasukkan di awal.</li><li>Kode tiket tidak dikenal atau jumlah tidak valid tidak menambah subtotal dan penghitung transaksi.</li><li>Biaya admin QRIS dihitung setelah diskon.</li><li>Bedakan jumlah baris transaksi valid dengan jumlah unit tiket.</li></ul></div>",
     "rubric": "<h3>Rubrik penilaian · 100 poin</h3><div class=\"rubric-list\"><div><span>Validasi input</span><b>15</b></div><div><span>do-while transaksi</span><b>15</b></div><div><span>switch-case harga/pembayaran</span><b>20</b></div><div><span>Akumulasi transaksi/tiket</span><b>15</b></div><div><span>Diskon bertingkat</span><b>20</b></div><div><span>Admin dan total akhir</span><b>15</b></div></div>",
     "materials": "<h3>Materi yang dilatih</h3><ul><li>do-while dan sentinel.</li><li>switch-case.</li><li>Nested if dan else if.</li><li>Operator logika dan persentase.</li><li>Akumulator.</li></ul>",
     "tests": [
       {
         "name": "Member dengan QRIS",
-        "input": "1\n2\n2\n1\n2\n0\n0\n2",
+        "input": "1\n2\n2\n2\n1\n2\n2",
         "hidden": false,
         "checks": [
           [
@@ -900,7 +900,7 @@ const tasks = [
       },
       {
         "name": "Non-member VVIP QRIS",
-        "input": "0\n3\n2\n0\n0\n2",
+        "input": "0\n1\n3\n2\n2",
         "hidden": true,
         "checks": [
           [
@@ -931,7 +931,7 @@ const tasks = [
       },
       {
         "name": "Kode tidak valid",
-        "input": "1\n9\n1\n1\n3\n0\n0\n1",
+        "input": "1\n2\n9\n1\n1\n3\n1",
         "hidden": true,
         "checks": [
           [
