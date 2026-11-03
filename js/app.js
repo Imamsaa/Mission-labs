@@ -1036,18 +1036,6 @@ function renderStandardIO(task) {
   const savedInput = localStorage.getItem(inputKey);
   $('#stdinInput').value = savedInput !== null ? savedInput : (test.input || '');
   fitStandardInput();
-
-  const checks = Array.isArray(test.checks) ? test.checks : [];
-  const preview = $('#standardOutputPreview');
-  if (checks.length) {
-    preview.innerHTML = checks.map(([label, expected]) =>
-      '<div class="expected-output-line"><span>' + escapeHTML(String(label)) +
-      '</span><strong>' + escapeHTML(String(expected)) + '</strong></div>'
-    ).join('');
-  } else {
-    preview.innerHTML = '<div class="expected-output-empty">Output standar belum tersedia untuk misi ini.</div>';
-  }
-  $('#standardInputCaseName').textContent = test.name ? '· ' + test.name : '';
 }
 function restoreStandardInput() {
   const task = tasks[currentTask];
