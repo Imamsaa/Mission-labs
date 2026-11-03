@@ -34,6 +34,6 @@ window.MISSION_RULES = Object.freeze({
   sessionMinutes: 70,
 
   // Batas akhir bersama: 3 November 2026, pukul 14.50 WIB (UTC+7).
-  deadlineAt: '2026-11-03T14:50:00+07:00',
+  deadlineAt: '2026-11-03T15:00:00+07:00',
   deadlineLabel: '15.00 WIB'
 });
