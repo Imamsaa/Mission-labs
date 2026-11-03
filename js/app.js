@@ -56,29 +56,921 @@ int main() {
 
 const tasks = [
   {
-    id: 'smart-canteen', title: 'Smart Canteen', subtitle: 'Bangun sistem kasir kantin dengan transaksi berulang dan logika diskon bertingkat.', category: 'TRANSACTION & DECISION LOGIC', sampleInput: '1\n1 5\n3 5\n0 0\n1',
-    brief: `<p class="problem-description">Kantin sekolah membutuhkan aplikasi kasir yang mampu melayani beberapa jenis barang dalam satu transaksi. Program harus memvalidasi input, menghitung subtotal, menentukan diskon berdasarkan status pelanggan, dan menghitung biaya pembayaran.</p>
-      <div class="section-block"><h3>Daftar produk</h3><table class="task-table"><thead><tr><th>Kode</th><th>Produk</th><th>Harga</th></tr></thead><tbody><tr><td>1</td><td>Nasi Goreng</td><td>12000</td></tr><tr><td>2</td><td>Roti Bakar</td><td>8000</td></tr><tr><td>3</td><td>Jus Buah</td><td>6000</td></tr><tr><td>4</td><td>Air Mineral</td><td>4000</td></tr></tbody></table></div>
-      <div class="section-block"><h3>Ketentuan program</h3><ol><li>Minta status pelanggan: <code>1</code> = member, <code>0</code> = bukan member. Validasi agar hanya menerima angka 0 atau 1.</li><li>Gunakan <code>do-while</code> untuk mengulang input barang. Masukkan kode produk dan jumlah. Masukkan <code>0 0</code> untuk mengakhiri transaksi.</li><li>Gunakan <code>switch-case</code> untuk menentukan harga produk. Kode produk yang tidak tersedia harus ditolak.</li><li>Validasi jumlah barang: minimal 1 dan maksimal 20. Kode maupun jumlah tidak valid tidak boleh masuk perhitungan.</li><li>Hitung jumlah transaksi barang valid, jumlah seluruh barang, dan subtotal.</li><li>Terapkan diskon menggunakan <code>if / else if / else</code> dan <b>nested if</b> sesuai aturan.</li><li>Gunakan <code>switch-case</code> untuk pembayaran: 1 = tunai (biaya admin 0), 2 = QRIS (biaya admin 1% dari total setelah diskon).</li><li>Tampilkan ringkasan akhir dengan label yang persis sama seperti contoh output.</li></ol></div>
-      <div class="callout"><b>Aturan diskon</b><br><b>Member:</b> subtotal ≥ 50.000 mendapat 15%; subtotal ≥ 25.000 mendapat 10%; selain itu 0%.<br><b>Bukan member:</b> subtotal ≥ 100.000 mendapat 10%; subtotal ≥ 50.000 mendapat 5%; selain itu 0%.</div>
-      <div class="section-block"><h3>Format input</h3><pre class="sample-block">1             // status member
-1 5           // kode 1, beli 5
-3 5           // kode 3, beli 5
-0 0           // akhir belanja
-1             // pembayaran tunai</pre><h3>Format output wajib</h3><pre class="sample-block">Jumlah Transaksi: 2
-Jumlah Barang: 10
-Subtotal: 90000
-Diskon: 13500
-Biaya Admin: 0
-Total Bayar: 76500</pre><p class="hint">Prompt tambahan boleh ditampilkan, tetapi enam baris ringkasan harus memiliki label persis sama. Angka ditulis tanpa pemisah ribuan maupun simbol mata uang.</p></div>`,
-    rubric: `<h3>Rubrik penilaian · 100 poin</h3><div class="rubric-list"><div><span>Validasi status member, kode produk, dan jumlah</span><b>15</b></div><div><span>Perulangan transaksi menggunakan do-while</span><b>15</b></div><div><span>Pemilihan produk dan pembayaran menggunakan switch-case</span><b>15</b></div><div><span>Akumulasi transaksi, barang, dan subtotal</span><b>15</b></div><div><span>Diskon bertingkat, nested if, dan operator logika</span><b>20</b></div><div><span>Perhitungan admin dan format laporan</span><b>20</b></div></div><div class="callout">Nilai otomatis berdasarkan 3 skenario uji. Guru tetap dapat memeriksa kode untuk memastikan struktur percabangan dan perulangan digunakan dengan benar.</div>`,
-    materials: `<h3>Materi yang harus tampak dalam kode</h3><ul><li>Variabel, tipe data, konstanta, dan operasi aritmatika.</li><li><code>cin</code>, <code>cout</code>, dan urutan input.</li><li>Operator perbandingan dan logika <code>&amp;&amp;</code> / <code>||</code>.</li><li><code>if / else if / else</code> dan nested <code>if</code>.</li><li><code>switch-case</code> untuk produk dan pembayaran.</li><li><code>do-while</code> untuk transaksi berulang.</li></ul><p class="hint">Array, vector, function, dan pointer tidak diperlukan. Fokus pada materi yang sudah dipelajari.</p>`,
-    tests: [
-      { name: 'Test 1 · Member + tunai', input: '1\n1 5\n3 5\n0 0\n1', checks: [['Jumlah Transaksi',2],['Jumlah Barang',10],['Subtotal',90000],['Diskon',13500],['Biaya Admin',0],['Total Bayar',76500]] },
-      { name: 'Test 2 · Non-member + QRIS', input: '0\n2 4\n4 5\n0 0\n2', hidden:true, checks: [['Jumlah Transaksi',2],['Jumlah Barang',9],['Subtotal',52000],['Diskon',2600],['Biaya Admin',494],['Total Bayar',49894]] },
-      { name: 'Test 3 · Kode tidak valid', input: '1\n2 3\n9 1\n4 1\n0 0\n1', hidden:true, checks: [['Jumlah Transaksi',2],['Jumlah Barang',4],['Subtotal',28000],['Diskon',2800],['Biaya Admin',0],['Total Bayar',25200]] },
-    ],
+    "id": "smart-canteen",
+    "title": "Smart Canteen",
+    "subtitle": "Kasir kantin dengan transaksi berulang, validasi produk, diskon bertingkat, dan metode pembayaran.",
+    "category": "TRANSAKSI & LOGIKA",
+    "difficulty": "MEDIUM",
+    "sampleInput": "1\n1 5\n3 5\n0 0\n1",
+    "brief": "<p class=\"problem-description\">Bangun aplikasi kasir kantin yang melayani banyak item dalam satu transaksi. Program harus memvalidasi input, menghitung subtotal, menentukan diskon berdasarkan status pelanggan, lalu menghitung biaya pembayaran.</p><div class=\"callout\"><b>Produk:</b> kode 1 Nasi Goreng = 12.000; 2 Roti Bakar = 8.000; 3 Jus Buah = 6.000; 4 Air Mineral = 4.000. <b>Diskon member:</b> subtotal ≥ 50.000 mendapat 15%; ≥ 25.000 mendapat 10%. <b>Non-member:</b> subtotal ≥ 100.000 mendapat 10%; ≥ 50.000 mendapat 5%. QRIS dikenai admin 1% dari total setelah diskon.</div><ol><li>Input status member (1/0) dan validasi nilainya.</li><li>Gunakan do-while untuk input kode produk dan jumlah. Akhiri dengan 0 0.</li><li>Gunakan switch-case untuk harga. Kode tidak dikenal atau jumlah di luar 1–20 diabaikan.</li><li>Gunakan nested if untuk diskon member/non-member.</li><li>Input pembayaran: 1 tunai, 2 QRIS. Tampilkan enam label output wajib.</li></ol>",
+    "rubric": "<h3>Rubrik penilaian · 100 poin</h3><div class=\"rubric-list\"><div><span>Validasi dan input</span><b>15</b></div><div><span>do-while transaksi</span><b>15</b></div><div><span>switch-case produk/pembayaran</span><b>15</b></div><div><span>Akumulasi subtotal</span><b>15</b></div><div><span>Diskon bertingkat</span><b>20</b></div><div><span>Biaya admin dan output</span><b>20</b></div></div>",
+    "materials": "<h3>Materi yang dilatih</h3><ul><li>Variabel dan operasi aritmetika.</li><li>cin, cout, dan validasi input.</li><li>Operator perbandingan dan logika.</li><li>if/else if/else dan nested if.</li><li>switch-case dan do-while.</li></ul>",
+    "tests": [
+      {
+        "name": "Member + tunai",
+        "input": "1\n1 5\n3 5\n0 0\n1",
+        "hidden": false,
+        "checks": [
+          [
+            "Jumlah Transaksi",
+            2
+          ],
+          [
+            "Jumlah Barang",
+            10
+          ],
+          [
+            "Subtotal",
+            90000
+          ],
+          [
+            "Diskon",
+            13500
+          ],
+          [
+            "Biaya Admin",
+            0
+          ],
+          [
+            "Total Bayar",
+            76500
+          ]
+        ]
+      },
+      {
+        "name": "Non-member + QRIS",
+        "input": "0\n2 4\n4 5\n0 0\n2",
+        "hidden": true,
+        "checks": [
+          [
+            "Jumlah Transaksi",
+            2
+          ],
+          [
+            "Jumlah Barang",
+            9
+          ],
+          [
+            "Subtotal",
+            52000
+          ],
+          [
+            "Diskon",
+            2600
+          ],
+          [
+            "Biaya Admin",
+            494
+          ],
+          [
+            "Total Bayar",
+            49894
+          ]
+        ]
+      },
+      {
+        "name": "Produk tidak valid",
+        "input": "1\n2 3\n9 1\n4 1\n0 0\n1",
+        "hidden": true,
+        "checks": [
+          [
+            "Jumlah Transaksi",
+            2
+          ],
+          [
+            "Jumlah Barang",
+            4
+          ],
+          [
+            "Subtotal",
+            28000
+          ],
+          [
+            "Diskon",
+            2800
+          ],
+          [
+            "Biaya Admin",
+            0
+          ],
+          [
+            "Total Bayar",
+            25200
+          ]
+        ]
+      }
+    ]
   },
+  {
+    "id": "smart-parking",
+    "title": "Smart Parking Gate",
+    "subtitle": "Hitung tarif kendaraan dengan durasi, biaya tambahan, dan diskon member.",
+    "category": "PERCABANGAN & SWITCH",
+    "difficulty": "MEDIUM",
+    "sampleInput": "2 5 1",
+    "brief": "<p class=\"problem-description\">Buat sistem gerbang parkir yang menghitung tarif berdasarkan jenis kendaraan, durasi parkir, dan status keanggotaan.</p><div class=\"callout\"><b>Tarif per jam:</b> motor (1) = 2.000, mobil (2) = 5.000, bus (3) = 8.000. Parkir lebih dari 4 jam mendapat biaya tambahan 5.000. Member mendapat diskon 10% dari biaya dasar jika biaya dasar minimal 20.000.</div><ol><li>Input kode kendaraan, lama parkir (1–24 jam), dan status member (1/0).</li><li>Gunakan switch-case untuk menentukan tarif kendaraan.</li><li>Validasi seluruh input sebelum menghitung.</li><li>Gunakan percabangan bertingkat untuk tambahan dan diskon.</li><li>Tampilkan Biaya Dasar, Biaya Tambahan, Diskon, dan Total Bayar.</li></ol>",
+    "rubric": "<h3>Rubrik penilaian · 100 poin</h3><div class=\"rubric-list\"><div><span>Input dan validasi</span><b>20</b></div><div><span>switch-case kendaraan</span><b>20</b></div><div><span>Tarif dan biaya tambahan</span><b>20</b></div><div><span>Diskon member dengan nested if</span><b>20</b></div><div><span>Ringkasan akhir</span><b>20</b></div></div>",
+    "materials": "<h3>Materi yang dilatih</h3><ul><li>Variabel dan operasi perkalian.</li><li>switch-case.</li><li>Operator &&, ||, dan perbandingan.</li><li>Nested if dan validasi.</li></ul>",
+    "tests": [
+      {
+        "name": "Motor 2 jam",
+        "input": "1 2 0",
+        "hidden": false,
+        "checks": [
+          [
+            "Biaya Dasar",
+            4000
+          ],
+          [
+            "Biaya Tambahan",
+            0
+          ],
+          [
+            "Diskon",
+            0
+          ],
+          [
+            "Total Bayar",
+            4000
+          ]
+        ]
+      },
+      {
+        "name": "Mobil member 5 jam",
+        "input": "2 5 1",
+        "hidden": true,
+        "checks": [
+          [
+            "Biaya Dasar",
+            25000
+          ],
+          [
+            "Biaya Tambahan",
+            5000
+          ],
+          [
+            "Diskon",
+            2500
+          ],
+          [
+            "Total Bayar",
+            27500
+          ]
+        ]
+      },
+      {
+        "name": "Bus 8 jam",
+        "input": "3 8 0",
+        "hidden": true,
+        "checks": [
+          [
+            "Biaya Dasar",
+            64000
+          ],
+          [
+            "Biaya Tambahan",
+            5000
+          ],
+          [
+            "Diskon",
+            0
+          ],
+          [
+            "Total Bayar",
+            69000
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "academic-report",
+    "title": "Rekap Nilai Akademik",
+    "subtitle": "Olah nilai latihan, ujian, dan proyek menggunakan perulangan serta bobot penilaian.",
+    "category": "PERULANGAN & LOGIKA",
+    "difficulty": "MEDIUM",
+    "sampleInput": "80 90 70 85 75 80 90",
+    "brief": "<p class=\"problem-description\">Buat program rekap nilai untuk satu siswa. Lima nilai latihan, satu nilai ujian, dan satu nilai proyek harus diolah menjadi nilai akhir dengan bobot tertentu.</p><div class=\"callout\"><b>Bobot:</b> rata-rata latihan 20%, ujian 35%, proyek 45%. Predikat A ≥ 90, B ≥ 80, C ≥ 70, D ≥ 60, selain itu E. LULUS jika nilai akhir ≥ 75 dan proyek ≥ 70.</div><ol><li>Baca lima nilai latihan menggunakan for dan akumulasikan jumlahnya.</li><li>Baca nilai ujian dan proyek.</li><li>Hitung rata-rata latihan dan nilai akhir berbobot.</li><li>Gunakan if/else if untuk predikat dan operator logika untuk kelulusan.</li><li>Tampilkan rata-rata serta nilai akhir dengan dua angka desimal.</li></ol>",
+    "rubric": "<h3>Rubrik penilaian · 100 poin</h3><div class=\"rubric-list\"><div><span>Input lima nilai dengan for</span><b>20</b></div><div><span>Akumulasi dan rata-rata</span><b>20</b></div><div><span>Perhitungan bobot</span><b>25</b></div><div><span>Predikat bertingkat</span><b>15</b></div><div><span>Status dengan operator logika</span><b>20</b></div></div>",
+    "materials": "<h3>Materi yang dilatih</h3><ul><li>Variabel int dan double.</li><li>for dan akumulator.</li><li>Operasi aritmetika berbobot.</li><li>if/else if dan operator logika.</li><li>fixed dan setprecision.</li></ul>",
+    "tests": [
+      {
+        "name": "Nilai baik",
+        "input": "80 90 70 85 75 80 90",
+        "hidden": false,
+        "checks": [
+          [
+            "Rata-rata Latihan",
+            80
+          ],
+          [
+            "Nilai Akhir",
+            84.5
+          ],
+          [
+            "Predikat",
+            "B"
+          ],
+          [
+            "Status",
+            "LULUS"
+          ]
+        ]
+      },
+      {
+        "name": "Perlu remedial",
+        "input": "60 60 70 50 60 60 60",
+        "hidden": true,
+        "checks": [
+          [
+            "Rata-rata Latihan",
+            60
+          ],
+          [
+            "Nilai Akhir",
+            60
+          ],
+          [
+            "Predikat",
+            "D"
+          ],
+          [
+            "Status",
+            "PERLU REMEDIAL"
+          ]
+        ]
+      },
+      {
+        "name": "Nilai maksimal",
+        "input": "100 95 90 100 95 100 100",
+        "hidden": true,
+        "checks": [
+          [
+            "Rata-rata Latihan",
+            96
+          ],
+          [
+            "Nilai Akhir",
+            99.2
+          ],
+          [
+            "Predikat",
+            "A"
+          ],
+          [
+            "Status",
+            "LULUS"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "atm-simulator",
+    "title": "ATM Simulator",
+    "subtitle": "Simulasikan setoran dan penarikan berulang dengan validasi saldo.",
+    "category": "DO-WHILE & SWITCH",
+    "difficulty": "MEDIUM",
+    "sampleInput": "50000\n1 20000\n2 30000\n0",
+    "brief": "<p class=\"problem-description\">Buat simulasi mesin ATM yang menerima beberapa transaksi hingga pengguna memilih keluar. Saldo tidak boleh negatif dan transaksi tidak valid tidak boleh dihitung.</p><div class=\"callout\">Pilihan transaksi: 1 = setoran, 2 = penarikan, 0 = selesai. Nominal transaksi harus lebih dari 0. Penarikan hanya berhasil apabila saldo mencukupi.</div><ol><li>Input saldo awal.</li><li>Gunakan do-while untuk membaca pilihan transaksi.</li><li>Untuk pilihan 1/2, baca nominal transaksi.</li><li>Gunakan switch-case dan validasi saldo sebelum penarikan.</li><li>Tampilkan Saldo Akhir, Transaksi Berhasil, Total Setoran, dan Total Penarikan.</li></ol>",
+    "rubric": "<h3>Rubrik penilaian · 100 poin</h3><div class=\"rubric-list\"><div><span>Input transaksi</span><b>15</b></div><div><span>do-while dengan sentinel</span><b>20</b></div><div><span>switch-case</span><b>20</b></div><div><span>Validasi nominal dan saldo</span><b>25</b></div><div><span>Akumulasi dan ringkasan</span><b>20</b></div></div>",
+    "materials": "<h3>Materi yang dilatih</h3><ul><li>do-while dan sentinel.</li><li>switch-case.</li><li>Nested if dan validasi saldo.</li><li>Akumulator dan operasi aritmetika.</li></ul>",
+    "tests": [
+      {
+        "name": "Setor dan tarik",
+        "input": "50000\n1 20000\n2 30000\n0",
+        "hidden": false,
+        "checks": [
+          [
+            "Saldo Akhir",
+            40000
+          ],
+          [
+            "Transaksi Berhasil",
+            2
+          ],
+          [
+            "Total Setoran",
+            20000
+          ],
+          [
+            "Total Penarikan",
+            30000
+          ]
+        ]
+      },
+      {
+        "name": "Penarikan ditolak",
+        "input": "50000\n2 60000\n1 10000\n0",
+        "hidden": true,
+        "checks": [
+          [
+            "Saldo Akhir",
+            60000
+          ],
+          [
+            "Transaksi Berhasil",
+            1
+          ],
+          [
+            "Total Setoran",
+            10000
+          ],
+          [
+            "Total Penarikan",
+            0
+          ]
+        ]
+      },
+      {
+        "name": "Beberapa transaksi",
+        "input": "100000\n1 50000\n2 25000\n2 200000\n0",
+        "hidden": true,
+        "checks": [
+          [
+            "Saldo Akhir",
+            125000
+          ],
+          [
+            "Transaksi Berhasil",
+            2
+          ],
+          [
+            "Total Setoran",
+            50000
+          ],
+          [
+            "Total Penarikan",
+            25000
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "smart-courier",
+    "title": "Smart Courier",
+    "subtitle": "Hitung ongkir berdasarkan berat, zona jarak, layanan ekspres, dan asuransi.",
+    "category": "PERCABANGAN BERTINGKAT",
+    "difficulty": "HARD",
+    "sampleInput": "2 5 25",
+    "brief": "<p class=\"problem-description\">Buat kalkulator ongkos kirim paket. Tarif ditentukan oleh berat paket, jarak tujuan, jenis layanan, serta kebutuhan asuransi.</p><div class=\"callout\"><b>Biaya dasar</b> = 8.000 + (berat kg × 2.000). Biaya jarak: ≤ 10 km = 0; 11–30 km = 4.000; > 30 km = 8.000. Layanan 1 reguler = tanpa tambahan; 2 ekspres = tambahan 50% dari biaya dasar + jarak. Berat ≥ 10 kg mendapat asuransi 5.000.</div><ol><li>Input kode layanan, berat (1–20 kg), dan jarak (1–100 km).</li><li>Validasi seluruh input.</li><li>Gunakan if/else if untuk menentukan zona jarak.</li><li>Hitung tambahan ekspres dan asuransi sesuai aturan.</li><li>Tampilkan Biaya Dasar, Biaya Jarak, Biaya Layanan, Biaya Asuransi, dan Total Ongkir.</li></ol>",
+    "rubric": "<h3>Rubrik penilaian · 100 poin</h3><div class=\"rubric-list\"><div><span>Input dan validasi</span><b>15</b></div><div><span>Biaya dasar dan zona</span><b>25</b></div><div><span>Layanan ekspres</span><b>20</b></div><div><span>Asuransi bertingkat</span><b>15</b></div><div><span>Urutan hitung dan output</span><b>25</b></div></div>",
+    "materials": "<h3>Materi yang dilatih</h3><ul><li>Operasi aritmetika.</li><li>if/else if/else.</li><li>Operator logika dan validasi.</li><li>Persentase serta nested if.</li></ul>",
+    "tests": [
+      {
+        "name": "Reguler jarak dekat",
+        "input": "1 2 8",
+        "hidden": false,
+        "checks": [
+          [
+            "Biaya Dasar",
+            12000
+          ],
+          [
+            "Biaya Jarak",
+            0
+          ],
+          [
+            "Biaya Layanan",
+            0
+          ],
+          [
+            "Biaya Asuransi",
+            0
+          ],
+          [
+            "Total Ongkir",
+            12000
+          ]
+        ]
+      },
+      {
+        "name": "Ekspres zona menengah",
+        "input": "2 5 25",
+        "hidden": true,
+        "checks": [
+          [
+            "Biaya Dasar",
+            18000
+          ],
+          [
+            "Biaya Jarak",
+            4000
+          ],
+          [
+            "Biaya Layanan",
+            11000
+          ],
+          [
+            "Biaya Asuransi",
+            0
+          ],
+          [
+            "Total Ongkir",
+            33000
+          ]
+        ]
+      },
+      {
+        "name": "Paket berat zona jauh",
+        "input": "1 12 50",
+        "hidden": true,
+        "checks": [
+          [
+            "Biaya Dasar",
+            32000
+          ],
+          [
+            "Biaya Jarak",
+            8000
+          ],
+          [
+            "Biaya Layanan",
+            0
+          ],
+          [
+            "Biaya Asuransi",
+            5000
+          ],
+          [
+            "Total Ongkir",
+            45000
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "theme-park",
+    "title": "Theme Park Ticketing",
+    "subtitle": "Tentukan kelayakan pengunjung dan hitung diskon rombongan serta hari kunjungan.",
+    "category": "NESTED IF & LOGIKA",
+    "difficulty": "HARD",
+    "sampleInput": "13 130 1 4",
+    "brief": "<p class=\"problem-description\">Taman bermain memiliki harga tiket berbeda berdasarkan usia. Pengunjung juga harus memenuhi batas tinggi badan. Diskon rombongan dan hari kerja dapat diberikan berurutan.</p><div class=\"callout\">Harga per tiket: usia < 12 = 15.000; usia 12–17 = 25.000; usia ≥ 18 = 40.000. Tinggi < 120 cm tidak memenuhi syarat dan total bayar 0. Hari 1 = hari kerja, 2 = akhir pekan. Minimal 4 tiket mendapat diskon 10%; hari kerja mendapat tambahan diskon 5% dari subtotal setelah diskon rombongan.</div><ol><li>Input usia, tinggi badan, hari kunjungan, dan jumlah tiket (1–20).</li><li>Tentukan harga berdasarkan usia dengan if/else if.</li><li>Gunakan nested if untuk mengecek kelayakan tinggi badan.</li><li>Hitung diskon rombongan lalu diskon hari kerja secara berurutan.</li><li>Pengunjung tidak layak membayar 0. Tampilkan enam label output yang ditentukan.</li></ol>",
+    "rubric": "<h3>Rubrik penilaian · 100 poin</h3><div class=\"rubric-list\"><div><span>Validasi empat input</span><b>20</b></div><div><span>Harga tiket berdasarkan usia</span><b>20</b></div><div><span>Kelayakan tinggi badan</span><b>20</b></div><div><span>Diskon berurutan</span><b>25</b></div><div><span>Ringkasan pembayaran</span><b>15</b></div></div>",
+    "materials": "<h3>Materi yang dilatih</h3><ul><li>Nested if dan if/else if.</li><li>Operator perbandingan dan logika.</li><li>Operasi persentase.</li><li>Validasi beberapa input.</li></ul>",
+    "tests": [
+      {
+        "name": "Rombongan hari kerja",
+        "input": "13 130 1 4",
+        "hidden": false,
+        "checks": [
+          [
+            "Harga Per Tiket",
+            25000
+          ],
+          [
+            "Subtotal",
+            100000
+          ],
+          [
+            "Diskon Kelompok",
+            10000
+          ],
+          [
+            "Diskon Hari",
+            4500
+          ],
+          [
+            "Total Bayar",
+            85500
+          ],
+          [
+            "Status",
+            "LAYAK"
+          ]
+        ]
+      },
+      {
+        "name": "Dewasa akhir pekan",
+        "input": "25 175 2 2",
+        "hidden": true,
+        "checks": [
+          [
+            "Harga Per Tiket",
+            40000
+          ],
+          [
+            "Subtotal",
+            80000
+          ],
+          [
+            "Diskon Kelompok",
+            0
+          ],
+          [
+            "Diskon Hari",
+            0
+          ],
+          [
+            "Total Bayar",
+            80000
+          ],
+          [
+            "Status",
+            "LAYAK"
+          ]
+        ]
+      },
+      {
+        "name": "Tinggi belum cukup",
+        "input": "10 115 1 3",
+        "hidden": true,
+        "checks": [
+          [
+            "Harga Per Tiket",
+            15000
+          ],
+          [
+            "Subtotal",
+            45000
+          ],
+          [
+            "Diskon Kelompok",
+            0
+          ],
+          [
+            "Diskon Hari",
+            0
+          ],
+          [
+            "Total Bayar",
+            0
+          ],
+          [
+            "Status",
+            "TIDAK MEMENUHI SYARAT"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "robot-tournament",
+    "title": "Robot Tournament Scoring",
+    "subtitle": "Olah tiga ronde penilaian, penalti pelanggaran, predikat, dan kelulusan tim.",
+    "category": "LOGIKA & AKUMULATOR",
+    "difficulty": "HARD",
+    "sampleInput": "90 85 95 2",
+    "brief": "<p class=\"problem-description\">Sistem penilaian lomba robotik menggabungkan nilai tiga ronde dan mengurangi poin penalti. Predikat ditentukan dari skor akhir, sedangkan kelulusan memeriksa skor setiap ronde dan skor akhir.</p><div class=\"callout\">Predikat: skor akhir ≥ 250 = EMAS; ≥ 200 = PERAK; ≥ 150 = PERUNGGU; selain itu = PEMBINAAN. Setiap pelanggaran mengurangi 5 poin. Skor akhir minimal 0. Tim LULUS hanya jika setiap ronde ≥ 50 dan skor akhir ≥ 180.</div><ol><li>Input skor tiga ronde (0–100) dan jumlah pelanggaran (0–20).</li><li>Validasi seluruh input.</li><li>Hitung total skor, poin penalti, dan skor akhir.</li><li>Gunakan if bertingkat untuk predikat.</li><li>Gunakan operator && untuk menentukan status kelulusan.</li></ol>",
+    "rubric": "<h3>Rubrik penilaian · 100 poin</h3><div class=\"rubric-list\"><div><span>Input dan validasi</span><b>15</b></div><div><span>Akumulasi skor</span><b>15</b></div><div><span>Perhitungan penalti</span><b>20</b></div><div><span>Predikat bertingkat</span><b>25</b></div><div><span>Status dengan syarat gabungan</span><b>25</b></div></div>",
+    "materials": "<h3>Materi yang dilatih</h3><ul><li>Variabel dan akumulator.</li><li>Operator aritmetika/perbandingan.</li><li>Nested if dan else if.</li><li>Operator logika &&.</li></ul>",
+    "tests": [
+      {
+        "name": "Tim skor emas",
+        "input": "90 85 95 2",
+        "hidden": false,
+        "checks": [
+          [
+            "Total Skor",
+            270
+          ],
+          [
+            "Poin Penalti",
+            10
+          ],
+          [
+            "Skor Akhir",
+            260
+          ],
+          [
+            "Predikat",
+            "EMAS"
+          ],
+          [
+            "Status",
+            "LULUS"
+          ]
+        ]
+      },
+      {
+        "name": "Skor perunggu",
+        "input": "60 65 70 5",
+        "hidden": true,
+        "checks": [
+          [
+            "Total Skor",
+            195
+          ],
+          [
+            "Poin Penalti",
+            25
+          ],
+          [
+            "Skor Akhir",
+            170
+          ],
+          [
+            "Predikat",
+            "PERUNGGU"
+          ],
+          [
+            "Status",
+            "BELUM LULUS"
+          ]
+        ]
+      },
+      {
+        "name": "Satu ronde di bawah batas",
+        "input": "40 90 80 0",
+        "hidden": true,
+        "checks": [
+          [
+            "Total Skor",
+            210
+          ],
+          [
+            "Poin Penalti",
+            0
+          ],
+          [
+            "Skor Akhir",
+            210
+          ],
+          [
+            "Predikat",
+            "PERAK"
+          ],
+          [
+            "Status",
+            "BELUM LULUS"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "warehouse-stock",
+    "title": "Warehouse Stock Control",
+    "subtitle": "Kelola stok masuk dan keluar dengan transaksi berulang serta validasi persediaan.",
+    "category": "LOOP & SWITCH",
+    "difficulty": "HARD",
+    "sampleInput": "100\n1 50\n2 30\n0",
+    "brief": "<p class=\"problem-description\">Buat sistem kontrol gudang. Operator dapat menambah stok atau mengeluarkan barang berkali-kali. Pengeluaran yang melebihi stok tidak boleh diproses.</p><div class=\"callout\">Pilihan 1 = barang masuk, 2 = barang keluar, 0 = selesai. Stok awal maksimal 100.000 dan jumlah transaksi 1–1.000.</div><ol><li>Input stok awal (0–100.000).</li><li>Gunakan do-while untuk membaca pilihan transaksi.</li><li>Untuk pilihan 1/2, baca jumlah barang.</li><li>Gunakan switch-case. Barang keluar hanya valid jika stok mencukupi.</li><li>Tampilkan Stok Akhir, Transaksi Valid, Total Barang Masuk, dan Total Barang Keluar.</li></ol>",
+    "rubric": "<h3>Rubrik penilaian · 100 poin</h3><div class=\"rubric-list\"><div><span>Input stok dan validasi</span><b>15</b></div><div><span>do-while dan sentinel</span><b>20</b></div><div><span>switch-case transaksi</span><b>20</b></div><div><span>Validasi stok dan jumlah</span><b>25</b></div><div><span>Akumulasi dan ringkasan</span><b>20</b></div></div>",
+    "materials": "<h3>Materi yang dilatih</h3><ul><li>do-while.</li><li>switch-case dan break.</li><li>Nested if untuk stok.</li><li>Akumulator dan operator logika.</li></ul>",
+    "tests": [
+      {
+        "name": "Barang masuk dan keluar",
+        "input": "100\n1 50\n2 30\n0",
+        "hidden": false,
+        "checks": [
+          [
+            "Stok Akhir",
+            120
+          ],
+          [
+            "Transaksi Valid",
+            2
+          ],
+          [
+            "Total Barang Masuk",
+            50
+          ],
+          [
+            "Total Barang Keluar",
+            30
+          ]
+        ]
+      },
+      {
+        "name": "Stok tidak cukup",
+        "input": "20\n2 25\n1 10\n0",
+        "hidden": true,
+        "checks": [
+          [
+            "Stok Akhir",
+            30
+          ],
+          [
+            "Transaksi Valid",
+            1
+          ],
+          [
+            "Total Barang Masuk",
+            10
+          ],
+          [
+            "Total Barang Keluar",
+            0
+          ]
+        ]
+      },
+      {
+        "name": "Tiga transaksi valid",
+        "input": "0\n1 10\n2 5\n1 7\n0",
+        "hidden": true,
+        "checks": [
+          [
+            "Stok Akhir",
+            12
+          ],
+          [
+            "Transaksi Valid",
+            3
+          ],
+          [
+            "Total Barang Masuk",
+            17
+          ],
+          [
+            "Total Barang Keluar",
+            5
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "internet-plan",
+    "title": "Internet Plan Billing",
+    "subtitle": "Hitung tagihan paket internet dengan kuota, kelebihan pemakaian, dan diskon pelanggan.",
+    "category": "SWITCH & DISKON",
+    "difficulty": "HARD",
+    "sampleInput": "2 60 3 1",
+    "brief": "<p class=\"problem-description\">Penyedia internet memiliki tiga paket. Tagihan bulanan dihitung dari biaya paket dan kelebihan kuota. Pelanggan member memperoleh diskon sesuai masa berlangganan.</p><div class=\"callout\">Paket 1 Basic 20 GB = 50.000/bulan; 2 Pro 50 GB = 90.000/bulan; 3 Max 100 GB = 150.000/bulan. Kelebihan kuota 5.000 per GB per bulan. Member mendapat diskon 10% jika tagihan ≥ 200.000, atau 15% jika berlangganan minimal 6 bulan.</div><ol><li>Input kode paket, pemakaian GB per bulan, lama berlangganan (1–24 bulan), dan status member (1/0).</li><li>Gunakan switch-case untuk menentukan harga dan kuota.</li><li>Hitung biaya paket dan biaya kelebihan kuota untuk seluruh bulan.</li><li>Validasi seluruh input.</li><li>Tentukan diskon member dengan nested if dan tampilkan empat label biaya.</li></ol>",
+    "rubric": "<h3>Rubrik penilaian · 100 poin</h3><div class=\"rubric-list\"><div><span>Input dan validasi</span><b>15</b></div><div><span>switch-case paket</span><b>20</b></div><div><span>Biaya paket dan kelebihan kuota</span><b>25</b></div><div><span>Diskon member</span><b>20</b></div><div><span>Total tagihan</span><b>20</b></div></div>",
+    "materials": "<h3>Materi yang dilatih</h3><ul><li>switch-case.</li><li>Operator perbandingan dan logika.</li><li>Nested if dan persentase.</li><li>Operasi perkalian dan akumulator.</li></ul>",
+    "tests": [
+      {
+        "name": "Basic tanpa kelebihan",
+        "input": "1 15 2 0",
+        "hidden": false,
+        "checks": [
+          [
+            "Biaya Paket",
+            100000
+          ],
+          [
+            "Biaya Kelebihan",
+            0
+          ],
+          [
+            "Diskon",
+            0
+          ],
+          [
+            "Total Bayar",
+            100000
+          ]
+        ]
+      },
+      {
+        "name": "Pro member 3 bulan",
+        "input": "2 60 3 1",
+        "hidden": true,
+        "checks": [
+          [
+            "Biaya Paket",
+            270000
+          ],
+          [
+            "Biaya Kelebihan",
+            150000
+          ],
+          [
+            "Diskon",
+            42000
+          ],
+          [
+            "Total Bayar",
+            378000
+          ]
+        ]
+      },
+      {
+        "name": "Max member 6 bulan",
+        "input": "3 100 6 1",
+        "hidden": true,
+        "checks": [
+          [
+            "Biaya Paket",
+            900000
+          ],
+          [
+            "Biaya Kelebihan",
+            0
+          ],
+          [
+            "Diskon",
+            135000
+          ],
+          [
+            "Total Bayar",
+            765000
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "festival-ticket",
+    "title": "Festival Ticketing System",
+    "subtitle": "Bangun kasir festival dengan banyak kategori tiket, transaksi berulang, diskon member, dan biaya QRIS.",
+    "category": "FINAL CHALLENGE",
+    "difficulty": "HARD",
+    "sampleInput": "1\n2 2\n1 2\n0 0\n2",
+    "brief": "<p class=\"problem-description\">Bangun sistem kasir festival sekolah yang melayani beberapa jenis tiket dalam satu transaksi. Sistem menghitung transaksi dan tiket, memberi diskon member, lalu menambahkan biaya admin pembayaran.</p><div class=\"callout\">Harga: kode 1 Reguler = 25.000; 2 VIP = 60.000; 3 VVIP = 100.000. Jumlah per transaksi 1–10. Member: subtotal ≥ 150.000 diskon 10%; ≥ 75.000 diskon 5%. Non-member: subtotal ≥ 200.000 diskon 5%. Pembayaran 1 tunai tanpa admin; 2 QRIS dengan admin 1,5% dari total setelah diskon.</div><ol><li>Input status member (1/0).</li><li>Gunakan do-while untuk membaca kode tiket dan jumlah; akhiri dengan 0 0.</li><li>Gunakan switch-case untuk harga. Kode atau jumlah tidak valid diabaikan.</li><li>Setelah transaksi selesai, input pembayaran (1/2).</li><li>Gunakan if bertingkat untuk diskon dan switch-case untuk biaya admin.</li><li>Tampilkan enam label ringkasan transaksi.</li></ol>",
+    "rubric": "<h3>Rubrik penilaian · 100 poin</h3><div class=\"rubric-list\"><div><span>Validasi input</span><b>15</b></div><div><span>do-while transaksi</span><b>15</b></div><div><span>switch-case harga/pembayaran</span><b>20</b></div><div><span>Akumulasi transaksi/tiket</span><b>15</b></div><div><span>Diskon bertingkat</span><b>20</b></div><div><span>Admin dan total akhir</span><b>15</b></div></div>",
+    "materials": "<h3>Materi yang dilatih</h3><ul><li>do-while dan sentinel.</li><li>switch-case.</li><li>Nested if dan else if.</li><li>Operator logika dan persentase.</li><li>Akumulator.</li></ul>",
+    "tests": [
+      {
+        "name": "Member dengan QRIS",
+        "input": "1\n2 2\n1 2\n0 0\n2",
+        "hidden": false,
+        "checks": [
+          [
+            "Jumlah Transaksi",
+            2
+          ],
+          [
+            "Jumlah Tiket",
+            4
+          ],
+          [
+            "Subtotal",
+            170000
+          ],
+          [
+            "Diskon",
+            17000
+          ],
+          [
+            "Biaya Admin",
+            2295
+          ],
+          [
+            "Total Bayar",
+            155295
+          ]
+        ]
+      },
+      {
+        "name": "Non-member VVIP QRIS",
+        "input": "0\n3 2\n0 0\n2",
+        "hidden": true,
+        "checks": [
+          [
+            "Jumlah Transaksi",
+            1
+          ],
+          [
+            "Jumlah Tiket",
+            2
+          ],
+          [
+            "Subtotal",
+            200000
+          ],
+          [
+            "Diskon",
+            10000
+          ],
+          [
+            "Biaya Admin",
+            2850
+          ],
+          [
+            "Total Bayar",
+            192850
+          ]
+        ]
+      },
+      {
+        "name": "Kode tidak valid",
+        "input": "1\n9 1\n1 3\n0 0\n1",
+        "hidden": true,
+        "checks": [
+          [
+            "Jumlah Transaksi",
+            1
+          ],
+          [
+            "Jumlah Tiket",
+            3
+          ],
+          [
+            "Subtotal",
+            75000
+          ],
+          [
+            "Diskon",
+            3750
+          ],
+          [
+            "Biaya Admin",
+            0
+          ],
+          [
+            "Total Bayar",
+            71250
+          ]
+        ]
+      }
+    ]
+  }
 ];
 
 let currentTask = 0, editor, editorCompartment, timerInterval = null, compileBusy = false;
