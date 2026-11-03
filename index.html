@@ -22,23 +22,21 @@
       "w3c-keyname":"https://esm.sh/w3c-keyname"
     }}
   </script>
-  <link rel="stylesheet" href="./css/style.css?v=dual-countdown-20261103" />
+  <link rel="stylesheet" href="./css/style.css?v=practice-10missions-20261103" />
 </head>
 <body>
   <div class="app-shell">
     <header class="topbar">
       <a class="brand" href="./"><span class="brand-mark" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 4l-4 16"/></svg></span><span class="brand-title">C++ MISSION LAB</span></a>
       <div class="event-label"><span class="live-dot"></span> ICT CLASS <span class="event-divider">/</span> PRACTICAL CHALLENGE</div>
-      <div class="top-actions"><div class="timer-chip"><span class="timer-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span id="timerDisplay">70:00</span><span class="timer-label">SISA WAKTU</span></div><div class="deadline-chip" id="deadlineChip" title="Batas akhir pengerjaan pukul 14.50 WIB"><span class="deadline-chip-label">BATAS 14.50 WIB</span><strong id="deadlineDisplay">--:--:--</strong></div><span class="penalty-chip" id="penaltyChip" hidden title="Total pengurangan waktu"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3.9 2.5 17.4A2 2 0 0 0 4.2 20h15.6a2 2 0 0 0 1.7-2.6L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4m0 3h.01"/></svg><span id="penaltyDisplay">−05:00</span></span></div>
+      <div class="top-actions"><div class="timer-chip"><span class="timer-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span id="timerDisplay">60:00</span><span class="timer-label">SISA WAKTU</span></div><button id="resetSessionBtn" class="btn btn-quiet btn-small" type="button" hidden>Reset Sesi</button><span class="penalty-chip" id="penaltyChip" hidden title="Total pengurangan waktu"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3.9 2.5 17.4A2 2 0 0 0 4.2 20h15.6a2 2 0 0 0 1.7-2.6L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4m0 3h.01"/></svg><span id="penaltyDisplay">−05:00</span></span></div>
     </header>
     <div class="workspace">
       <aside class="sidebar panel">
-        <div class="sidebar-heading"><div><p class="eyebrow">MISSION MAP</p><h2>Tantangan</h2></div><span class="count-pill">01</span></div>
-        <div class="challenge-list" id="challengeList">
-          <button class="challenge-item active" data-task="0"><span class="challenge-number">01</span><span class="challenge-copy"><b>Smart Canteen</b><small>Transaction &amp; logic</small></span><span class="challenge-check" id="done0" aria-label="Belum selesai"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg></span></button>
-        </div>
+        <div class="sidebar-heading"><div><p class="eyebrow">MISSION MAP</p><h2>Tantangan</h2></div><span class="count-pill" id="challengeCount">10</span></div>
+        <div class="challenge-list" id="challengeList"></div>
         <div class="sidebar-bottom">
-          <div class="progress-card"><div class="progress-top"><span>PROGRESS KAMU</span><strong id="progressPercent">0%</strong></div><div class="progress-track"><span id="progressBar"></span></div><p><strong id="solvedCount">0</strong> dari 1 misi selesai · <strong id="xpTotal">0</strong> XP</p></div>
+          <div class="progress-card"><div class="progress-top"><span>PROGRESS KAMU</span><strong id="progressPercent">0%</strong></div><div class="progress-track"><span id="progressBar"></span></div><p><strong id="solvedCount">0</strong> dari <strong id="challengeTotal">10</strong> misi selesai · <strong id="xpTotal">0</strong> XP</p></div>
           <div class="sidebar-note"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.4 5.2L20 10l-5.6 1.8L12 17l-2.4-5.2L4 10l5.6-1.8L12 3Z"/><path d="m19 16 .9 2.1L22 19l-2.1.9L19 22l-.9-2.1L16 19l2.1-.9L19 16Z"/></svg><span>Setiap pelanggaran aturan mengurangi waktu 5 menit.</span></div>
         </div>
       </aside>
@@ -78,13 +76,11 @@
       </div>
       <p class="start-session-eyebrow">C++ MISSION LAB</p>
       <h2 id="startSessionTitle">Siap memulai tantangan?</h2>
-      <p class="start-session-description">Masukkan nama lengkap sebelum mengerjakan Smart Canteen. Timer 70 menit akan langsung berjalan setelah kamu menekan tombol mulai. Semua siswa juga harus menyelesaikan tugas sebelum pukul 14.50 WIB.</p>
+      <p class="start-session-description">Masukkan nama lengkap sebelum memulai latihan. Timer 60 menit akan langsung berjalan setelah kamu menekan tombol mulai. Kamu dapat mereset sesi dan memulai latihan baru kapan saja.</p>
       <label for="startStudentName">NAMA LENGKAP</label>
       <input id="startStudentName" type="text" maxlength="120" placeholder="Contoh: Ahmad Fulan" autocomplete="name" required>
       <p id="startSessionError" class="start-session-error" role="alert" hidden>Nama lengkap wajib diisi.</p>
-      <div class="start-session-note"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>70 menit · 1 tantangan · Waktu tidak dapat dijeda</span></div>
-      <div class="start-session-deadline"><div><small>COUNTDOWN BATAS AKHIR</small><b>3 November 2026 · 14.50 WIB</b></div><strong id="deadlineModalCountdown">--:--:--</strong></div>
-      <p id="deadlineModalMessage" class="deadline-modal-message" aria-live="polite">Sesi harus selesai sebelum batas akhir bersama.</p>
+      <div class="start-session-note"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>60 menit · 10 misi · Timer berjalan selama sesi</span></div>
       <button id="startSessionSubmit" class="btn btn-primary start-session-button" type="submit"><span>Mulai Sesi</span><svg class="ui-icon" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
     </form>
   </div>
@@ -93,6 +89,6 @@
   </div>
   <div id="loadingOverlay" class="loading-overlay hidden"><div class="loading-card"><div class="loader-ring"></div><p class="eyebrow">WASM COMPILER</p><h2 id="loadingTitle">Menyiapkan compiler...</h2><p id="loadingMessage">Menginisialisasi C++ di browser.</p><div class="loading-progress"><span id="loadingProgress"></span></div><small>Proses pertama kali bisa membutuhkan waktu lebih lama.</small></div></div>
   <script src="./js/config.js"></script>
-  <script src="./js/rules.config.js?v=exam-60min-1500-20261103"></script>
-  <script type="module" src="./js/app.js?v=compiler-parity-20261103"></script>
+  <script src="./js/rules.config.js?v=practice-no-deadline-20261103"></script>
+  <script type="module" src="./js/app.js?v=practice-10missions-auto-submit-20261103"></script>
 </body></html>
