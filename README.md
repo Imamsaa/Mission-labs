@@ -104,3 +104,13 @@ The expected standard output panel renders each required label and reference val
 
 
 The STDIN editor loads the public test input automatically and expands to fit its content. The target output and exact labels to be validated are written directly in each mission's Challenge Brief under 'Format output dan target validasi'. Actual program output remains available in the STDOUT tab.
+
+
+## Auto-save kode siswa
+
+- Setiap perubahan dokumen editor CodeMirror langsung disimpan ke localStorage browser.
+- Draft setiap misi juga disimpan pada kunci terpisah, di luar objek progres utama, sebagai cadangan jika penyimpanan progres utama bermasalah.
+- Draft disimpan lagi ketika halaman masuk ke background, ditutup, atau direfresh.
+- Saat halaman dibuka kembali, kode terakhir dipulihkan untuk setiap misi.
+- Draft tetap ada setelah Reset Sesi; reset hanya memulai timer dan catatan penalti baru.
+- Penyimpanan ini berlaku pada browser/perangkat yang sama. Menghapus data situs, membuka profil browser berbeda, atau berpindah perangkat dapat menghilangkan akses ke draft lokal.
