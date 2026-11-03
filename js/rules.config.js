@@ -16,13 +16,13 @@
  */
 window.MISSION_RULES = Object.freeze({
   // false = siswa/developer boleh copy, cut, paste dan memilih teks soal.
-  restrictClipboard: true,
+  restrictClipboard: false,
 
   // false = berpindah tab atau membuka tab lain tidak mengurangi waktu.
-  penalizeTabSwitch: true,
+  penalizeTabSwitch: false,
 
   // false = klik kanan / menu konteks tidak dikenai penalti.
-  penalizeContextMenu: true,
+  penalizeContextMenu: false,
 
   // false = shortcut screenshot, print, dan Developer Tools tidak dikenai penalti.
   penalizeSystemShortcuts: true,
