@@ -1,97 +1,88 @@
 # C++ Mission Lab — ICT Class
 
-Web tugas praktik C++ dengan satu challenge praktik gabungan materi. Mekanisme pengerjaan meniru alur `Imamsaa/Hackathon-C-Batch-1`: halaman soal dan rubrik, editor, STDIN, Run Code, test case, timer sesi dengan penalti pelanggaran, progress, serta pengiriman hasil.
+Platform latihan praktik C++ untuk siswa SMP. Berisi **10 misi tingkat Medium hingga Hard**, compiler C++17 WebAssembly, CodeMirror, STDIN, pengujian otomatis, timer per sesi, proteksi pelanggaran, dan integrasi Google Spreadsheet.
 
-## Fitur dan alur siswa
+## Alur siswa
 
-1. Siswa dapat membaca challenge brief, rubrik penilaian, dan cakupan materi sebelum sesi dimulai.
-2. Saat pertama membuka halaman, modal meminta nama lengkap siswa. Setelah menekan **Mulai Sesi**, nama tersimpan dan timer individu 70 menit langsung berjalan. Sesi juga dibatasi deadline bersama pukul 14.50 WIB.
-3. Tidak ada mode istirahat. Setiap pelanggaran aturan yang terdeteksi mengurangi sisa waktu sebanyak 5 menit.
-4. Editor CodeMirror 6 menyediakan syntax highlighting C++, nomor baris, autocomplete dasar, auto-indent, comment shortcut, Tab indent, dan Ctrl+Enter.
-5. Tinggi editor dapat diperbesar atau diperkecil dengan menarik handle di bawah area kode; pilihan tinggi disimpan di browser.
-6. Tab STDIN menerima input berbaris untuk program yang menggunakan `cin`, `getline`, dan `cin.ignore()`.
-7. **Run Code** mengompilasi lalu menjalankan kode terhadap STDIN yang dimasukkan siswa.
-8. **Check Tests** menjalankan tiga skenario terpisah untuk tiap misi. Pemeriksaan membaca nilai pada baris output yang memiliki label wajib. Nilai otomatis = `test lolos / 3 × 100`.
-9. **Submit Mission** baru aktif setelah pengujian. Submission mengirim nama, tugas, tanggal/jam submit, keberhasilan test, source code, waktu mulai, sisa waktu, lama pengerjaan, jumlah dan rincian pelanggaran ke Google Spreadsheet.
-10. Draft, identitas nama, progres, waktu sesi, dan total penalti disimpan di localStorage.
-11. Pelanggaran yang diberi penalti meliputi copy, cut, paste, drag-and-drop kode, menyeleksi/menyalin soal atau membuka menu konteks pada area soal, shortcut screenshot/print, shortcut Developer Tools/View Source, dan berpindah tab. Setiap kejadian mengurangi 300 detik; akumulasi penalti disimpan di localStorage dan ditampilkan di header.
-12. Saat waktu habis, editor, Run, Check Tests, navigasi misi, dan Submit dikunci pada browser tersebut.
+1. Siswa memasukkan nama lengkap dan menekan **Mulai Sesi**.
+2. Siswa mendapat waktu **60 menit** untuk berlatih. Tidak ada deadline bersama.
+3. Sepuluh misi dapat dipilih dan dikerjakan dalam satu sesi. Setiap misi memiliki tiga skenario test.
+4. Siswa dapat menekan **Reset Sesi** untuk memulai jatah 60 menit baru. Draft kode dan progres misi tetap tersimpan.
+5. Setiap pelanggaran yang terdeteksi mengurangi waktu lima menit. Semua proteksi tetap aktif pada sesi yang baru.
+6. Jika waktu habis, sesi dan editor dikunci. Kode pada misi yang sedang terbuka diuji otomatis dan dikirim ke Google Spreadsheet dengan jenis submit `OTOMATIS - WAKTU HABIS`.
+7. Siswa juga dapat menjalankan Check Tests lalu mengirim melalui tombol **Submit Mission**. Kolom Jenis Submit membedakan pengiriman manual dan otomatis.
 
-> Catatan: penalti berjalan di sisi browser. Browser tidak selalu dapat mendeteksi screenshot yang diambil oleh sistem operasi, kamera eksternal, atau pembukaan Developer Tools melalui menu browser. Mekanisme ini adalah deterrent, bukan jaminan anti-cheat mutlak.
+## Daftar 10 misi
 
-## Satu challenge
+| No. | Misi | Tingkat | Materi utama |
+|---:|---|---|---|
+| 1 | Smart Canteen | Medium | do-while, switch-case, diskon bertingkat, nested if |
+| 2 | Smart Parking Gate | Medium | switch-case, validasi, diskon member |
+| 3 | Rekap Nilai Akademik | Medium | for, akumulator, rata-rata, bobot nilai |
+| 4 | ATM Simulator | Medium | do-while, switch-case, validasi saldo |
+| 5 | Smart Courier | Hard | percabangan bertingkat, biaya layanan, persentase |
+| 6 | Theme Park Ticketing | Hard | nested if, kelayakan, diskon berurutan |
+| 7 | Robot Tournament Scoring | Hard | akumulator, penalti, predikat, logika gabungan |
+| 8 | Warehouse Stock Control | Hard | do-while, switch-case, validasi stok |
+| 9 | Internet Plan Billing | Hard | switch-case, kuota, diskon langganan |
+| 10 | Festival Ticketing System | Hard | do-while, switch-case, transaksi, diskon, QRIS |
 
-### 01 — Smart Canteen
-Menggabungkan input, variabel, operator aritmatika/perbandingan/logika, validasi, nested `if`, `if-else if-else`, `switch-case`, dan `do-while`. Skenario: transaksi member/non-member, pembayaran tunai/QRIS, diskon bertingkat, produk tidak valid.
+Setiap misi menggunakan tiga test case. Materi berfokus pada variabel, input/output, operator, validasi, percabangan, nested if, switch-case, dan perulangan. Array, vector, pointer, serta function tambahan tidak diwajibkan.
 
+## Timer dan reset
 
-## Compiler WebAssembly
+- Durasi setiap sesi: **60 menit**.
+- Tidak ada countdown deadline bersama.
+- Reset Sesi membuat sesi baru, mengatur timer kembali ke 60 menit, dan mereset catatan penalti sesi.
+- Draft kode serta progres misi tidak dihapus saat reset.
+- Setiap pelanggaran terdeteksi mengurangi lima menit.
+- Jika waktu habis, aplikasi menguji dan mengirim kode misi yang sedang terbuka secara otomatis.
+- Bila jaringan tidak tersedia saat timeout, snapshot pengiriman tertunda disimpan di browser dan dicoba kembali saat halaman dibuka lagi.
 
-- Compiler: `browsercc@0.1.1` (Clang/C++17 → WebAssembly).
+## Proteksi latihan
+
+Semua aturan tetap aktif:
+- Copy, cut, paste, dan drag-and-drop kode dibatasi.
+- Seleksi teks soal dan menu konteks dibatasi.
+- Shortcut screenshot, print, Developer Tools, dan View Source dikenai penalti.
+- Meninggalkan tab Mission Lab dikenai penalti.
+- Setiap pelanggaran terdeteksi mengurangi waktu lima menit.
+
+Proteksi browser adalah deterrent, bukan jaminan anti-cheat mutlak. Screenshot sistem operasi, kamera eksternal, dan beberapa jalur Developer Tools tidak dapat dipastikan terblokir oleh halaman web.
+
+## Compiler
+
+- Compiler: `browsercc@0.1.1` (Clang C++17 → WebAssembly).
 - Runtime: `@bjorn3/browser_wasi_shim@0.4.2`.
-- Kompilasi berjalan di `js/compiler-worker.js`; eksekusi program berjalan di `js/runtime-worker.js`.
-- Batas waktu tiap eksekusi program: 4 detik. Worker dihentikan bila program tidak selesai (misalnya infinite loop).
-- Editor CodeMirror 6 dan dependensi compiler dimuat dari CDN. Kunjungan pertama perlu koneksi internet.
-- `coi-serviceworker.js` mencoba menyediakan header COOP/COEP untuk kompatibilitas lingkungan WebAssembly di static hosting. Akses situs melalui HTTPS; browser harus mendukung Service Worker dan WebAssembly.
-
-## Deployment GitHub Pages (tanpa build)
-
-1. Buat repository baru atau gunakan repository yang dituju.
-2. Upload **seluruh isi folder project ini** ke root branch `main` (pastikan `index.html` berada di root, bukan dalam subfolder tambahan).
-3. Buka repository → **Settings → Pages**.
-4. Pada **Build and deployment**, pilih **GitHub Actions**.
-5. Push ke `main`; workflow `.github/workflows/deploy.yml` akan menerbitkan isi root repository.
-6. URL menjadi `https://USERNAME.github.io/NAMA-REPOSITORY/`.
-
-Tidak membutuhkan Node.js, npm, Vite, proses build, atau folder `dist`.
+- Compile dan eksekusi berjalan pada Web Worker.
+- Run Code mendukung STDIN untuk `cin`, `getline`, dan `cin.ignore()`.
+- Setiap test case dijalankan dalam instance WebAssembly terpisah.
+- Batas runtime per program/test case: lima detik untuk mencegah infinite loop.
+- Kunjungan pertama memerlukan koneksi internet untuk memuat dependensi CDN.
 
 ## Integrasi Google Spreadsheet
 
-1. Buka Google Spreadsheet tujuan.
-2. Extensions → Apps Script.
-3. Salin isi `Code.gs` ke editor Apps Script.
-4. Jalankan `setup()` satu kali. Script membuat sheet `Hasil Tugas C++` bila belum ada dan tidak menghapus data sheet lain.
-5. Deploy → New deployment → Web app. Pilih **Execute as: Me** dan **Who has access: Anyone**.
-6. Salin URL `/exec` hasil deployment.
-7. Buka `js/config.js`, isi nilai `window.CPP_MISSION_APPS_SCRIPT_URL` dengan URL tersebut.
-8. Commit/push perubahan ke GitHub.
+1. Buka Spreadsheet tujuan → Extensions → Apps Script.
+2. Ganti isi Apps Script dengan **Code.gs** terbaru dari repository.
+3. Jalankan `setup()` satu kali. Script akan menambahkan header baru tanpa menghapus baris atau kolom yang sudah ada.
+4. Buka **Deploy → Manage deployments → Edit → New version → Deploy**.
+5. Pertahankan URL `/exec` yang sama. URL yang telah diatur di `js/config.js` dapat tetap digunakan jika deployment yang sama diperbarui.
 
-Pengiriman menggunakan JSONP chunk agar kode sumber yang panjang dapat dikirim melalui endpoint Apps Script. Apps Script merakit chunk, memvalidasi payload, dan menambahkan satu baris ke Google Sheets.
+Kolom tambahan **Jenis Submit** dan **ID Pengiriman** membedakan submit manual/otomatis serta mencegah satu pengiriman yang sama ditulis dua kali.
 
 ## Kolom spreadsheet
 
-Nama Peserta · Tugas · Waktu Submit · Tanggal Submit · Jam Submit · Status · Keberhasilan · Test Lolos · Total Test · Nilai Akhir · Kode C++ · Waktu Mulai · Sisa Waktu Saat Submit · Lama Pengerjaan · Jumlah Pelanggaran · Rincian Pelanggaran · Rincian Pengujian.
+Nama Peserta · Tugas · Waktu Submit · Tanggal Submit · Jam Submit · Status · Test Lolos · Total Test · Nilai Akhir · Rincian Pengujian · Kode C++ · Waktu Mulai · Sisa Waktu Saat Submit · Lama Pengerjaan · Jumlah Pelanggaran · Rincian Pelanggaran · Jenis Submit · ID Pengiriman.
 
-## Batasan integritas dan keamanan
+## Deployment GitHub Pages
 
-Aplikasi ini berjalan statis di browser. Timer, localStorage, clipboard guard, peringatan pindah tab, pembatasan print/screenshot, dan test di sisi klien merupakan deterrent/UX; semuanya dapat dilewati oleh pengguna yang menguasai browser atau source JavaScript. Nilai yang dikirim dari browser bukan penilaian anti-cheat yang kriptografis. Gunakan hasil otomatis sebagai pemeriksaan format/logika awal dan tinjau source code di spreadsheet sebelum menetapkan nilai final.
+1. Push repository ke branch `main`.
+2. Buka Settings → Pages.
+3. Pilih GitHub Actions sebagai Build and deployment.
+4. Workflow `.github/workflows/deploy.yml` menerbitkan isi root repository.
 
-## Konfigurasi aturan ujian dan development
+Aplikasi statis ini tidak membutuhkan npm, Vite, proses build, atau folder `dist`.
 
-Aturan dapat diaktifkan/nonaktifkan tanpa mengedit `js/app.js`. Ubah file **`js/rules.config.js`**, lalu commit/push perubahan:
+## Catatan data
 
-| Properti | `true` | `false` |
-|---|---|---|
-| `restrictClipboard` | Copy/cut/paste dibatasi di editor dan teks soal tidak dapat dipilih | Copy/cut/paste dan seleksi teks diizinkan |
-| `penalizeTabSwitch` | Berpindah tab mengurangi waktu | Berpindah/membuka tab lain tidak dikenai penalti |
-| `penalizeContextMenu` | Klik kanan di area soal dikenai penalti | Menu konteks tidak dikenai penalti |
-| `penalizeSystemShortcuts` | Shortcut screenshot, print, dan DevTools dikenai penalti | Shortcut tersebut tidak dikenai penalti |
-| `penaltyMinutes` | Mengatur potongan waktu per pelanggaran yang terdeteksi | Contoh: `5` = lima menit |
-
-Untuk development lokal, ubah empat properti aturan menjadi `false`. Sebelum digunakan siswa, aktifkan kembali dengan `true`. Nilai bawaan repository tetap mode ujian (semua aturan aktif, penalti 5 menit).
-
-Catatan: konfigurasi ini mengendalikan perilaku halaman. Browser tidak dapat menjamin pemblokiran screenshot sistem operasi atau mencegah tab baru secara mutlak; opsi tab mengatur penalti saat halaman ditinggalkan, bukan memblokir browser membuka tab.
-
-## Dua countdown pengerjaan
-
-- Timer individu: **70 menit** sejak siswa menekan Mulai Sesi.
-- Batas akhir bersama: **3 November 2026 pukul 14.50 WIB**.
-- Countdown batas akhir tampil di modal pembuka dan header saat siswa mengerjakan.
-- Sesi otomatis dikunci ketika salah satu countdown mencapai nol.
-- Kedua pengaturan dapat diubah di `js/rules.config.js` melalui `sessionMinutes` dan `deadlineAt`.
-
-
-### Data sesi dan pelanggaran
-Setiap submit menyimpan waktu mulai, sisa waktu saat submit, lama pengerjaan (format HH:MM:SS), jumlah pelanggaran, dan daftar pelanggaran yang terdeteksi. Timestamp submit dihasilkan oleh Apps Script dan diformat dengan zona waktu `Asia/Jakarta`. Perubahan skema bersifat aditif: `setup()` menambahkan header yang belum ada tanpa menghapus kolom atau baris lama.
-
-**Penting setelah mengganti `Code.gs`:** salin kode terbaru ke Apps Script. Buka **Deploy → Manage deployments → Edit → New version → Deploy** agar Web App yang aktif menggunakan skema baru. Jalankan `setup()` sekali untuk menambahkan header baru ke sheet.
+Draft, progres, nama, timer, penalti, dan antrean pengiriman otomatis tertunda disimpan di localStorage browser. Jika siswa menggunakan browser/perangkat berbeda, data lokal tersebut tidak otomatis tersinkron. Nilai otomatis perlu ditinjau bersama source code siswa oleh guru.
