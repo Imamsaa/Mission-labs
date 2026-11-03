@@ -1206,3 +1206,38 @@ body.modal-open{overflow:hidden}
   .stdin-testing-grid{grid-template-columns:1fr!important}
   .console-panel{min-height:0!important}
 }
+
+
+/* Single wide STDIN panel. Target output instructions live in each Challenge Brief. */
+#inputView.console-view{
+  max-height:none!important;
+  min-height:0!important;
+  overflow:visible!important;
+  flex:none!important;
+  padding:12px 13px 14px!important;
+}
+.stdin-view{display:flex;flex-direction:column;gap:10px!important}
+.stdin-toolbar{align-items:center!important;min-height:30px}
+.stdin-toolbar>div{min-width:0}
+.stdin-toolbar strong{font-size:9px!important;letter-spacing:.75px}
+.stdin-toolbar small{font-size:9px!important;line-height:1.45}
+.stdin-editor-card{
+  display:flex;flex-direction:column;min-width:0;width:100%;
+  padding:10px;border:1px solid #293d52;border-radius:8px;background:#0c1724;
+}
+.stdin-card-heading{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.stdin-card-heading span{color:#a9bacb;font:600 9px var(--mono);letter-spacing:.6px}
+.stdin-card-heading small{color:#6e879d;font:8px var(--mono)}
+.stdin-input{
+  display:block;width:100%;min-height:132px!important;height:132px;max-height:none!important;
+  overflow-y:hidden!important;overflow-x:auto;resize:vertical;padding:11px 12px!important;
+  border:1px solid #2b4158!important;border-radius:7px!important;background:#09131f!important;
+  color:#e1edf8!important;font:11px/1.8 var(--mono)!important;letter-spacing:.1px;
+  scrollbar-width:thin;scrollbar-color:#42576d #0b1420;
+}
+.stdin-input:focus{border-color:rgba(185,243,107,.7)!important;box-shadow:0 0 0 2px rgba(185,243,107,.07)!important}
+.stdin-help{margin-top:8px;font:8px/1.55 var(--mono)!important;color:#778da3!important}
+@media(max-width:680px){
+  #inputView.console-view{overflow:visible!important}
+  .stdin-input{min-height:120px!important;height:120px;font-size:10px!important}
+}
