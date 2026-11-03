@@ -27,7 +27,7 @@ Platform latihan praktik C++ untuk siswa SMP. Berisi **10 misi tingkat Medium hi
 | 9 | Internet Plan Billing | Hard | switch-case, kuota, diskon langganan |
 | 10 | Festival Ticketing System | Hard | do-while, switch-case, transaksi, diskon, QRIS |
 
-Setiap misi menggunakan tiga test case. Materi berfokus pada variabel, input/output, operator, validasi, percabangan, nested if, switch-case, dan perulangan. Array, vector, pointer, serta function tambahan tidak diwajibkan.
+Setiap misi menggunakan tiga test case. Materi berfokus pada variabel, input/output, operator, validasi, percabangan, nested if, switch-case, dan perulangan. Array, vector, pointer, serta function tambahan tidak diwajibkan. Pada misi dengan transaksi berulang, siswa memasukkan jumlah transaksi di awal; program memproses sebanyak jumlah tersebut tanpa sentinel atau kode khusus untuk berhenti.
 
 ## Timer dan reset
 
