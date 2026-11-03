@@ -758,3 +758,86 @@ body.modal-open{overflow:hidden}
 
 /* Practice mode: ten-mission navigation and student-controlled session reset. */
 .challenge-copy{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}.challenge-copy small{font:8px var(--mono);color:#71849a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.challenge-name{display:block;max-width:100%}.challenge-item{gap:7px}.challenge-check{flex:none}.top-actions #resetSessionBtn{white-space:nowrap}
+
+
+/* Mission navigation: display all ten practice missions without a viewport-height cutoff. */
+.sidebar{
+  min-height:0;
+}
+.challenge-list{
+  display:flex!important;
+  flex-direction:column!important;
+  grid-template-columns:none!important;
+  gap:5px!important;
+  padding-top:8px!important;
+  max-height:none!important;
+  min-height:0!important;
+  height:auto!important;
+  overflow:visible!important;
+  align-content:start!important;
+  grid-auto-rows:max-content!important;
+}
+.challenge-item{
+  flex:0 0 auto!important;
+  width:100%;
+  min-height:47px!important;
+  height:auto!important;
+  padding:7px 9px!important;
+  align-self:stretch!important;
+}
+.challenge-copy{
+  min-width:0;
+  flex:1 1 auto;
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+}
+.challenge-copy b.challenge-name{
+  display:block;
+  max-width:100%;
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  font-size:10px;
+  line-height:1.3;
+}
+.challenge-copy small{
+  display:block;
+  max-width:100%;
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  font-size:8px;
+  line-height:1.25;
+  overflow-wrap:anywhere;
+}
+.challenge-check{
+  flex:0 0 18px;
+  width:18px;
+  display:grid;
+  place-items:center;
+}
+.sidebar-bottom{
+  margin-top:14px;
+}
+@media(max-width:680px){
+  .challenge-list{
+    display:flex!important;
+    flex-direction:column!important;
+    grid-template-columns:none!important;
+    max-height:none!important;
+    min-height:0!important;
+    overflow:visible!important;
+  }
+  .challenge-item{
+    min-height:46px!important;
+    padding:7px 9px!important;
+  }
+  .challenge-copy b.challenge-name{font-size:10px}
+  .challenge-copy small{font-size:8px}
+  .sidebar-bottom{
+    display:block!important;
+    margin-top:12px;
+    padding-top:0;
+  }
+}
