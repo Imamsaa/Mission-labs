@@ -755,3 +755,6 @@ body.modal-open{overflow:hidden}
   .start-session-deadline{align-items:flex-start;flex-direction:column;gap:8px}
   .start-session-deadline>strong{font-size:20px}
 }
+
+/* Practice mode: ten-mission navigation and student-controlled session reset. */
+.challenge-copy{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}.challenge-copy small{font:8px var(--mono);color:#71849a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.challenge-name{display:block;max-width:100%}.challenge-item{gap:7px}.challenge-check{flex:none}.top-actions #resetSessionBtn{white-space:nowrap}
