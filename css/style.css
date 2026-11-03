@@ -841,3 +841,51 @@ body.modal-open{overflow:hidden}
     padding-top:0;
   }
 }
+
+
+/* Detailed mission brief: make input/output formats scannable in the problem panel. */
+.problem-content .brief-code{
+  display:block;
+  width:100%;
+  margin:9px 0 0;
+  padding:11px 12px;
+  overflow-x:auto;
+  border:1px solid #26384d;
+  border-radius:8px;
+  background:#0a131e;
+  color:#d2dfec;
+  font:10px/1.75 var(--mono);
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+}
+.problem-content .section-block>p{
+  margin:0 0 8px;
+  color:#aebdcc;
+  font-size:11px;
+  line-height:1.7;
+}
+.problem-content .section-block>ul,
+.problem-content .section-block>ol{
+  padding-left:19px;
+}
+.problem-content .section-block>ul li,
+.problem-content .section-block>ol li{
+  padding-left:2px;
+}
+.problem-content .section-block code{
+  color:#e1f4cb;
+  font-size:.95em;
+}
+.problem-content .hint-card{
+  margin-top:18px;
+}
+@media(max-width:680px){
+  .problem-content .brief-code{
+    padding:10px;
+    font-size:9px;
+    line-height:1.8;
+  }
+  .problem-content .section-block>p{
+    font-size:11px;
+  }
+}
