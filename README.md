@@ -86,3 +86,10 @@ Aplikasi statis ini tidak membutuhkan npm, Vite, proses build, atau folder `dist
 ## Catatan data
 
 Draft, progres, nama, timer, penalti, dan antrean pengiriman otomatis tertunda disimpan di localStorage browser. Jika siswa menggunakan browser/perangkat berbeda, data lokal tersebut tidak otomatis tersinkron. Nilai otomatis perlu ditinjau bersama source code siswa oleh guru.
+
+
+## Panel pengujian STDIN / STDOUT
+
+- **STDIN (Standard Input):** tempat siswa mengisi data yang akan dibaca oleh program melalui `cin` atau `getline()`. Format spasi dan baris baru sama-sama diterima.
+- **STDOUT (Standard Output):** tempat melihat hasil yang ditampilkan program melalui `cout` setelah tombol **Run Code** ditekan.
+- **TEST RESULTS:** tempat melihat hasil tiga test case otomatis setelah tombol **Check Tests** ditekan. Output setiap test case yang ditampilkan tersedia pada detail pengujian.
