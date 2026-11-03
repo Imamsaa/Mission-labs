@@ -1019,13 +1019,35 @@ function getCode() { return editor.state.doc.toString(); }
 function setCode(value) { editor.dispatch({changes:{from:0,to:editor.state.doc.length,insert:value}}); }
 function saveDraft() { progress.drafts=progress.drafts||{};progress.drafts[tasks[currentTask].id]=getCode();localStorage.setItem(PROGRESS_KEY,JSON.stringify(progress));$('#editorStatus').textContent='Draft tersimpan';if(lastSubmission&&lastSubmission.code!==getCode()){lastSubmission=null;$('#submitBtn').disabled=true;$('#scorePreview').textContent='Kode berubah · Jalankan Check Tests kembali.';}updateCursorInfo(); }
 function updateCursorInfo() { if(!editor?.state)return;const pos=editor.state.selection.main.head;const line=editor.state.doc.lineAt(pos);$('#lineCount').textContent=line.number;$('#columnCount').textContent=pos-line.from+1; }
+
+function getPublicStandardTest(task) {
+  return task.tests.find(test => !test.hidden) || task.tests[0] || { input: '', checks: [] };
+}
+function renderStandardIO(task) {
+  const test = getPublicStandardTest(task);
+  const inputKey = 'cppMissionLab_stdin_' + task.id;
+  const savedInput = localStorage.getItem(inputKey);
+  $('#stdinInput').value = savedInput !== null ? savedInput : (test.input || '');
+  const expectedOutput = (test.checks || [])
+    .map(([label, expected]) => label + ': ' + expected)
+    .join('\n');
+  $('#standardOutputPreview').textContent = expectedOutput || 'Output standar belum tersedia.';
+  $('#standardInputCaseName').textContent = test.name ? '· ' + test.name : '';
+}
+function restoreStandardInput() {
+  const task = tasks[currentTask];
+  const test = getPublicStandardTest(task);
+  $('#stdinInput').value = test.input || '';
+  localStorage.setItem('cppMissionLab_stdin_' + task.id, $('#stdinInput').value);
+  toast('Input standar untuk ' + task.title + ' dipulihkan.');
+}
 function renderTask(index) {
   if(compileBusy){toast('Tunggu proses kompilasi selesai sebelum berpindah tugas.','bad');return;}saveDraft();currentTask=index;const task=tasks[index];
   document.querySelectorAll('.challenge-item').forEach((b,i)=>b.classList.toggle('active',i===index));
   $('#problemNumber').textContent=String(index+1).padStart(2,'0');$('#problemStage').textContent=task.category;$('#problemTitle').textContent=task.title;$('#problemSubtitle').textContent=task.subtitle;$('#problemDifficulty').textContent=task.difficulty;$('#problemDifficulty').className='difficulty '+task.difficulty.toLowerCase();
   $('#descriptionTab').innerHTML=task.brief;$('#rubricTab').innerHTML=task.rubric;$('#materialsTab').innerHTML=task.materials;
   document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab==='description'));['description','rubric','materials'].forEach(t=>$(`#${t}Tab`).classList.toggle('hidden',t!=='description'));
-  setCode(progress.drafts?.[task.id]||starterCode);$('#stdinInput').value='';$('#testResultCount').textContent='—';$('#runDuration').textContent='';$('#scorePreview').textContent='Jalankan Check Tests sebelum submit.';$('#submitBtn').disabled=true;lastSubmission=null;compiledSource='';compiledModule=null;
+  setCode(progress.drafts?.[task.id]||starterCode);renderStandardIO(task);$('#testResultCount').textContent='—';$('#runDuration').textContent='';$('#scorePreview').textContent='Jalankan Check Tests sebelum submit.';$('#submitBtn').disabled=true;lastSubmission=null;compiledSource='';compiledModule=null;
   $('#outputView').innerHTML=`<div class="empty-console stdout-empty"><span class="terminal-glyph">${icon('terminal',18)}</span><div><strong>Standard Output (STDOUT)</strong><p>Hasil dari cout akan tampil di sini setelah kamu menekan Run Code.</p></div></div>`;
   $('#testsView').innerHTML=`<div class="empty-console"><span class="terminal-glyph">${icon('checkCircle',18)}</span><div><strong>Belum ada hasil test</strong><p>Tekan Check Tests untuk menjalankan tiga skenario pengujian.</p></div></div>`;showConsole('input');updateSessionLock();
 }
@@ -1566,6 +1588,12 @@ function initEditorResizer() {
   });
 }
 function bindEvents(){
+  $('#stdinInput').addEventListener('input', () => {
+    const task = tasks[currentTask];
+    if (task) localStorage.setItem('cppMissionLab_stdin_' + task.id, $('#stdinInput').value);
+  });
+  $('#restoreStandardInputBtn').addEventListener('click', restoreStandardInput);
+
   $('#startSessionForm').addEventListener('submit',submitStartSession);
   $('#startStudentName').addEventListener('input',()=>{
     $('#startSessionError').hidden=true;
