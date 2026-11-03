@@ -965,7 +965,7 @@ const tasks = [
   }
 ];
 
-let currentTask = 0, editor, editorCompartment, timerInterval = null, compileBusy = false;
+let currentTask = 0, activeDraftTaskId = null, editor, editorCompartment, timerInterval = null, compileBusy = false;
 let compileWorker = null, runtimeWorker = null, cancelActive = null;
 let sessionStarted = Boolean(Number(localStorage.getItem(START_KEY)));
 let sessionFinished = localStorage.getItem(FINISHED_KEY) === '1';
@@ -1030,7 +1030,8 @@ function getStoredDraft(taskId) {
 }
 function saveDraft() {
   if (!editor || !tasks[currentTask]) return false;
-  const taskId = tasks[currentTask].id;
+  const taskId = activeDraftTaskId;
+  if (!taskId) return false;
   const code = getCode();
   let standaloneSaved = false;
   let progressSaved = false;
@@ -1090,7 +1091,13 @@ function restoreStandardInput() {
   toast('Input standar untuk ' + task.title + ' dipulihkan.');
 }
 function renderTask(index) {
-  if(compileBusy){toast('Tunggu proses kompilasi selesai sebelum berpindah tugas.','bad');return;}saveDraft();currentTask=index;const task=tasks[index];
+  if(compileBusy){toast('Tunggu proses kompilasi selesai sebelum berpindah tugas.','bad');return;}
+  // Save only after a task has actually been loaded. On first page load,
+  // editor still contains starterCode and must not overwrite the saved draft.
+  if(activeDraftTaskId) saveDraft();
+  currentTask=index;
+  const task=tasks[index];
+  activeDraftTaskId=task.id;
   document.querySelectorAll('.challenge-item').forEach((b,i)=>b.classList.toggle('active',i===index));
   $('#problemNumber').textContent=String(index+1).padStart(2,'0');$('#problemStage').textContent=task.category;$('#problemTitle').textContent=task.title;$('#problemSubtitle').textContent=task.subtitle;$('#problemDifficulty').textContent=task.difficulty;$('#problemDifficulty').className='difficulty '+task.difficulty.toLowerCase();
   $('#descriptionTab').innerHTML=task.brief;$('#rubricTab').innerHTML=task.rubric;$('#materialsTab').innerHTML=task.materials;
