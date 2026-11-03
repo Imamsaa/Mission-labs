@@ -22,7 +22,7 @@
       "w3c-keyname":"https://esm.sh/w3c-keyname"
     }}
   </script>
-  <link rel="stylesheet" href="./css/style.css?v=stdin-expected-output-polished-20261103" />
+  <link rel="stylesheet" href="./css/style.css?v=stdin-expected-output-side-by-side-20261103" />
 </head>
 <body>
   <div class="app-shell">
@@ -58,15 +58,20 @@
         <div class="console-panel"><div class="console-header"><div class="console-tabs"><button class="console-tab active" data-console-tab="input">STDIN</button><button class="console-tab" data-console-tab="output">STDOUT</button><button class="console-tab" data-console-tab="tests">TEST RESULTS <span class="console-count" id="testResultCount">—</span></button></div><div class="console-actions"><span id="runDuration"></span><button class="clear-btn" id="clearOutputBtn">Clear</button></div></div>
           <div id="inputView" class="console-view stdin-view">
             <div class="stdin-toolbar">
-              <div><strong>STANDARD INPUT (STDIN)</strong><small>Input standar dari sistem untuk menguji misi ini. Kamu boleh mengubahnya.</small></div>
+              <div><strong>STANDARD INPUT (STDIN)</strong><small>Input bawaan sistem untuk menguji program. Kamu boleh mengubahnya.</small></div>
               <button id="restoreStandardInputBtn" class="clear-btn" type="button">Pulihkan standar</button>
             </div>
-            <textarea id="stdinInput" class="stdin-input" rows="8" spellcheck="false" placeholder="Input standar akan dimuat otomatis..."></textarea>
-            <div class="stdin-help">Data awal berasal dari test case publik. Kamu bebas mengubah nilai, spasi, atau baris untuk mencoba program.</div>
-            <div class="standard-output-reference">
-              <div class="standard-output-heading"><strong>STANDARD OUTPUT (EXPECTED)</strong><span id="standardInputCaseName"></span></div>
-              <div id="standardOutputPreview" class="standard-output-lines"><div class="expected-output-empty">Output standar akan ditampilkan berdasarkan input bawaan misi.</div></div>
-              <p>Nilai yang diharapkan untuk input bawaan misi. Bandingkan dengan hasil aktual pada tab STDOUT setelah menekan Run Code.</p>
+            <div class="stdin-testing-grid">
+              <div class="stdin-editor-card">
+                <div class="stdin-card-heading"><span>INPUT DATA</span><small>Editable</small></div>
+                <textarea id="stdinInput" class="stdin-input" rows="6" spellcheck="false" placeholder="Input standar akan dimuat otomatis..."></textarea>
+                <div class="stdin-help">Spasi dan Enter menjadi pemisah input. Data akan dibaca melalui cin atau getline().</div>
+              </div>
+              <div class="standard-output-reference">
+                <div class="standard-output-heading"><strong>EXPECTED OUTPUT</strong><span id="standardInputCaseName"></span></div>
+                <div id="standardOutputPreview" class="standard-output-lines"><div class="expected-output-empty">Output yang diharapkan akan tampil di sini.</div></div>
+                <p>Hasil yang seharusnya keluar untuk input bawaan. Bandingkan dengan STDOUT setelah Run Code.</p>
+              </div>
             </div>
           </div>
           <div id="outputView" class="console-view hidden"><div class="empty-console stdout-empty"><span class="terminal-glyph"><svg class="ui-icon" viewBox="0 0 24 24"><path d="m5 7 5 5-5 5M13 17h6"/></svg></span><div><strong>STANDARD OUTPUT (STDOUT)</strong><p>Hasil dari cout akan tampil di sini setelah kamu menekan Run Code.</p></div></div></div>
@@ -102,5 +107,5 @@
   <div id="loadingOverlay" class="loading-overlay hidden"><div class="loading-card"><div class="loader-ring"></div><p class="eyebrow">WASM COMPILER</p><h2 id="loadingTitle">Menyiapkan compiler...</h2><p id="loadingMessage">Menginisialisasi C++ di browser.</p><div class="loading-progress"><span id="loadingProgress"></span></div><small>Proses pertama kali bisa membutuhkan waktu lebih lama.</small></div></div>
   <script src="./js/config.js"></script>
   <script src="./js/rules.config.js?v=practice-no-deadline-20261103"></script>
-  <script type="module" src="./js/app.js?v=expected-output-rows-stdin-polish-20261103"></script>
+  <script type="module" src="./js/app.js?v=stdin-expected-output-side-by-side-20261103"></script>
 </body></html>
