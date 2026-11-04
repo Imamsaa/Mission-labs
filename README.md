@@ -1,6 +1,6 @@
 # C++ Mission Lab — ICT Class
 
-Platform latihan praktik C++ untuk siswa SMP. Berisi **10 misi tingkat Medium hingga Hard**, compiler C++17 WebAssembly, CodeMirror, STDIN, pengujian otomatis, timer per sesi, proteksi pelanggaran, dan integrasi Google Spreadsheet.
+Platform latihan praktik C++ untuk siswa SMP. Berisi **10 misi tingkat Medium hingga Hard**, compiler C++20 WebAssembly, CodeMirror, STDIN, pengujian otomatis, timer per sesi, proteksi pelanggaran, dan integrasi Google Spreadsheet.
 
 ## Alur siswa
 
@@ -52,8 +52,10 @@ Proteksi browser adalah deterrent, bukan jaminan anti-cheat mutlak. Screenshot s
 
 ## Compiler
 
-- Compiler: `browsercc@0.1.1` (Clang C++17 → WebAssembly).
+- Compiler: `browsercc@0.1.1` (Clang C++20 → WebAssembly).
 - Runtime: `@bjorn3/browser_wasi_shim@0.4.2`.
+
+- **Kompatibilitas Arduino:** C++20 di Mission Labs berlaku untuk compiler WebAssembly di browser. Arduino Uno/Nano dengan toolchain AVR standar biasanya memakai standar yang lebih lama; jangan menganggap semua fitur C++20 dapat langsung dipindahkan ke sketch Arduino.
 - Compile dan eksekusi berjalan pada Web Worker.
 - Run Code mendukung STDIN untuk `cin`, `getline`, dan `cin.ignore()`. Format input bebas: siswa boleh memisahkan nilai dengan spasi atau baris baru, serta bebas menggunakan satu atau beberapa perintah `cin`, selama urutan pembacaan sesuai ketentuan soal. Format input fleksibel: siswa boleh menulis nilai dalam satu baris atau banyak baris, menggunakan `cin` tunggal maupun berantai, selama urutan pembacaan data sesuai instruksi misi. Spasi dan baris baru diperlakukan sebagai pemisah input. Challenge Brief tidak memberikan contoh kode atau urutan penyelesaian agar siswa merancang algoritmanya sendiri.
 - Setiap test case dijalankan dalam instance WebAssembly terpisah.
