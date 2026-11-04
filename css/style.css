@@ -1266,3 +1266,12 @@ body.modal-open{overflow:hidden}
   }
 }
 
+
+
+/* Multi-file project tabs for selected C++ missions. */
+.editor-file-tabs{display:flex;align-items:stretch;align-self:stretch;gap:4px;min-width:0;max-width:min(70%,720px);overflow-x:auto;scrollbar-width:thin}
+.editor-file-tab{flex:0 0 auto;border:0;border-bottom:2px solid transparent;background:transparent;color:#7f91a4;cursor:pointer;font:10px var(--mono);white-space:nowrap;min-width:104px;justify-content:flex-start;transition:background .15s,color .15s,border-color .15s}
+.editor-file-tab:hover{color:#dce7f2;background:rgba(255,255,255,.025)}
+.editor-file-tab.active{color:#dce7f2;border-bottom-color:var(--green);background:rgba(185,243,107,.035)}
+.editor-file-tab .file-dot{flex:0 0 7px}
+@media(max-width:680px){.editor-file-tabs{max-width:calc(100% - 95px);gap:2px}.editor-file-tab{min-width:auto;padding:0 8px;font-size:9px}}
