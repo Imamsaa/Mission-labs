@@ -29,6 +29,18 @@ Platform latihan praktik C++ untuk siswa SMP. Berisi **10 misi tingkat Hard deng
 
 Seluruh misi disusun setara dengan LKPD integrasi C++ dan menggunakan tiga test case (satu publik dan dua tersembunyi). Setiap misi mewajibkan array sejajar maksimal lima data, function untuk input/perhitungan/status/laporan/ringkasan, scope global dan lokal, object string dengan method length(), find(), substr(), dan append(), serta getline() untuk teks yang mengandung spasi. Program langsung menampilkan menu tanpa meminta jumlah data di awal. Setiap pilihan Input Data menambahkan satu data hingga kapasitas lima. Struktur kontrol yang wajib digunakan adalah while(true) untuk mengulang menu sampai pilihan Keluar, do-while untuk meminta ulang pilihan menu yang tidak valid, for untuk membaca dan menampilkan array, switch-case untuk menu, serta if bersarang untuk keputusan. Tidak diperbolehkan membuat class sendiri, nested loop, file, vector, pointer, atau library tambahan.
 
+## Editor multi-file
+
+Enam misi menggunakan dua file yang dapat dibuka melalui tab di atas editor:
+- Smart Courier: `main.cpp` dan `courier.h`
+- Theme Park Ticketing: `main.cpp` dan `ticket_rules.h`
+- Robot Tournament Scoring: `main.cpp` dan `scoring.h`
+- Warehouse Stock Control: `main.cpp` dan `inventory.h`
+- Internet Plan Billing: `main.cpp` dan `billing.h`
+- Festival Ticketing System: `main.cpp` dan `festival.h`
+
+File header dikirim ke compiler WebAssembly sebagai `extraFiles` sehingga dapat dipakai dengan `#include "nama_file.h"` pada `main.cpp`. Draft disimpan per file di browser. Run Code dan Check Tests mengompilasi `main.cpp` bersama file header yang sesuai. Saat submit, isi semua file disatukan pada kolom Kode C++ dengan penanda nama file. Empat misi lainnya tetap menggunakan satu file `main.cpp`.
+
 ## Timer dan reset
 
 - Durasi setiap sesi: **60 menit**.
