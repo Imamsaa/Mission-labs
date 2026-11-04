@@ -1241,3 +1241,28 @@ body.modal-open{overflow:hidden}
   #inputView.console-view{overflow:visible!important}
   .stdin-input{min-height:120px!important;height:120px;font-size:10px!important}
 }
+
+/* Test results: show the complete report instead of a nested scrolling viewport. */
+#testsView.console-view{
+  height:auto!important;
+  max-height:none!important;
+  min-height:0!important;
+  overflow:visible!important;
+  flex:0 0 auto!important;
+}
+#testsView .test-output{
+  max-height:none!important;
+  overflow:visible!important;
+  overflow-wrap:anywhere;
+}
+.editor-panel:has(#testsView:not(.hidden)){
+  height:auto!important;
+  min-height:0!important;
+}
+@media(max-width:680px){
+  #testsView.console-view{
+    max-height:none!important;
+    overflow:visible!important;
+  }
+}
+
