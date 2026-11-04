@@ -114,3 +114,9 @@ The STDIN editor loads the public test input automatically and expands to fit it
 - Saat halaman dibuka kembali, kode terakhir dipulihkan untuk setiap misi.
 - Draft tetap ada setelah Reset Sesi; reset hanya memulai timer dan catatan penalti baru.
 - Penyimpanan ini berlaku pada browser/perangkat yang sama. Menghapus data situs, membuka profil browser berbeda, atau berpindah perangkat dapat menghilangkan akses ke draft lokal.
+
+## Proyek multi-file
+
+Enam misi lanjutan menyediakan dua tab file: `main.cpp` dan satu file header `.h`. Siswa mengerjakan program utama di `main.cpp`, menulis fungsi pendukung di file header, lalu memanggilnya dengan `#include "nama_file.h"`. File header dikirim ke compiler sebagai `extraFiles`, sehingga ikut dipakai pada Run Code dan seluruh test case. Draft setiap file disimpan terpisah pada browser. Saat Submit Mission atau pengiriman otomatis, isi semua file dikemas bersama nama filenya pada kolom Kode C++.
+
+Misi lainnya tetap hanya menggunakan `main.cpp`. Tombol Reset pada misi multi-file mengembalikan semua file ke template awal.
