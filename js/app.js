@@ -375,7 +375,7 @@ function hideLoading() { $('#loadingOverlay').classList.add('hidden'); }
 function runCompilerWorker(source, options = {}) {
   const mode = options.mode === 'tests' ? 'tests' : 'run';
   return new Promise((resolve, reject) => {
-    const worker = new Worker(new URL('./compiler-worker.js?v=compiler-parity-20261103', import.meta.url), { type: 'module' });
+    const worker = new Worker(new URL('./compiler-worker.js?v=compiler-cxx20-20261104', import.meta.url), { type: 'module' });
     compileWorker = worker;
     let settled = false;
     let timeout = null;
@@ -410,7 +410,7 @@ function runCompilerWorker(source, options = {}) {
       const data = event.data || {};
 
       if (data.type === 'status') {
-        showLoading('Menyiapkan compiler C++17...', data.message || 'Memuat Clang WebAssembly.', 20);
+        showLoading('Menyiapkan compiler C++20...', data.message || 'Memuat Clang WebAssembly.', 20);
         return;
       }
 
@@ -459,7 +459,7 @@ function runCompilerWorker(source, options = {}) {
       worker.postMessage({
         source,
         runMode: mode === 'run' ? 'stdin' : 'tests',
-        standard: 'c++17',
+        standard: 'c++20',
         stdin: options.stdin || '',
         testCases: (options.tests || []).map(test => ({
           label: test.name,
@@ -509,7 +509,7 @@ async function execute(mode) {
   $('#runDuration').textContent='Compiling';
   try {
     if (mode==='run') {
-      showLoading('Mengompilasi C++17...','Menyiapkan Clang WebAssembly.',15);
+      showLoading('Mengompilasi C++20...','Menyiapkan Clang WebAssembly.',15);
       const result=await runCompilerWorker(source,{mode:'run',stdin:$('#stdinInput').value});
       hideLoading();
       const sections=[];
