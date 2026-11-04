@@ -1,30 +1,38 @@
 /* Minimal COOP/COEP service worker shim for threaded WebAssembly on static hosts. */
 (() => {
   if (typeof window === 'undefined' || typeof navigator === 'undefined') return;
-  if (!('serviceWorker' in navigator) || !window.isSecureContext || window.crossOriginIsolated) return;
+  if (!('serviceWorker' in navigator) || !window.isSecureContext) return;
   const scriptURL = document.currentScript?.src;
   if (!scriptURL) return;
-  const key = 'cppMissionCoiReloaded';
+
+  // A versioned key permits one reload when switching the existing controller
+  // from COEP require-corp to credentialless.
+  const key = 'cppMissionCoiCredentiallessReloaded_v1';
   if (sessionStorage.getItem(key) === '1') return;
+
+  const hadController = Boolean(navigator.serviceWorker.controller);
+  const reloadOnce = () => {
+    if (sessionStorage.getItem(key) === '1') return;
+    sessionStorage.setItem(key, '1');
+    window.location.reload();
+  };
+
+  // Listen before registering: an updated worker uses skipWaiting() and
+  // clients.claim(), which changes the controller after activation.
+  navigator.serviceWorker.addEventListener('controllerchange', reloadOnce, { once: true });
+
   navigator.serviceWorker.register(scriptURL, { scope: new URL('./', scriptURL).pathname })
     .then(registration => {
-      if (navigator.serviceWorker.controller) return;
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (window.crossOriginIsolated || sessionStorage.getItem(key) !== '1') {
-          sessionStorage.setItem(key, '1');
-          window.location.reload();
-        }
-      }, { once: true });
-      if (registration.active) {
-        sessionStorage.setItem(key, '1');
-        window.location.reload();
-      }
+      // First visit: if a worker is already active but this page was not
+      // controlled during navigation, reload once to receive its headers.
+      if (!hadController && registration.active) reloadOnce();
     })
     .catch(error => console.warn('Cross-origin isolation service worker registration failed:', error));
 })();
 
 if (typeof window === 'undefined') {
-  let credentialless = false;
+  // Keep cross-origin isolation while allowing public no-CORS resources (e.g. Apps Script JSONP).
+  let credentialless = true;
   const cacheName = 'cpp-mission-runtime-v1';
   const appCache = 'cpp-mission-app-v1';
   function addIsolationHeaders(response, crossOrigin = false) {
