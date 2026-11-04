@@ -42,6 +42,7 @@ async function executeModule(module, input) {
 self.onmessage = async event => {
   const {
     source,
+    extraFiles = {},
     testCases = [],
     standard = 'c++20',
     runMode = 'stdin',
@@ -56,6 +57,7 @@ self.onmessage = async event => {
     const result = await compile({
       source,
       fileName: 'main.cpp',
+      extraFiles,
       flags: [
         '-O0',
         '-Wall',
