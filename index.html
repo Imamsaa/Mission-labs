@@ -47,14 +47,14 @@
         <section id="descriptionTab" class="problem-content"></section><section id="rubricTab" class="problem-content hidden"></section><section id="materialsTab" class="problem-content hidden"></section>
       </main>
       <section class="editor-panel panel">
-        <div class="editor-topbar"><div class="file-tab"><span class="file-dot"></span><span>main.cpp</span></div><div class="editor-tools"><span class="editor-policy-chip">C++17 · WEBASSEMBLY</span><button id="resetCodeBtn" class="tool-btn"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5"/></svg><span>Reset</span></button></div></div>
+        <div class="editor-topbar"><div class="file-tab"><span class="file-dot"></span><span>main.cpp</span></div><div class="editor-tools"><span class="editor-policy-chip">C++20 · WEBASSEMBLY</span><button id="resetCodeBtn" class="tool-btn"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5"/></svg><span>Reset</span></button></div></div>
         <div class="editor-caption"><span><i class="status-dot"></i> EDITOR</span><span id="editorStatus">Draft tersimpan lokal</span></div>
         <div id="editorHost" class="editor-host"><textarea id="codeFallback" spellcheck="false" aria-label="Editor kode C++"></textarea><div id="sessionLockOverlay" class="session-lock-overlay"><div class="session-lock-card"><span class="session-lock-icon"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><strong id="sessionLockTitle">Sesi belum dimulai</strong><p id="sessionLockMessage">Baca tantangan terlebih dahulu. Editor akan terbuka setelah menekan Mulai Sesi.</p><small>Waktu pengerjaan dimulai saat sesi dibuka.</small></div></div></div>
         <div id="editorResizeHandle" class="editor-resize-handle" role="separator" aria-orientation="horizontal" aria-label="Tarik untuk mengubah tinggi editor" aria-controls="editorHost" aria-valuemin="240" aria-valuemax="900" aria-valuenow="360" tabindex="0">
           <span class="editor-resize-grip" aria-hidden="true"></span>
           <small>DRAG UNTUK MEMPERBESAR EDITOR</small>
         </div>
-        <div class="editor-footer"><span>Ln <b id="lineCount">1</b>, Col <b id="columnCount">1</b></span><span>UTF-8 · C++17</span><span class="shortcut-hint"><kbd>Tab</kbd> Indent · <kbd>Ctrl</kbd>+<kbd>Enter</kbd> Run</span></div>
+        <div class="editor-footer"><span>Ln <b id="lineCount">1</b>, Col <b id="columnCount">1</b></span><span>UTF-8 · C++20</span><span class="shortcut-hint"><kbd>Tab</kbd> Indent · <kbd>Ctrl</kbd>+<kbd>Enter</kbd> Run</span></div>
         <div class="console-panel"><div class="console-header"><div class="console-tabs"><button class="console-tab active" data-console-tab="input">STDIN</button><button class="console-tab" data-console-tab="output">STDOUT</button><button class="console-tab" data-console-tab="tests">TEST RESULTS <span class="console-count" id="testResultCount">—</span></button></div><div class="console-actions"><span id="runDuration"></span><button class="clear-btn" id="clearOutputBtn">Clear</button></div></div>
           <div id="inputView" class="console-view stdin-view">
             <div class="stdin-toolbar">
@@ -74,7 +74,7 @@
         <input id="studentName" type="hidden" value=""><div class="student-submit"><span id="scorePreview">Jalankan Check Tests sebelum submit.</span></div>
       </section>
     </div>
-    <footer class="page-footer"><span>ICT CLASS · SMPIT AL FIRDAUS PURWODADI</span><span>POWERED BY <strong>WEBASSEMBLY</strong> · C++17</span></footer>
+    <footer class="page-footer"><span>ICT CLASS · SMPIT AL FIRDAUS PURWODADI</span><span>POWERED BY <strong>WEBASSEMBLY</strong> · C++20</span></footer>
   </div>
   <div id="toastRegion" class="toast-region" aria-live="polite"></div>
   <div id="startSessionModal" class="start-session-modal hidden" role="dialog" aria-modal="true" aria-labelledby="startSessionTitle" aria-hidden="true">
@@ -100,5 +100,5 @@
   <div id="loadingOverlay" class="loading-overlay hidden"><div class="loading-card"><div class="loader-ring"></div><p class="eyebrow">WASM COMPILER</p><h2 id="loadingTitle">Menyiapkan compiler...</h2><p id="loadingMessage">Menginisialisasi C++ di browser.</p><div class="loading-progress"><span id="loadingProgress"></span></div><small>Proses pertama kali bisa membutuhkan waktu lebih lama.</small></div></div>
   <script src="./js/config.js"></script>
   <script src="./js/rules.config.js?v=practice-no-deadline-20261103"></script>
-  <script type="module" src="./js/app.js?v=brief-language-refresh-20261104"></script>
+  <script type="module" src="./js/app.js?v=compiler-cxx20-20261104"></script>
 </body></html>
