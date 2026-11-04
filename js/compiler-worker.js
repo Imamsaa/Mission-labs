@@ -43,7 +43,7 @@ self.onmessage = async event => {
   const {
     source,
     testCases = [],
-    standard = 'c++17',
+    standard = 'c++20',
     runMode = 'stdin',
     stdin = ''
   } = event.data || {};
