@@ -531,6 +531,8 @@ async function execute(mode) {
   } catch(error) {
     hideLoading();showOutput(error.message||String(error),'error');$('#runDuration').textContent='Compile / runtime error';toast('Program gagal dijalankan. Periksa terminal.','bad');
   } finally {
+    // Always dismiss the compiler overlay after Run Code or Check Tests completes.
+    hideLoading();
     compileBusy=false;
     const locked=!sessionStarted||sessionFinished;
     $('#runBtn').disabled=locked;$('#checkTestsBtn').disabled=locked;
