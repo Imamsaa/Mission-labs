@@ -158,7 +158,7 @@ function getProjectFilesSnapshot(task=tasks[currentTask]) {
   return files;
 }
 function serializeProjectFiles(files) {
-  return Object.entries(files||{}).map(([name,source])=>'// ===== FILE: '+name+' =====\n'+source).join('\n\n');
+  return Object.entries(files||{}).map(([name,source])=>'// ===== FILE: '+name+' ====='+String.fromCharCode(10)+source).join(String.fromCharCode(10,10));
 }
 function getCompilerExtraFiles(files) {
   return Object.fromEntries(Object.entries(files||{}).filter(([name])=>name!=='main.cpp'));
