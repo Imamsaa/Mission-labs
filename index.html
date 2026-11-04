@@ -47,7 +47,7 @@
         <section id="descriptionTab" class="problem-content"></section><section id="rubricTab" class="problem-content hidden"></section><section id="materialsTab" class="problem-content hidden"></section>
       </main>
       <section class="editor-panel panel">
-        <div class="editor-topbar"><div class="file-tab"><span class="file-dot"></span><span>main.cpp</span></div><div class="editor-tools"><span class="editor-policy-chip">C++20 · WEBASSEMBLY</span><button id="resetCodeBtn" class="tool-btn"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5"/></svg><span>Reset</span></button></div></div>
+        <div class="editor-topbar"><div class="editor-file-tabs" id="editorFileTabs"><button type="button" class="file-tab editor-file-tab active" data-editor-file="main.cpp"><span class="file-dot"></span><span>main.cpp</span></button></div><div class="editor-tools"><span class="editor-policy-chip">C++20 · WEBASSEMBLY</span><button id="resetCodeBtn" class="tool-btn"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5"/></svg><span>Reset</span></button></div></div>
         <div class="editor-caption"><span><i class="status-dot"></i> EDITOR</span><span id="editorStatus">Draft tersimpan lokal</span></div>
         <div id="editorHost" class="editor-host"><textarea id="codeFallback" spellcheck="false" aria-label="Editor kode C++"></textarea><div id="sessionLockOverlay" class="session-lock-overlay"><div class="session-lock-card"><span class="session-lock-icon"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><strong id="sessionLockTitle">Sesi belum dimulai</strong><p id="sessionLockMessage">Baca tantangan terlebih dahulu. Editor akan terbuka setelah menekan Mulai Sesi.</p><small>Waktu pengerjaan dimulai saat sesi dibuka.</small></div></div></div>
         <div id="editorResizeHandle" class="editor-resize-handle" role="separator" aria-orientation="horizontal" aria-label="Tarik untuk mengubah tinggi editor" aria-controls="editorHost" aria-valuemin="240" aria-valuemax="900" aria-valuenow="360" tabindex="0">
@@ -100,5 +100,5 @@
   <div id="loadingOverlay" class="loading-overlay hidden"><div class="loading-card"><div class="loader-ring"></div><p class="eyebrow">WASM COMPILER</p><h2 id="loadingTitle">Menyiapkan compiler...</h2><p id="loadingMessage">Menginisialisasi C++ di browser.</p><div class="loading-progress"><span id="loadingProgress"></span></div><small>Proses pertama kali bisa membutuhkan waktu lebih lama.</small></div></div>
   <script src="./js/config.js"></script>
   <script src="./js/rules.config.js?v=practice-no-deadline-20261103"></script>
-  <script type="module" src="./js/app.js?v=menu-loop-break-flow-20261104"></script>
+  <script type="module" src="./js/app.js?v=multi-file-header-tabs-20261104"></script>
 </body></html>
