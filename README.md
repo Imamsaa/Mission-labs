@@ -27,7 +27,7 @@ Platform latihan praktik C++ untuk siswa SMP. Berisi **10 misi tingkat Hard deng
 | 9 | Internet Plan Billing | Hard | Paket, kuota berlebih, diskon pelanggan |
 | 10 | Festival Ticketing System | Hard | Kategori tiket, diskon member, biaya QRIS |
 
-Seluruh misi disusun setara dengan LKPD integrasi C++ dan menggunakan tiga test case (satu publik dan dua tersembunyi). Setiap misi mewajibkan array sejajar maksimal lima data, function untuk input/perhitungan/status/laporan/ringkasan, scope global dan lokal, object string dengan method length(), find(), substr(), dan append(), serta getline() untuk teks yang mengandung spasi. Struktur kontrol yang wajib digunakan adalah do-while untuk validasi jumlah data 1–5, while untuk menu 1–5, for untuk membaca dan menampilkan data, switch-case untuk menu, serta if bersarang untuk keputusan. Tidak diperbolehkan membuat class sendiri, nested loop, file, vector, pointer, atau library tambahan.
+Seluruh misi disusun setara dengan LKPD integrasi C++ dan menggunakan tiga test case (satu publik dan dua tersembunyi). Setiap misi mewajibkan array sejajar maksimal lima data, function untuk input/perhitungan/status/laporan/ringkasan, scope global dan lokal, object string dengan method length(), find(), substr(), dan append(), serta getline() untuk teks yang mengandung spasi. Program langsung menampilkan menu tanpa meminta jumlah data di awal. Setiap pilihan Input Data menambahkan satu data hingga kapasitas lima. Struktur kontrol yang wajib digunakan adalah while(true) untuk mengulang menu sampai pilihan Keluar, do-while untuk meminta ulang pilihan menu yang tidak valid, for untuk membaca dan menampilkan array, switch-case untuk menu, serta if bersarang untuk keputusan. Tidak diperbolehkan membuat class sendiri, nested loop, file, vector, pointer, atau library tambahan.
 
 ## Timer dan reset
 
@@ -99,7 +99,7 @@ Draft, progres, nama, timer, penalti, dan antrean pengiriman otomatis tertunda d
 
 ### Input/output standar dari sistem
 
-Saat siswa memilih sebuah misi, kolom STDIN otomatis diisi dengan input dari test case publik pertama untuk misi tersebut. Sistem juga menampilkan STDOUT yang diharapkan sebagai pembanding. Siswa dapat mengubah input secara bebas; input terakhir disimpan per misi di browser. Tombol **Pulihkan standar** mengembalikan input bawaan dari sistem.
+Saat siswa memilih sebuah misi, kolom STDIN otomatis diisi dengan input dari test case publik pertama untuk misi tersebut, dimulai dari menu Input Data. Sistem juga menampilkan STDOUT yang diharapkan sebagai pembanding. Siswa dapat mengubah input secara bebas; input terakhir disimpan per misi di browser. Tombol **Pulihkan standar** mengembalikan input bawaan dari sistem.
 
 
 
