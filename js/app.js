@@ -34,6 +34,17 @@ function icon(name,size=14,className='') {
 }
 
 const SESSION_SECONDS = Math.max(1, Number(RULES.sessionMinutes) || 60) * 60;
+const INTERACTIVE_INPUT_CAPACITY = 65536;
+const INTERACTIVE_INPUT_SUPPORTED = typeof SharedArrayBuffer === 'function' &&
+  typeof Atomics === 'object' && typeof Atomics.wait === 'function' &&
+  window.crossOriginIsolated === true;
+let interactiveInputHeader = null;
+let interactiveInputBytes = null;
+let interactiveInputClosed = false;
+let interactiveProgramActive = false;
+let interactiveWaitingForInput = false;
+let interactiveInputHistory = '';
+let interactiveExecutionWatchdog = null;
 const STUDENT_STORAGE_BASE = Object.freeze({
   START: 'cppMissionLab_sessionStart_v3',
   FINISHED: 'cppMissionLab_sessionFinished_v3',
@@ -348,10 +359,9 @@ function fitStandardInput() {
   input.style.height = Math.max(132, input.scrollHeight + 2) + 'px';
 }
 function renderStandardIO(task) {
-  const test = getPublicStandardTest(task);
   const inputKey = STDIN_PREFIX + task.id;
   const savedInput = localStorage.getItem(inputKey);
-  $('#stdinInput').value = savedInput !== null ? savedInput : (test.input || '');
+  if ($('#stdinInput')) $('#stdinInput').value = savedInput !== null ? savedInput : '';
   fitStandardInput();
 }
 function restoreStandardInput() {
@@ -375,7 +385,9 @@ function renderTask(index) {
   $('#descriptionTab').innerHTML=task.brief;$('#rubricTab').innerHTML=task.rubric;$('#materialsTab').innerHTML=task.materials;
   document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab==='description'));['description','rubric','materials'].forEach(t=>$(`#${t}Tab`).classList.toggle('hidden',t!=='description'));
   activeEditorFile='main.cpp';renderEditorFileTabs(task);setCode(getStoredFileDraft(task,'main.cpp'));renderStandardIO(task);$('#testResultCount').textContent='—';$('#runDuration').textContent='';$('#scorePreview').textContent='Jalankan Check Tests sebelum submit.';$('#submitBtn').disabled=true;lastSubmission=null;compiledSource='';compiledModule=null;
-  $('#outputView').innerHTML=`<div class="empty-console stdout-empty"><span class="terminal-glyph">${icon('terminal',18)}</span><div><strong>Standard Output (STDOUT)</strong><p>Hasil dari cout akan tampil di sini setelah kamu menekan Run Code.</p></div></div>`;
+  $('#terminalOutput').textContent = '';
+  $('#terminalOutput').className = 'console-output';
+  $('#terminalStatus').textContent = 'Terminal siap';
   $('#testsView').innerHTML=`<div class="empty-console"><span class="terminal-glyph">${icon('checkCircle',18)}</span><div><strong>Belum ada hasil test</strong><p>Tekan Check Tests untuk menjalankan tiga skenario pengujian.</p></div></div>`;
   lastSubmission = restoreSubmissionResult(task, getProjectFilesSnapshot(task), localStorage.getItem(NAME_KEY) || '');
   if (lastSubmission) {
@@ -470,6 +482,7 @@ function recordViolation(reason) {
 }
 function finishSession(notify=true, reason='Waktu pengerjaan habis. Semua tantangan dikunci.') {
   if (sessionFinished) return;
+  closeInteractiveInputQueue();
   sessionFinished = true;
   localStorage.setItem(FINISHED_KEY, '1');
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
@@ -611,39 +624,157 @@ function updateSessionLock() {
   if (changeStudentButton) changeStudentButton.hidden = !sessionStarted && !sessionFinished;
   updateTimer();
 }
-function showOutput(text,kind='') { $('#outputView').innerHTML=`<pre class="console-output ${kind}">${escapeHTML(text)}</pre>`;showConsole('output'); }
+function showOutput(text,kind='') {
+  const terminal = $('#terminalOutput');
+  if (terminal) {
+    terminal.textContent = String(text || '');
+    terminal.className = 'console-output ' + kind;
+  } else {
+    $('#outputView').innerHTML = `<pre class="console-output ${kind}">${escapeHTML(text)}</pre>`;
+  }
+  showConsole('output');
+}
 function showLoading(title,message,percent=15) { $('#loadingTitle').textContent=title;$('#loadingMessage').textContent=message;$('#loadingProgress').style.width=`${percent}%` ;$('#loadingOverlay').classList.remove('hidden'); }
 function hideLoading() { $('#loadingOverlay').classList.add('hidden'); }
+function createInteractiveInputQueue() {
+  if (!INTERACTIVE_INPUT_SUPPORTED) return null;
+  const buffer = new SharedArrayBuffer(16 + INTERACTIVE_INPUT_CAPACITY);
+  interactiveInputHeader = new Int32Array(buffer, 0, 4);
+  interactiveInputBytes = new Uint8Array(buffer, 16);
+  interactiveInputClosed = false;
+  interactiveInputHistory = '';
+  return buffer;
+}
+function closeInteractiveInputQueue() {
+  if (!interactiveInputHeader || interactiveInputClosed) return;
+  interactiveInputClosed = true;
+  Atomics.store(interactiveInputHeader, 2, 1);
+  Atomics.notify(interactiveInputHeader, 0);
+}
+function clearInteractiveExecutionWatchdog() {
+  if (interactiveExecutionWatchdog) clearTimeout(interactiveExecutionWatchdog);
+  interactiveExecutionWatchdog = null;
+}
+function armInteractiveExecutionWatchdog() {
+  clearInteractiveExecutionWatchdog();
+  if (!interactiveProgramActive || interactiveWaitingForInput || interactiveInputClosed) return;
+  interactiveExecutionWatchdog = setTimeout(() => {
+    if (compileWorker && cancelActive) {
+      cancelActive(new Error('TIME LIMIT EXCEEDED: program tidak meminta input atau menghasilkan output selama 5 detik. Periksa kemungkinan infinite loop.'));
+    }
+  }, 5000);
+}
+function appendTerminalOutput(text, stream = 'stdout') {
+  const pre = $('#terminalOutput');
+  if (!pre) return;
+  const span = document.createElement('span');
+  span.className = 'terminal-' + stream;
+  span.textContent = String(text || '');
+  pre.append(span);
+  pre.scrollTop = pre.scrollHeight;
+}
+function setInteractiveTerminalState(active, waiting = false) {
+  interactiveProgramActive = Boolean(active) && !interactiveInputClosed;
+  interactiveWaitingForInput = Boolean(waiting) && interactiveProgramActive;
+  const input = $('#terminalInput');
+  const send = $('#sendTerminalInputBtn');
+  const eof = $('#terminalEofBtn');
+  const status = $('#terminalStatus');
+  if (input) {
+    input.disabled = !interactiveProgramActive;
+    input.placeholder = interactiveWaitingForInput
+      ? 'Program menunggu input… ketik lalu tekan Enter'
+      : 'Ketik input untuk cin lalu tekan Enter…';
+  }
+  if (send) send.disabled = !interactiveProgramActive;
+  if (eof) eof.disabled = !interactiveProgramActive;
+  if (status) {
+    status.textContent = !INTERACTIVE_INPUT_SUPPORTED
+      ? 'Mode terminal interaktif tidak tersedia'
+      : !interactiveProgramActive ? 'Terminal siap'
+      : interactiveWaitingForInput ? 'Program menunggu input'
+      : 'Program berjalan';
+  }
+}
+function enqueueInteractiveInput(line) {
+  if (!interactiveInputHeader || !interactiveInputBytes ||
+      !interactiveProgramActive || interactiveInputClosed) return false;
+  const bytes = new TextEncoder().encode(line);
+  const write = Atomics.load(interactiveInputHeader, 0);
+  const read = Atomics.load(interactiveInputHeader, 1);
+  const used = write - read;
+  if (used < 0 || used > INTERACTIVE_INPUT_CAPACITY ||
+      bytes.length > INTERACTIVE_INPUT_CAPACITY - used) return false;
+  for (let i = 0; i < bytes.length; i++) {
+    interactiveInputBytes[(write + i) & (INTERACTIVE_INPUT_CAPACITY - 1)] = bytes[i];
+  }
+  Atomics.store(interactiveInputHeader, 0, write + bytes.length);
+  Atomics.notify(interactiveInputHeader, 0);
+  return true;
+}
+function sendInteractiveInput() {
+  if (!interactiveProgramActive || interactiveInputClosed) return;
+  const input = $('#terminalInput');
+  const line = input.value;
+  if (!enqueueInteractiveInput(line + '\n')) {
+    toast('Antrean input penuh. Tunggu program membaca input.', 'bad');
+    return;
+  }
+  interactiveInputHistory += line + '\n';
+  appendTerminalOutput(line + '\n', 'input');
+  input.value = '';
+  input.focus();
+  if (interactiveWaitingForInput) {
+    setInteractiveTerminalState(true, false);
+    armInteractiveExecutionWatchdog();
+  }
+}
+function closeInteractiveStdin() {
+  if (!interactiveProgramActive || interactiveInputClosed) return;
+  appendTerminalOutput('[EOF]\n', 'system');
+  closeInteractiveInputQueue();
+  setInteractiveTerminalState(false);
+  $('#terminalStatus').textContent = 'STDIN ditutup';
+}
 function runCompilerWorker(source, options = {}) {
   const mode = options.mode === 'tests' ? 'tests' : 'run';
+  const interactive = mode === 'run' && options.interactive === true && INTERACTIVE_INPUT_SUPPORTED;
+
   return new Promise((resolve, reject) => {
-    const worker = new Worker(new URL('./compiler-worker.js?v=multi-file-header-tabs-20261104', import.meta.url), { type: 'module' });
+    const worker = new Worker(new URL('./compiler-worker.js?v=interactive-terminal-20261105', import.meta.url), { type: 'module' });
     compileWorker = worker;
     let settled = false;
     let timeout = null;
 
-    function cleanup() {
+    const cleanup = () => {
       if (timeout) clearTimeout(timeout);
+      clearInteractiveExecutionWatchdog();
+      if (interactive) {
+        closeInteractiveInputQueue();
+        setInteractiveTerminalState(false);
+        interactiveInputHeader = null;
+        interactiveInputBytes = null;
+      }
       worker.terminate();
       if (compileWorker === worker) compileWorker = null;
       if (cancelActive === cancel) cancelActive = null;
-    }
-    function cancel(error) {
+    };
+    const cancel = error => {
       if (settled) return;
       settled = true;
       cleanup();
       reject(error instanceof Error ? error : new Error(String(error || 'Proses dibatalkan.')));
-    }
-    function finish(value) {
+    };
+    const finish = value => {
       if (settled) return;
       settled = true;
       cleanup();
       resolve(value);
-    }
-    function armTimeout(milliseconds, message) {
+    };
+    const armTimeout = (milliseconds, message) => {
       if (timeout) clearTimeout(timeout);
       timeout = setTimeout(() => cancel(new Error(message)), milliseconds);
-    }
+    };
 
     cancelActive = cancel;
     armTimeout(180000, 'Compiler timeout. Periksa koneksi internet lalu coba lagi.');
@@ -657,9 +788,34 @@ function runCompilerWorker(source, options = {}) {
       }
 
       if (data.type === 'compile-success') {
-        armTimeout(5000, 'TIME LIMIT EXCEEDED: program berjalan lebih dari 5 detik. Periksa kemungkinan infinite loop.');
-        if (mode === 'run') {
-          showLoading('Menjalankan program...', 'Program dieksekusi pada worker WebAssembly.', 75);
+        if (interactive) {
+          armTimeout(90000, 'Program dihentikan karena melewati batas 90 detik.');
+          hideLoading();
+          setInteractiveTerminalState(true, false);
+          armInteractiveExecutionWatchdog();
+          $('#terminalInput').focus();
+        } else {
+          armTimeout(5000, 'TIME LIMIT EXCEEDED: program berjalan lebih dari 5 detik. Periksa kemungkinan infinite loop.');
+          if (mode === 'run') {
+            showLoading('Menjalankan program...', 'Program dieksekusi pada worker WebAssembly.', 75);
+          }
+        }
+        return;
+      }
+
+      if (data.type === 'waiting-input') {
+        if (interactive) {
+          clearInteractiveExecutionWatchdog();
+          setInteractiveTerminalState(true, true);
+          hideLoading();
+        }
+        return;
+      }
+
+      if (data.type === 'output') {
+        if (interactive) {
+          appendTerminalOutput(data.text || '', data.stream || 'stdout');
+          if (!interactiveWaitingForInput) armInteractiveExecutionWatchdog();
         }
         return;
       }
@@ -700,12 +856,14 @@ function runCompilerWorker(source, options = {}) {
     };
 
     try {
+      const sharedInput = interactive ? createInteractiveInputQueue() : null;
       worker.postMessage({
         source,
         extraFiles: options.extraFiles || {},
         runMode: mode === 'run' ? 'stdin' : 'tests',
         standard: 'c++20',
         stdin: options.stdin || '',
+        sharedInput,
         testCases: (options.tests || []).map(test => ({
           label: test.name,
           input: test.input || '',
@@ -717,7 +875,6 @@ function runCompilerWorker(source, options = {}) {
     }
   });
 }
-
 function parseLabel(output,label) { const escaped=label.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');const match=output.match(new RegExp(`^\\s*${escaped}\\s*:\\s*(.*?)\\s*$`,'mi'));return match?match[1].trim():null; }
 function compareValue(actual,expected) { if(actual===null)return false;if(typeof expected==='number'){const value=Number(actual.replace(/,/g,'.'));return Number.isFinite(value)&&Math.abs(value-expected)<=0.011;}return actual.trim().toLowerCase()===String(expected).trim().toLowerCase(); }
 function renderTests(rows,total) {
@@ -764,23 +921,45 @@ async function execute(mode) {
 
   try {
     if (mode === 'run') {
+      const interactive = INTERACTIVE_INPUT_SUPPORTED;
+      interactiveInputHistory = '';
+      $('#terminalOutput').textContent = '';
+      $('#terminalOutput').className = 'console-output';
+      $('#terminalStatus').textContent = interactive ? 'Mengompilasi program…' : 'Mode STDIN manual';
+      if (interactive) {
+        showConsole('output');
+        appendTerminalOutput('[Compile] Memulai kompilasi C++20…\n', 'system');
+      } else {
+        showConsole('input');
+      }
       showLoading('Mengompilasi C++20...', 'Menyiapkan Clang WebAssembly.', 15);
-      const result = await runCompilerWorker(source, {mode:'run', stdin:activitySnapshot.stdin, extraFiles});
+      const result = await runCompilerWorker(source, {
+        mode:'run',
+        stdin:interactive ? '' : activitySnapshot.stdin,
+        extraFiles,
+        interactive
+      });
       hideLoading();
-      const sections = [];
-      sections.push(result.stdout || '(Program selesai tanpa menghasilkan output.)');
-      if (result.stderr) sections.push('[STDERR]\\n' + result.stderr);
-      if (result.runtimeError) sections.push('[RUNTIME ERROR]\\n' + result.runtimeError);
-      showOutput(sections.join('\\n\\n'), result.runtimeError ? 'error' : 'success');
+      if (interactive) {
+        if (result.runtimeError) appendTerminalOutput('\n[Runtime error] ' + result.runtimeError + '\n', 'system');
+        else appendTerminalOutput('\n[Program selesai.]\n', 'system');
+        $('#terminalStatus').textContent = result.runtimeError ? 'Runtime error' : 'Program selesai';
+      } else {
+        const sections = [];
+        sections.push(result.stdout || '(Program selesai tanpa menghasilkan output.)');
+        if (result.stderr) sections.push('[STDERR]\n' + result.stderr);
+        if (result.runtimeError) sections.push('[RUNTIME ERROR]\n' + result.runtimeError);
+        showOutput(sections.join('\n\n'), result.runtimeError ? 'error' : 'success');
+      }
       toast(result.runtimeError ? 'Program mengalami runtime error.' : 'Program berhasil dijalankan.', result.runtimeError ? 'bad' : 'good');
       activityResult = {
         stdout: result.stdout,
         stderr: result.stderr,
+        stdin: interactive ? interactiveInputHistory : activitySnapshot.stdin,
         runtimeError: result.runtimeError,
         compileOutput: result.compileOutput,
         executionStatus: result.runtimeError ? 'RUNTIME ERROR' : 'BERHASIL DIJALANKAN'
       };
-    } else {
       lastSubmission = null;
       showLoading('Menjalankan test case...', 'Memeriksa tiga skenario misi.', 25);
       lastSubmission = await evaluateTaskSource(projectFiles, task);
@@ -975,7 +1154,7 @@ function buildActivityPayload(snapshot, activityType, result) {
     ? String(result.stdout || '')
     : tests.map(row => '[' + row.name + '] ' + (row.ok ? 'PASS' : 'FAIL') + '\\n' + (row.output || '')).join('\\n\\n');
   const stdin = activityType === 'RUN CODE'
-    ? snapshot.stdin
+    ? (result.stdin !== undefined ? result.stdin : snapshot.stdin)
     : tests.map(row => '[' + row.name + ']\\n' + (row.input || '')).join('\\n\\n');
   const details = {
     compileOutput: result.compileOutput || '',
@@ -1187,7 +1366,15 @@ async function submitMission() {
     progress.scores=progress.scores||{};progress.scores[tasks[currentTask].id]=lastSubmission.score;if(lastSubmission.score===100){progress.solved=Array.from(new Set([...(progress.solved||[]),tasks[currentTask].id]));}saveProgress();button.innerHTML=`${icon('checkCircle',14)}<span>Terkirim</span>`;toast(`Tugas berhasil dikirim. Nilai: ${result.score??lastSubmission.score}/100.`);
   }catch(error){button.disabled=false;button.innerHTML=`${icon('upload',14)}<span>Submit Mission</span>`;toast(error.message||'Pengiriman gagal.','bad');}
 }
-function clearConsole(){ $('#outputView').innerHTML=`<div class="empty-console stdout-empty"><span class="terminal-glyph">${icon('terminal',18)}</span><div><strong>Standard Output (STDOUT)</strong><p>Hasil dari cout akan tampil di sini setelah Run Code.</p></div></div>`;$('#testsView').innerHTML=`<div class="empty-console"><span class="terminal-glyph">${icon('checkCircle',18)}</span><div><strong>Belum ada hasil test</strong></div></div>`;$('#testResultCount').textContent='—';$('#runDuration').textContent='';showConsole('output'); }
+function clearConsole() {
+  const terminal = $('#terminalOutput');
+  if (terminal) terminal.textContent = '';
+  $('#testsView').innerHTML=`<div class="empty-console"><span class="terminal-glyph">${icon('checkCircle',18)}</span><div><strong>Belum ada hasil test</strong></div></div>`;
+  $('#testResultCount').textContent='—';
+  $('#runDuration').textContent='';
+  if ($('#terminalStatus')) $('#terminalStatus').textContent='Terminal siap';
+  showConsole('output');
+}
 let clipboardWarningReturnFocus = null;
 function showWarning(title,message){
   const modal=$('#clipboardWarningModal');
@@ -1316,7 +1503,21 @@ function bindEvents(){
     fitStandardInput();
     if (task) localStorage.setItem(STDIN_PREFIX + task.id, $('#stdinInput').value);
   });
-  $('#restoreStandardInputBtn').addEventListener('click', restoreStandardInput);
+  $('#terminalForm').addEventListener('submit', event => {
+    event.preventDefault();
+    sendInteractiveInput();
+  });
+  $('#terminalEofBtn').addEventListener('click', closeInteractiveStdin);
+  $('#terminalInput').addEventListener('keydown', event => {
+    if (event.key === 'ArrowUp' || event.key === 'ArrowDown') event.stopPropagation();
+  });
+  $('#terminalCapability').textContent = INTERACTIVE_INPUT_SUPPORTED
+    ? 'TERMINAL INTERAKTIF AKTIF'
+    : 'FALLBACK STDIN AKTIF';
+  $('#stdinFallbackCard').hidden = INTERACTIVE_INPUT_SUPPORTED;
+  $('#terminalForm').hidden = !INTERACTIVE_INPUT_SUPPORTED;
+  $('#terminalFallbackNote').hidden = INTERACTIVE_INPUT_SUPPORTED;
+  $('#terminalStatus').textContent = 'Terminal siap';
 
   $('#startSessionForm').addEventListener('submit',submitStartSession);
   $('#startStudentName').addEventListener('input',()=>{

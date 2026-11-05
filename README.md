@@ -106,18 +106,19 @@ Draft, progres, input standar, timer, dan penalti disimpan terpisah berdasarkan 
 
 ## Panel pengujian STDIN / STDOUT
 
-- **STDIN (Standard Input):** tempat siswa mengisi data yang akan dibaca oleh program melalui `cin` atau `getline()`. Format spasi dan baris baru sama-sama diterima.
-- **STDOUT (Standard Output):** tempat melihat hasil yang ditampilkan program melalui `cout` setelah tombol **Run Code** ditekan.
-- **TEST RESULTS:** tempat melihat hasil tiga test case otomatis setelah tombol **Check Tests** ditekan. Output setiap test case yang ditampilkan tersedia pada detail pengujian.
+- **Run Code:** pada browser yang mendukung `SharedArrayBuffer`, terminal menerima input langsung saat program meminta data melalui `cin` atau `getline()`. Siswa dapat mengirim beberapa baris berturut-turut melalui Enter/Kirim. Tombol **EOF** menutup input standar. Jika browser tidak mendukung isolasi lintas-origin, panel STDIN manual menjadi mode cadangan.
+- **STDOUT:** output dari `cout` dan `cerr` tampil langsung di terminal selama program berjalan.
+- **Check Tests:** tetap menggunakan tiga input otomatis dari sistem; siswa tidak perlu mengetik ulang input untuk pengujian.
+- Setiap Run Code dan Check Tests tetap dicatat ke Google Sheets. STDIN pada log Run Code berisi baris yang benar-benar diketik siswa.
 
 
 ### Input/output standar dari sistem
 
-Saat siswa memilih sebuah misi, kolom STDIN otomatis diisi dengan input dari test case publik pertama untuk misi tersebut, dimulai dari menu Input Data. Sistem juga menampilkan STDOUT yang diharapkan sebagai pembanding. Siswa dapat mengubah input secara bebas; input terakhir disimpan per misi di browser. Tombol **Pulihkan standar** mengembalikan input bawaan dari sistem.
+Pada mode terminal interaktif, siswa tidak perlu menyiapkan STDIN sebelum Run Code. Program berjalan sampai selesai atau meminta input; setiap baris dikirim dari terminal secara langsung. Pada mode cadangan, STDIN manual dimulai kosong dan input yang ditulis siswa disimpan per misi di browser. Test case publik tetap digunakan oleh Check Tests, bukan sebagai input otomatis untuk Run Code.
 
 
 
-The STDIN editor loads the public test input automatically and expands to fit its content. The target output and exact labels to be validated are written directly in each mission's Challenge Brief under 'Ringkasan yang harus ditampilkan'. Actual program output remains available in the STDOUT tab.
+Run Code uses an interactive terminal when the browser supports cross-origin isolation: the program can request multiple input lines from the student while it is running. Manual STDIN is an empty fallback for browsers without SharedArrayBuffer. Check Tests continues to run the mission's automatic test inputs. The target output and exact labels to be validated are written directly in each mission's Challenge Brief under 'Ringkasan yang harus ditampilkan'.
 
 
 ## Auto-save kode siswa

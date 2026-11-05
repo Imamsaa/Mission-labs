@@ -1,17 +1,63 @@
 import { compile } from "https://cdn.jsdelivr.net/npm/browsercc@0.1.1/dist/index.js";
 import { WASI, File, OpenFile, ConsoleStdout } from "https://esm.sh/@bjorn3/browser_wasi_shim@0.4.2";
 
-async function executeModule(module, input) {
+const INPUT_QUEUE_CAPACITY = 65536;
+
+class SharedQueueStdin extends OpenFile {
+  constructor(sharedBuffer) {
+    super(new File(new Uint8Array(0)));
+    this.header = new Int32Array(sharedBuffer, 0, 4);
+    this.queue = new Uint8Array(sharedBuffer, 16);
+  }
+
+  fd_read(size) {
+    if (size <= 0) return { ret: 0, data: new Uint8Array(0) };
+    while (true) {
+      const write = Atomics.load(this.header, 0);
+      const read = Atomics.load(this.header, 1);
+      const available = write - read;
+
+      if (available > 0) {
+        const count = Math.min(size, available);
+        const result = new Uint8Array(count);
+        for (let i = 0; i < count; i++) {
+          result[i] = this.queue[(read + i) & (INPUT_QUEUE_CAPACITY - 1)];
+        }
+        Atomics.store(this.header, 1, read + count);
+        Atomics.notify(this.header, 1);
+        return { ret: 0, data: result };
+      }
+
+      if (Atomics.load(this.header, 2) !== 0) {
+        return { ret: 0, data: new Uint8Array(0) };
+      }
+
+      self.postMessage({ type: 'waiting-input' });
+      Atomics.wait(this.header, 0, write);
+    }
+  }
+}
+
+async function executeModule(module, input, sharedInput = null, onOutput = null) {
   const encoder = new TextEncoder();
   const inputText = String(input ?? '');
   const stdoutParts = [];
   const stderrParts = [];
   const stdoutDecoder = new TextDecoder('utf-8');
   const stderrDecoder = new TextDecoder('utf-8');
+  const emit = (decoder, parts, bytes, stream) => {
+    const text = decoder.decode(bytes, { stream: true });
+    if (!text) return;
+    parts.push(text);
+    if (onOutput) onOutput(text, stream);
+  };
+  const stdin = sharedInput
+    ? new SharedQueueStdin(sharedInput)
+    : new OpenFile(new File(encoder.encode(inputText)));
   const fds = [
-    new OpenFile(new File(encoder.encode(inputText))),
-    new ConsoleStdout(bytes => stdoutParts.push(stdoutDecoder.decode(bytes, { stream: true }))),
-    new ConsoleStdout(bytes => stderrParts.push(stderrDecoder.decode(bytes, { stream: true })))
+    stdin,
+    new ConsoleStdout(bytes => emit(stdoutDecoder, stdoutParts, bytes, 'stdout')),
+    new ConsoleStdout(bytes => emit(stderrDecoder, stderrParts, bytes, 'stderr'))
   ];
   const wasi = new WASI([], [], fds);
   let runtimeError = '';
@@ -29,8 +75,22 @@ async function executeModule(module, input) {
     runtimeError = error?.message || String(error);
   }
 
-  stdoutParts.push(stdoutDecoder.decode());
-  stderrParts.push(stderrDecoder.decode());
+  const stdoutTail = stdoutDecoder.decode();
+  const stderrTail = stderrDecoder.decode();
+  if (stdoutTail) {
+    stdoutParts.push(stdoutTail);
+    if (onOutput) onOutput(stdoutTail, 'stdout');
+  }
+  if (stderrTail) {
+    stderrParts.push(stderrTail);
+    if (onOutput) onOutput(stderrTail, 'stderr');
+  }
+
+  if (sharedInput) {
+    const header = new Int32Array(sharedInput, 0, 4);
+    Atomics.store(header, 2, 1);
+    Atomics.notify(header, 0);
+  }
 
   return {
     stdout: stdoutParts.join(''),
@@ -46,7 +106,8 @@ self.onmessage = async event => {
     testCases = [],
     standard = 'c++20',
     runMode = 'stdin',
-    stdin = ''
+    stdin = '',
+    sharedInput = null
   } = event.data || {};
 
   let compileOutput = '';
@@ -83,7 +144,12 @@ self.onmessage = async event => {
     self.postMessage({ type: 'compile-success', compileOutput });
 
     if (runMode === 'stdin') {
-      const execution = await executeModule(result.module, stdin);
+      const execution = await executeModule(
+        result.module,
+        stdin,
+        sharedInput,
+        (text, stream) => self.postMessage({ type: 'output', text, stream })
+      );
       self.postMessage({
         type: 'stdin-result',
         ok: !execution.runtimeError,

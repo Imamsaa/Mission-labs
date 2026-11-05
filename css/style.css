@@ -1326,3 +1326,27 @@ body.modal-open{overflow:hidden}
   .loading-overlay{width:min(320px,calc(100vw - 24px))}
   .loading-card{padding:18px 17px 16px}
 }
+
+
+/* Interactive terminal for Run Code; manual STDIN remains as a fallback. */
+#inputView.console-view{max-height:none!important;min-height:0!important;flex:0 0 auto!important;overflow:visible!important}
+#inputView .stdin-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#inputView .stdin-toolbar>div{display:flex;flex-direction:column;gap:4px;min-width:0}
+#inputView .stdin-toolbar strong{font:600 9px var(--mono);letter-spacing:.8px;color:#cbd9e7}
+#inputView .stdin-toolbar small,.stdin-help{font:9px/1.55 var(--mono);color:#7d91a7}
+.terminal-capability{font:8px var(--mono);color:#91b6a5;white-space:nowrap}
+.terminal-fallback-card[hidden],#terminalFallbackNote[hidden],#terminalForm[hidden]{display:none!important}
+.terminal-fallback-card .stdin-input{min-height:90px!important;height:90px}
+.terminal-status-row{display:flex;justify-content:space-between;gap:8px;margin:0 0 8px;color:#7f95aa;font:8px var(--mono);letter-spacing:.7px}
+#terminalStatus{color:#b9f36b;letter-spacing:0;text-transform:none}
+#outputView.console-view{max-height:300px!important;min-height:180px!important;padding:12px!important}
+#outputView .console-output{margin:0;min-height:145px;max-height:240px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;color:#c8d7e5;font:10px/1.7 var(--mono)}
+.terminal-stdout{color:#c8d7e5}.terminal-stderr{color:#f0ad87}.terminal-input{color:#b9f36b}.terminal-system{color:#728ba1}
+.interactive-terminal-form{display:flex;align-items:center;gap:7px;margin-top:10px;padding-top:9px;border-top:1px solid #203247}
+.terminal-prompt{color:#b9f36b;font:12px var(--mono)}
+#terminalInput{min-width:0;flex:1;background:#09131f;border:1px solid #2b4158;border-radius:6px;padding:8px 10px;color:#e1edf8;outline:none;font:10px var(--mono)}
+#terminalInput:focus{border-color:rgba(185,243,107,.65)}#terminalInput:disabled{opacity:.5}
+#sendTerminalInputBtn,#terminalEofBtn{border:1px solid #30465c;border-radius:6px;padding:7px 9px;background:#142235;color:#c7d7e6;font:9px var(--mono);cursor:pointer}
+#sendTerminalInputBtn:disabled,#terminalEofBtn:disabled{opacity:.4;cursor:not-allowed}
+#inputView .stdin-help{margin-top:6px}
+@media(max-width:520px){#outputView.console-view{max-height:280px!important;min-height:165px!important}}

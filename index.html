@@ -22,7 +22,7 @@
       "w3c-keyname":"https://esm.sh/w3c-keyname"
     }}
   </script>
-  <link rel="stylesheet" href="./css/style.css?v=compact-compiler-dialog-20261105" />
+  <link rel="stylesheet" href="./css/style.css?v=interactive-terminal-20261105" />
 </head>
 <body>
   <div class="app-shell">
@@ -58,16 +58,27 @@
         <div class="console-panel"><div class="console-header"><div class="console-tabs"><button class="console-tab active" data-console-tab="input">STDIN</button><button class="console-tab" data-console-tab="output">STDOUT</button><button class="console-tab" data-console-tab="tests">TEST RESULTS <span class="console-count" id="testResultCount">—</span></button></div><div class="console-actions"><span id="runDuration"></span><button class="clear-btn" id="clearOutputBtn">Clear</button></div></div>
           <div id="inputView" class="console-view stdin-view">
             <div class="stdin-toolbar">
-              <div><strong>STANDARD INPUT (STDIN)</strong><small>Input bawaan sistem untuk menguji program. Kamu boleh mengubahnya.</small></div>
-              <button id="restoreStandardInputBtn" class="clear-btn" type="button">Pulihkan standar</button>
+              <div><strong>INPUT PROGRAM</strong><small>Jawab langsung melalui terminal saat program meminta data dengan cin atau getline().</small></div>
+              <span class="terminal-capability" id="terminalCapability">Memeriksa dukungan browser…</span>
             </div>
-            <div class="stdin-editor-card">
-              <div class="stdin-card-heading"><span>INPUT DATA</span><small>Editable</small></div>
-              <textarea id="stdinInput" class="stdin-input" rows="6" spellcheck="false" placeholder="Input standar akan dimuat otomatis..."></textarea>
-              <div class="stdin-help">Spasi dan Enter menjadi pemisah input. Data akan dibaca melalui cin atau getline().</div>
+            <div class="stdin-editor-card terminal-fallback-card" id="stdinFallbackCard" hidden>
+              <div class="stdin-card-heading"><span>STDIN MANUAL · MODE CADANGAN</span><small>Fallback</small></div>
+              <textarea id="stdinInput" class="stdin-input" rows="4" spellcheck="false" placeholder="Masukkan input, satu nilai per baris…"></textarea>
+              <div class="stdin-help">Hanya digunakan jika browser tidak mendukung terminal interaktif.</div>
             </div>
+            <div class="stdin-help">Tekan Run Code, kemudian masukkan jawaban di tab STDOUT saat program memintanya.</div>
           </div>
-          <div id="outputView" class="console-view hidden"><div class="empty-console stdout-empty"><span class="terminal-glyph"><svg class="ui-icon" viewBox="0 0 24 24"><path d="m5 7 5 5-5 5M13 17h6"/></svg></span><div><strong>STANDARD OUTPUT (STDOUT)</strong><p>Hasil dari cout akan tampil di sini setelah kamu menekan Run Code.</p></div></div></div>
+          <div id="outputView" class="console-view hidden">
+            <div class="terminal-status-row"><span>TERMINAL</span><span id="terminalStatus">Terminal siap</span></div>
+            <pre class="console-output" id="terminalOutput" aria-live="polite"></pre>
+            <form class="interactive-terminal-form" id="terminalForm">
+              <span class="terminal-prompt">&gt;</span>
+              <input id="terminalInput" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" disabled placeholder="Input diminta saat program berjalan…">
+              <button class="clear-btn" id="sendTerminalInputBtn" type="submit" disabled>Kirim</button>
+              <button class="clear-btn" id="terminalEofBtn" type="button" disabled title="Akhiri input standar">EOF</button>
+            </form>
+            <div id="terminalFallbackNote" class="stdin-help" hidden>Mode interaktif tidak tersedia. Isi STDIN manual sebelum menekan Run Code.</div>
+          </div>
           <div id="testsView" class="console-view hidden"><div class="empty-console"><span class="terminal-glyph"><svg class="ui-icon" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></span><div><strong>TEST RESULTS</strong><p>Tekan Check Tests untuk menjalankan tiga skenario pengujian. Hasil stdout setiap test terlihat pada detail test yang ditampilkan.</p></div></div></div>
         </div>
         <div class="runbar"><div class="runbar-note"><span class="shield-icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"/><path d="m9 12 2 2 4-4"/></svg></span> Compiled &amp; executed locally in WebAssembly</div><div class="run-actions"><button id="runBtn" class="btn btn-secondary"><svg class="ui-icon" viewBox="0 0 24 24"><path d="m8 5 12 7-12 7V5Z"/></svg><span>Run Code</span></button><button id="checkTestsBtn" class="btn btn-secondary"><svg class="ui-icon" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg><span>Check Tests</span></button><button id="submitBtn" class="btn btn-primary" disabled><svg class="ui-icon" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M5 20h14"/></svg><span>Submit Mission</span></button></div></div>
@@ -100,5 +111,5 @@
   <div id="loadingOverlay" class="loading-overlay hidden"><div class="loading-card"><div class="loader-ring"></div><p class="eyebrow">WASM COMPILER</p><h2 id="loadingTitle">Menyiapkan compiler...</h2><p id="loadingMessage">Menginisialisasi C++ di browser.</p><div class="loading-progress"><span id="loadingProgress"></span></div><small>Proses pertama kali bisa membutuhkan waktu lebih lama.</small></div></div>
   <script src="./js/config.js"></script>
   <script src="./js/rules.config.js?v=practice-no-deadline-20261103"></script>
-  <script type="module" src="./js/app.js?v=force-fresh-assets-20261105"></script>
+  <script type="module" src="./js/app.js?v=interactive-terminal-20261105"></script>
 </body></html>
