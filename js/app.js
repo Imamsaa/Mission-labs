@@ -983,6 +983,7 @@ async function execute(mode) {
     if (mode === 'tests') lastSubmission = null;
     activityResult = {
       error: error.message || String(error),
+      stdin: mode === 'run' && INTERACTIVE_INPUT_SUPPORTED ? interactiveInputHistory : activitySnapshot.stdin,
       executionStatus: 'GAGAL KOMPILASI / EKSEKUSI'
     };
   } finally {
@@ -1372,7 +1373,11 @@ function clearConsole() {
   $('#testsView').innerHTML=`<div class="empty-console"><span class="terminal-glyph">${icon('checkCircle',18)}</span><div><strong>Belum ada hasil test</strong></div></div>`;
   $('#testResultCount').textContent='—';
   $('#runDuration').textContent='';
-  if ($('#terminalStatus')) $('#terminalStatus').textContent='Terminal siap';
+  if ($('#terminalStatus')) {
+    $('#terminalStatus').textContent = interactiveProgramActive
+      ? (interactiveWaitingForInput ? 'Program menunggu input' : 'Program berjalan')
+      : 'Terminal siap';
+  }
   showConsole('output');
 }
 let clipboardWarningReturnFocus = null;
