@@ -1527,12 +1527,26 @@ function bindEvents(){
   $('#terminalInput').addEventListener('keydown', event => {
     if (event.key === 'ArrowUp' || event.key === 'ArrowDown') event.stopPropagation();
   });
+  const interactiveFallbackReason = !window.isSecureContext
+    ? 'Halaman harus dibuka melalui HTTPS atau localhost.'
+    : !('serviceWorker' in navigator)
+      ? 'Browser tidak mendukung Service Worker.'
+      : window.self !== window.top
+        ? 'Halaman sedang dibuka di dalam frame. Buka aplikasi langsung di tab baru.'
+        : 'Header isolasi browser belum aktif. Muat ulang halaman di tab baru setelah Service Worker terpasang.';
   $('#terminalCapability').textContent = INTERACTIVE_INPUT_SUPPORTED
     ? 'TERMINAL INTERAKTIF AKTIF'
-    : 'FALLBACK STDIN AKTIF';
+    : 'MODE CADANGAN · STDIN MANUAL';
+  $('#terminalCapability').title = 'crossOriginIsolated=' + String(window.crossOriginIsolated) +
+    '; SharedArrayBuffer=' + String(typeof SharedArrayBuffer === 'function') +
+    '; Service Worker=' + String('serviceWorker' in navigator) +
+    '; Controller=' + String(Boolean(navigator.serviceWorker?.controller));
   $('#stdinFallbackCard').hidden = INTERACTIVE_INPUT_SUPPORTED;
   $('#terminalForm').hidden = !INTERACTIVE_INPUT_SUPPORTED;
   $('#terminalFallbackNote').hidden = INTERACTIVE_INPUT_SUPPORTED;
+  if (!INTERACTIVE_INPUT_SUPPORTED) {
+    $('#terminalFallbackNote').textContent = 'Mode interaktif belum aktif: ' + interactiveFallbackReason;
+  }
   $('#terminalStatus').textContent = 'Terminal siap';
 
   $('#startSessionForm').addEventListener('submit',submitStartSession);
