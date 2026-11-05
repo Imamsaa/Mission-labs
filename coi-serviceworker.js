@@ -14,39 +14,48 @@
   const version = new URL(scriptURL).searchParams.get('v') || 'current';
   const reloadKey = 'cppMissionCoiNavigationReload_' + version;
   let reloadStarted = false;
+  let controllerTimer = null;
 
-  function reloadOnce(reason) {
-    if (window.crossOriginIsolated || reloadStarted) return;
+  function reloadAfterControl(reason) {
+    if (window.crossOriginIsolated || reloadStarted || !navigator.serviceWorker.controller) return;
+
     if (sessionStorage.getItem(reloadKey) === '1') {
-      console.warn('Cross-origin isolation is still unavailable after the service worker reload.', reason);
+      console.warn('Cross-origin isolation is still unavailable after the controlled navigation.', reason);
       return;
     }
 
     sessionStorage.setItem(reloadKey, '1');
     reloadStarted = true;
-    console.info('Reloading Mission Lab through the COOP/COEP service worker:', reason);
+    console.info('Reloading Mission Lab after Service Worker control is confirmed:', reason);
     window.location.reload();
   }
 
-  function watchActivation(worker) {
+  function requestClaim(worker) {
     if (!worker) return;
-    const onStateChange = () => {
-      if (worker.state === 'activated') {
-        worker.removeEventListener('statechange', onStateChange);
-        // The controllerchange event normally reloads first. This is a backup
-        // for browsers that activate the worker without dispatching it in time.
-        if (!navigator.serviceWorker.controller) reloadOnce('service-worker-activated');
-      }
-      if (worker.state === 'redundant') {
-        worker.removeEventListener('statechange', onStateChange);
-      }
-    };
-    worker.addEventListener('statechange', onStateChange);
+    try {
+      worker.postMessage({ type: 'coi-ensure-control' });
+    } catch (error) {
+      console.warn('Could not request Service Worker client claim:', error);
+    }
   }
 
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (!window.crossOriginIsolated) reloadOnce('controllerchange');
-  });
+  function stopControllerTimer() {
+    if (controllerTimer) clearTimeout(controllerTimer);
+    controllerTimer = null;
+  }
+
+  function handleControllerChange() {
+    stopControllerTimer();
+    const controller = navigator.serviceWorker.controller;
+    if (!controller) return;
+
+    // credentialless is the preferred mode because Mission Lab also loads
+    // public Apps Script JSONP and CDN assets without CORS headers.
+    controller.postMessage({ type: 'coepCredentialless', value: true });
+    reloadAfterControl('controllerchange');
+  }
+
+  navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
 
   navigator.serviceWorker.register(scriptURL, {
     scope: new URL('./', scriptURL).pathname,
@@ -58,28 +67,40 @@
       console.warn('Service Worker update check failed:', error);
     }
 
-    watchActivation(registration.installing || registration.waiting);
-
     try {
       await navigator.serviceWorker.ready;
     } catch (error) {
       console.warn('Service Worker readiness check failed:', error);
     }
 
-    const controller = navigator.serviceWorker.controller;
-    if (controller) {
-      // Preserve credentialless mode so Apps Script JSONP and other public
-      // no-CORS resources continue to work under COEP.
-      controller.postMessage({ type: 'coepCredentialless', value: true });
-      // The current document may have loaded before the controller added
-      // isolation headers. Reload this URL exactly once through the controller.
-      reloadOnce('controlled-page-needs-isolated-navigation');
-    } else if (registration.active) {
-      // The active worker exists, but this tab was not claimed yet.
-      reloadOnce('active-worker-has-not-claimed-tab');
-    } else {
-      watchActivation(registration.installing || registration.waiting);
+    if (navigator.serviceWorker.controller) {
+      handleControllerChange();
+      return;
     }
+
+    const activeWorker = registration.active;
+    if (activeWorker) {
+      // Do not reload just because a registration is active. It must first
+      // claim this tab; otherwise the next navigation still has no COEP headers.
+      requestClaim(activeWorker);
+    } else {
+      const installingWorker = registration.installing || registration.waiting;
+      if (installingWorker) {
+        installingWorker.addEventListener('statechange', () => {
+          if (installingWorker.state === 'activated') requestClaim(registration.active || installingWorker);
+        });
+      }
+    }
+
+    // Wait for clients.claim() to deliver controllerchange. Never spend the
+    // one-time reload before the browser confirms that this tab is controlled.
+    controllerTimer = setTimeout(() => {
+      if (navigator.serviceWorker.controller) {
+        handleControllerChange();
+      } else {
+        console.warn('Service Worker is registered but still does not control this tab. No reload was attempted.');
+      }
+    }, 12000);
   }).catch(error => {
     console.warn('Cross-origin isolation service worker registration failed:', error);
   });
@@ -109,7 +130,15 @@ if (typeof window === 'undefined') {
       .map(name => caches.delete(name)));
     await self.clients.claim();
   })()));
-  self.addEventListener('message', event => { if (event.data?.type === 'coepCredentialless') credentialless = Boolean(event.data.value); });
+  self.addEventListener('message', event => {
+    if (event.data?.type === 'coepCredentialless') {
+      credentialless = Boolean(event.data.value);
+      return;
+    }
+    if (event.data?.type === 'coi-ensure-control') {
+      event.waitUntil(self.clients.claim());
+    }
+  });
   self.addEventListener('fetch', event => {
     const request = event.request;
     if (request.method !== 'GET') return;

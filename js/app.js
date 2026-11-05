@@ -783,13 +783,17 @@ function runCompilerWorker(source, options = {}) {
       const data = event.data || {};
 
       if (data.type === 'status') {
-        // Compiler initialization is a lightweight status, not a blocking modal.
-        hideLoading();
-        $('#runDuration').textContent = mode === 'run' ? 'Mengompilasi…' : 'Menyiapkan compiler…';
         if (mode === 'run') {
+          // Run Code stays non-modal; compiler status is shown in the terminal.
+          hideLoading();
+          $('#runDuration').textContent = 'Mengompilasi…';
           $('#terminalStatus').textContent = interactive
             ? 'Menyiapkan compiler C++20…'
             : 'Mode STDIN manual · menyiapkan compiler…';
+        } else {
+          // Check Tests retains its progress modal through compiler setup.
+          showLoading('Menyiapkan compiler C++20...', data.message || 'Memuat Clang WebAssembly.', 25);
+          $('#runDuration').textContent = 'Menyiapkan test…';
         }
         return;
       }
