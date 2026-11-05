@@ -786,7 +786,11 @@ function runCompilerWorker(source, options = {}) {
         // Compiler initialization is a lightweight status, not a blocking modal.
         hideLoading();
         $('#runDuration').textContent = mode === 'run' ? 'Mengompilasi…' : 'Menyiapkan compiler…';
-        if (mode === 'run') $('#terminalStatus').textContent = 'Menyiapkan compiler C++20…';
+        if (mode === 'run') {
+          $('#terminalStatus').textContent = interactive
+            ? 'Menyiapkan compiler C++20…'
+            : 'Mode STDIN manual · menyiapkan compiler…';
+        }
         return;
       }
 
@@ -801,8 +805,8 @@ function runCompilerWorker(source, options = {}) {
           armTimeout(5000, 'TIME LIMIT EXCEEDED: program berjalan lebih dari 5 detik. Periksa kemungkinan infinite loop.');
           if (mode === 'run') {
             hideLoading();
-            $('#runDuration').textContent = 'Menjalankan…';
-            $('#terminalStatus').textContent = 'Program berjalan…';
+            $('#runDuration').textContent = 'Menjalankan mode STDIN manual…';
+            $('#terminalStatus').textContent = 'Mode STDIN manual · input sudah disiapkan';
           }
         }
         return;
@@ -964,6 +968,9 @@ async function execute(mode) {
         if (result.stderr) sections.push('[STDERR]\n' + result.stderr);
         if (result.runtimeError) sections.push('[RUNTIME ERROR]\n' + result.runtimeError);
         showOutput(sections.join('\n\n'), result.runtimeError ? 'error' : 'success');
+        $('#terminalStatus').textContent = result.runtimeError
+          ? 'Runtime error · mode STDIN manual'
+          : 'Program selesai · mode STDIN manual';
       }
       toast(result.runtimeError ? 'Program mengalami runtime error.' : 'Program berhasil dijalankan.', result.runtimeError ? 'bad' : 'good');
       activityResult = {
@@ -993,6 +1000,7 @@ async function execute(mode) {
   } catch (error) {
     hideLoading();
     showOutput(error.message || String(error), 'error');
+    $('#terminalStatus').textContent = 'Eksekusi gagal';
     $('#runDuration').textContent = 'Compile / runtime error';
     toast('Program gagal dijalankan. Periksa terminal.', 'bad');
     if (mode === 'tests') lastSubmission = null;
@@ -1531,27 +1539,33 @@ function bindEvents(){
   $('#terminalInput').addEventListener('keydown', event => {
     if (event.key === 'ArrowUp' || event.key === 'ArrowDown') event.stopPropagation();
   });
+  const serviceWorkerSupported = 'serviceWorker' in navigator;
+  const serviceWorkerControlled = Boolean(navigator.serviceWorker?.controller);
+  const interactiveDiagnostics = [
+    'COI=' + String(window.crossOriginIsolated),
+    'SAB=' + String(typeof SharedArrayBuffer === 'function'),
+    'Secure=' + String(window.isSecureContext),
+    'SW=' + String(serviceWorkerSupported),
+    'Controller=' + String(serviceWorkerControlled),
+    'Frame=' + String(window.self !== window.top)
+  ].join(' · ');
   const interactiveFallbackReason = !window.isSecureContext
     ? 'Halaman harus dibuka melalui HTTPS atau localhost.'
-    : !('serviceWorker' in navigator)
+    : !serviceWorkerSupported
       ? 'Browser tidak mendukung Service Worker.'
       : window.self !== window.top
         ? 'Halaman sedang dibuka di dalam frame. Buka aplikasi langsung di tab baru.'
-        : 'Header isolasi browser belum aktif. Muat ulang halaman di tab baru setelah Service Worker terpasang.';
+        : 'Header isolasi belum diterapkan pada dokumen ini. Buka ulang halaman setelah Service Worker aktif.';
   $('#terminalCapability').textContent = INTERACTIVE_INPUT_SUPPORTED
     ? 'TERMINAL INTERAKTIF AKTIF'
     : 'MODE CADANGAN · STDIN MANUAL';
-  $('#terminalCapability').title = 'crossOriginIsolated=' + String(window.crossOriginIsolated) +
-    '; SharedArrayBuffer=' + String(typeof SharedArrayBuffer === 'function') +
-    '; Service Worker=' + String('serviceWorker' in navigator) +
-    '; Controller=' + String(Boolean(navigator.serviceWorker?.controller));
+  $('#terminalCapability').title = interactiveDiagnostics;
   $('#stdinFallbackCard').hidden = INTERACTIVE_INPUT_SUPPORTED;
   $('#terminalForm').hidden = !INTERACTIVE_INPUT_SUPPORTED;
   $('#terminalFallbackNote').hidden = INTERACTIVE_INPUT_SUPPORTED;
   if (!INTERACTIVE_INPUT_SUPPORTED) {
-    $('#terminalFallbackNote').textContent = 'Mode interaktif belum aktif: ' + interactiveFallbackReason;
-  }
-  $('#terminalStatus').textContent = 'Terminal siap';
+    $('#terminalFallbackNote').textContent = 'Mode interaktif belum aktif: ' + interactiveFallbackReason + ' (' + interactiveDiagnostics + ').';
+  }  $('#terminalStatus').textContent = 'Terminal siap';
 
   $('#startSessionForm').addEventListener('submit',submitStartSession);
   $('#startStudentName').addEventListener('input',()=>{
