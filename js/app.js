@@ -50,6 +50,7 @@ let START_KEY = '', FINISHED_KEY = '', PENALTY_KEY = '';
 let VIOLATION_COUNT_KEY = '', VIOLATION_LOG_KEY = '', PROGRESS_KEY = '';
 let DRAFT_PREFIX = '', PROJECT_DRAFT_PREFIX = '', STDIN_PREFIX = '';
 const AUTO_PENDING_KEY = 'cppMissionLab_autoSubmissionPending_v1';
+const LAST_SUBMISSION_PREFIX = 'cppMissionLab_lastSubmissionResult_v1_';
 const ACTIVITY_PENDING_KEY = 'cppMissionLab_activityPending_v1';
 const SENT_PREFIX = 'cppMissionLab_sent_';
 const NAME_KEY = 'cppMissionLab_studentName_v3';
@@ -295,6 +296,7 @@ function resetTaskProject() {
     localStorage.removeItem(projectDraftKey(task.id,'main.cpp'));
     getTaskFiles(task).forEach(file=>localStorage.removeItem(projectDraftKey(task.id,file.name)));
     if(progress.drafts)delete progress.drafts[task.id];
+    removeCachedSubmissionResult(task.id);
     localStorage.setItem(PROGRESS_KEY,JSON.stringify(progress));
   } catch(error) {
     console.warn('Could not clear project drafts:',error);
@@ -374,7 +376,13 @@ function renderTask(index) {
   document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab==='description'));['description','rubric','materials'].forEach(t=>$(`#${t}Tab`).classList.toggle('hidden',t!=='description'));
   activeEditorFile='main.cpp';renderEditorFileTabs(task);setCode(getStoredFileDraft(task,'main.cpp'));renderStandardIO(task);$('#testResultCount').textContent='—';$('#runDuration').textContent='';$('#scorePreview').textContent='Jalankan Check Tests sebelum submit.';$('#submitBtn').disabled=true;lastSubmission=null;compiledSource='';compiledModule=null;
   $('#outputView').innerHTML=`<div class="empty-console stdout-empty"><span class="terminal-glyph">${icon('terminal',18)}</span><div><strong>Standard Output (STDOUT)</strong><p>Hasil dari cout akan tampil di sini setelah kamu menekan Run Code.</p></div></div>`;
-  $('#testsView').innerHTML=`<div class="empty-console"><span class="terminal-glyph">${icon('checkCircle',18)}</span><div><strong>Belum ada hasil test</strong><p>Tekan Check Tests untuk menjalankan tiga skenario pengujian.</p></div></div>`;showConsole('input');updateSessionLock();
+  $('#testsView').innerHTML=`<div class="empty-console"><span class="terminal-glyph">${icon('checkCircle',18)}</span><div><strong>Belum ada hasil test</strong><p>Tekan Check Tests untuk menjalankan tiga skenario pengujian.</p></div></div>`;
+  lastSubmission = restoreSubmissionResult(task, getProjectFilesSnapshot(task), localStorage.getItem(NAME_KEY) || '');
+  if (lastSubmission) {
+    renderTests(lastSubmission.rows, lastSubmission.total);
+    $('#scorePreview').textContent = lastSubmission.passed + '/' + lastSubmission.total + ' test lolos · Nilai ' + lastSubmission.score + '/100 · Hasil dipulihkan';
+  }
+  showConsole(lastSubmission ? 'tests' : 'input');updateSessionLock();
 }
 function showConsole(name) { ['input','output','tests'].forEach(k=>{$(`#${k}View`).classList.toggle('hidden',k!==name);document.querySelector(`[data-console-tab="${k}"]`).classList.toggle('active',k===name);}); }
 function getPenaltySeconds() {
@@ -663,7 +671,9 @@ function runCompilerWorker(source, options = {}) {
       }
 
       if (data.type === 'result' && !data.ok) {
-        cancel(new Error(data.compileOutput || data.error || 'Kompilasi gagal. Compiler tidak menghasilkan modul WebAssembly.'));
+        const error = new Error(data.compileOutput || data.error || 'Kompilasi gagal. Compiler tidak menghasilkan modul WebAssembly.');
+        error.code = data.compileOutput ? 'CPP_COMPILE_ERROR' : 'COMPILER_FAILURE';
+        cancel(error);
         return;
       }
 
@@ -774,6 +784,7 @@ async function execute(mode) {
       lastSubmission = null;
       showLoading('Menjalankan test case...', 'Memeriksa tiga skenario misi.', 25);
       lastSubmission = await evaluateTaskSource(projectFiles, task);
+      persistSubmissionResult(task, projectFiles, lastSubmission, activitySnapshot.name);
       const passed = renderTests(lastSubmission.rows, lastSubmission.total);
       $('#scorePreview').textContent = passed + '/' + lastSubmission.total + ' test lolos · Nilai ' + lastSubmission.score + '/100';
       $('#submitBtn').disabled = false;
@@ -817,6 +828,98 @@ function codeFingerprint(value) {
   for(let i=0;i<source.length;i++){hash^=source.charCodeAt(i);hash=Math.imul(hash,16777619);}
   return (hash>>>0).toString(36);
 }
+function getLastSubmissionStorageKey(taskId, studentName = localStorage.getItem(NAME_KEY) || '') {
+  return LAST_SUBMISSION_PREFIX + getStudentStorageScope(studentName) + '_' + taskId;
+}
+function removeCachedSubmissionResult(taskId, studentName = localStorage.getItem(NAME_KEY) || '') {
+  if (!taskId) return;
+  try { localStorage.removeItem(getLastSubmissionStorageKey(taskId, studentName)); }
+  catch (error) { console.warn('Cached test result could not be removed:', error); }
+}
+function persistSubmissionResult(task, projectFiles, result, studentName = localStorage.getItem(NAME_KEY) || '') {
+  if (!task || !result || !Array.isArray(result.rows)) return false;
+  const entry = {
+    version: 1,
+    taskId: task.id,
+    task: task.title,
+    code: serializeProjectFiles(projectFiles),
+    testsFingerprint: codeFingerprint(JSON.stringify(task.tests || [])),
+    passed: Number(result.passed) || 0,
+    total: Number(result.total) || 0,
+    score: Number(result.score) || 0,
+    rows: result.rows,
+    savedAt: Date.now()
+  };
+  try {
+    localStorage.setItem(getLastSubmissionStorageKey(task.id, studentName), JSON.stringify(entry));
+    return true;
+  } catch (error) {
+    console.warn('Test result could not be cached locally:', error);
+    return false;
+  }
+}
+function restoreSubmissionResult(task, projectFiles, studentName = localStorage.getItem(NAME_KEY) || '') {
+  if (!task) return null;
+  const key = getLastSubmissionStorageKey(task.id, studentName);
+  try {
+    const stored = JSON.parse(localStorage.getItem(key) || 'null');
+    if (!stored) return null;
+    const code = serializeProjectFiles(projectFiles);
+    const valid = stored.version === 1 &&
+      stored.taskId === task.id &&
+      stored.task === task.title &&
+      stored.code === code &&
+      stored.testsFingerprint === codeFingerprint(JSON.stringify(task.tests || [])) &&
+      Array.isArray(stored.rows) &&
+      stored.rows.length === task.tests.length &&
+      Number.isFinite(Number(stored.passed)) &&
+      Number.isFinite(Number(stored.total)) &&
+      Number(stored.total) === task.tests.length &&
+      Number.isFinite(Number(stored.score));
+    if (!valid) {
+      localStorage.removeItem(key);
+      return null;
+    }
+    return {
+      task: task.title,
+      code,
+      files: projectFiles,
+      rows: stored.rows,
+      passed: Number(stored.passed),
+      total: Number(stored.total),
+      score: Number(stored.score)
+    };
+  } catch (error) {
+    console.warn('Cached test result could not be restored:', error);
+    return null;
+  }
+}
+function buildCompileFailureResult(task, projectFiles, error) {
+  const compileError = String(error?.message || error || 'Kompilasi gagal.').slice(0, 12000);
+  const rows = task.tests.map((test, index) => ({
+    name: test.name,
+    input: test.input || '',
+    hidden: !!test.hidden,
+    ok: false,
+    checks: test.checks.map(([label, expected]) => ({
+      label,
+      expected,
+      actual: 'COMPILE ERROR',
+      ok: false
+    })),
+    output: index === 0 ? compileError : 'Test tidak dijalankan karena kompilasi gagal.'
+  }));
+  return {
+    task: task.title,
+    code: serializeProjectFiles(projectFiles),
+    files: projectFiles,
+    rows,
+    passed: 0,
+    total: task.tests.length,
+    score: 0,
+    compileError
+  };
+}
 function captureSubmissionSnapshot(submitType) {
   const startedAtMs=Number(localStorage.getItem(START_KEY))||Date.now();
   const task=tasks[currentTask];const files=getProjectFilesSnapshot(task);const code=serializeProjectFiles(files);
@@ -834,7 +937,7 @@ function buildSubmissionPayload(snapshot,result) {
     activityType:snapshot.submitType === 'OTOMATIS - WAKTU HABIS' ? 'AUTO SUBMIT' : 'SUBMIT MISSION',
     name:snapshot.name,task:snapshot.task,code:snapshot.code,
     passed:result.passed,total:result.total,score:result.score,
-    details:JSON.stringify(result.rows.map(row=>({name:row.name,ok:row.ok,checks:row.checks}))),
+    details:JSON.stringify(result.rows.map(row=>({name:row.name,ok:row.ok,checks:row.checks,...(row.output?{output:String(row.output).slice(0,12000)}:{})}))),
     submittedAtClient:new Date().toISOString(),startedAtMs:snapshot.startedAtMs,
     remainingSeconds:snapshot.remainingSeconds,elapsedSeconds:snapshot.elapsedSeconds,
     violationCount:snapshot.violationCount,violations:JSON.stringify(snapshot.violations)
@@ -1004,8 +1107,18 @@ async function processAutoSubmission(snapshot) {
   const task=tasks.find(item=>item.id===snapshot.taskId);
   if(!task)throw new Error('Misi untuk pengiriman otomatis tidak ditemukan.');
   let result;
-  if(lastSubmission&&lastSubmission.task===snapshot.task&&lastSubmission.code===snapshot.code)result=lastSubmission;
-  else {showLoading('Waktu habis · Menguji jawaban...','Menjalankan test case otomatis sebelum pengiriman.',40);result=await evaluateTaskSource(snapshot.files||{'main.cpp':snapshot.code},task);}
+  const projectFiles = snapshot.files || {'main.cpp':snapshot.code};
+  result = restoreSubmissionResult(task, projectFiles, snapshot.name);
+  if (!result) {
+    showLoading('Waktu habis · Menguji jawaban...','Menjalankan test case otomatis sebelum pengiriman.',40);
+    try {
+      result = await evaluateTaskSource(projectFiles, task);
+    } catch (error) {
+      if (error?.code !== 'CPP_COMPILE_ERROR') throw error;
+      result = buildCompileFailureResult(task, projectFiles, error);
+    }
+    persistSubmissionResult(task, projectFiles, result, snapshot.name);
+  }
   await sendSubmission(buildSubmissionPayload(snapshot,result));
   markSubmissionSent(snapshot);removePendingSubmission(snapshot);
   progress.scores=progress.scores||{};progress.scores[task.id]=result.score;
@@ -1116,7 +1229,7 @@ function closeWarning(){
   clipboardWarningReturnFocus=null;
 }
 function initEditor(){
-  editorCompartment=new Compartment();editor=new EditorView({doc:starterCode,parent:$('#editorHost'),extensions:[basicSetup,cpp(),oneDark,editorCompartment.of(EditorView.editable.of(false)),EditorView.theme({'&':{height:'100%',fontSize:'12px',backgroundColor:'#0b121c'},'.cm-scroller':{fontFamily:'DM Mono, Consolas, monospace',lineHeight:'1.7'},'.cm-content':{padding:'12px 0'},'.cm-line':{padding:'0 12px'},'.cm-gutters':{backgroundColor:'#0b121c',borderRight:'1px solid #1c2a3b',color:'#53667c'}}),EditorView.domEventHandlers({keydown(event,view){if(event.key==='Tab'){event.preventDefault();event.shiftKey?indentLess(view):indentMore(view);return true;}if((event.ctrlKey||event.metaKey)&&event.key==='/'){event.preventDefault();toggleComment(view);return true;}if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){event.preventDefault();saveDraft();toast('Draft tersimpan di browser.');return true;}return false;}}),EditorView.updateListener.of(update=>{if(update.docChanged&&!suppressEditorChange){saveDraft();lastSubmission=null;$('#submitBtn').disabled=true;$('#scorePreview').textContent='Kode berubah · Jalankan Check Tests kembali.';}if(update.docChanged||update.selectionSet)updateCursorInfo();})]});
+  editorCompartment=new Compartment();editor=new EditorView({doc:starterCode,parent:$('#editorHost'),extensions:[basicSetup,cpp(),oneDark,editorCompartment.of(EditorView.editable.of(false)),EditorView.theme({'&':{height:'100%',fontSize:'12px',backgroundColor:'#0b121c'},'.cm-scroller':{fontFamily:'DM Mono, Consolas, monospace',lineHeight:'1.7'},'.cm-content':{padding:'12px 0'},'.cm-line':{padding:'0 12px'},'.cm-gutters':{backgroundColor:'#0b121c',borderRight:'1px solid #1c2a3b',color:'#53667c'}}),EditorView.domEventHandlers({keydown(event,view){if(event.key==='Tab'){event.preventDefault();event.shiftKey?indentLess(view):indentMore(view);return true;}if((event.ctrlKey||event.metaKey)&&event.key==='/'){event.preventDefault();toggleComment(view);return true;}if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){event.preventDefault();saveDraft();toast('Draft tersimpan di browser.');return true;}return false;}}),EditorView.updateListener.of(update=>{if(update.docChanged&&!suppressEditorChange){saveDraft();removeCachedSubmissionResult(activeDraftTaskId);lastSubmission=null;$('#submitBtn').disabled=true;$('#scorePreview').textContent='Kode berubah · Jalankan Check Tests kembali.';}if(update.docChanged||update.selectionSet)updateCursorInfo();})]});
   // Remove the plain-text fallback after CodeMirror mounts. Keeping both
   // siblings inside the flex editor host makes each consume half the width.
   $('#editorHost').classList.add('editor-ready');
