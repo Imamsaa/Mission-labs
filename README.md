@@ -12,6 +12,7 @@ Platform latihan praktik C++ untuk siswa SMP. Berisi **10 misi tingkat Hard deng
 6. Jika waktu habis, sesi dan editor dikunci. Kode pada misi yang sedang terbuka diuji otomatis dan dikirim ke Google Spreadsheet dengan jenis submit `OTOMATIS - WAKTU HABIS`.
 7. Setiap klik **Run Code** dan **Check Tests** juga dicatat ke Google Spreadsheet. Log menyimpan jenis aktivitas, kode multi-file, input/output, status eksekusi, durasi, dan rincian test.
 8. Siswa dapat mengirim hasil penilaian melalui tombol **Submit Mission**. Pengiriman manual dan otomatis tetap dibedakan dari log Run Code / Check Tests.
+9. Gunakan tombol **Ganti Peserta** untuk mengakhiri sesi peserta saat ini dan memulai sesi dengan nama berbeda tanpa menghapus data melalui Developer Tools.
 
 ## Daftar 10 misi
 
@@ -100,7 +101,7 @@ Aplikasi statis ini tidak membutuhkan npm, Vite, proses build, atau folder `dist
 
 ## Catatan data
 
-Draft, progres, nama, timer, penalti, dan antrean pengiriman otomatis tertunda disimpan di localStorage browser. Jika siswa menggunakan browser/perangkat berbeda, data lokal tersebut tidak otomatis tersinkron. Nilai otomatis perlu ditinjau bersama source code siswa oleh guru.
+Draft, progres, input standar, timer, dan penalti disimpan terpisah berdasarkan nama peserta di localStorage browser. Tombol **Ganti Peserta** membuka sesi baru dengan timer dan penalti baru tanpa membawa draft/progres peserta sebelumnya. Antrean pengiriman tertunda tetap disimpan bersama perangkat agar submission lama dapat dikirim ulang. Jika siswa menggunakan browser/perangkat berbeda, data lokal tidak otomatis tersinkron. Nilai otomatis perlu ditinjau bersama source code siswa oleh guru.
 
 
 ## Panel pengujian STDIN / STDOUT

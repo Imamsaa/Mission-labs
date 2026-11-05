@@ -29,7 +29,7 @@
     <header class="topbar">
       <a class="brand" href="./"><span class="brand-mark" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 4l-4 16"/></svg></span><span class="brand-title">C++ MISSION LAB</span></a>
       <div class="event-label"><span class="live-dot"></span> ICT CLASS <span class="event-divider">/</span> PRACTICAL CHALLENGE</div>
-      <div class="top-actions"><div class="timer-chip"><span class="timer-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span id="timerDisplay">60:00</span><span class="timer-label">SISA WAKTU</span></div><button id="resetSessionBtn" class="btn btn-quiet btn-small" type="button" hidden>Reset Sesi</button><span class="penalty-chip" id="penaltyChip" hidden title="Total pengurangan waktu"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3.9 2.5 17.4A2 2 0 0 0 4.2 20h15.6a2 2 0 0 0 1.7-2.6L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4m0 3h.01"/></svg><span id="penaltyDisplay">−05:00</span></span></div>
+      <div class="top-actions"><div class="timer-chip"><span class="timer-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span id="timerDisplay">60:00</span><span class="timer-label">SISA WAKTU</span></div><button id="changeStudentBtn" class="btn btn-quiet btn-small" type="button" hidden>Ganti Peserta</button><button id="resetSessionBtn" class="btn btn-quiet btn-small" type="button" hidden>Reset Sesi</button><span class="penalty-chip" id="penaltyChip" hidden title="Total pengurangan waktu"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3.9 2.5 17.4A2 2 0 0 0 4.2 20h15.6a2 2 0 0 0 1.7-2.6L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4m0 3h.01"/></svg><span id="penaltyDisplay">−05:00</span></span></div>
     </header>
     <div class="workspace">
       <aside class="sidebar panel">
@@ -86,12 +86,12 @@
       </div>
       <p class="start-session-eyebrow">C++ MISSION LAB</p>
       <h2 id="startSessionTitle">Siap memulai tantangan?</h2>
-      <p class="start-session-description">Masukkan nama lengkap sebelum memulai latihan. Timer 60 menit akan langsung berjalan setelah kamu menekan tombol mulai. Kamu dapat mereset sesi dan memulai latihan baru kapan saja.</p>
+      <p id="startSessionDescription" class="start-session-description">Masukkan nama lengkap sebelum memulai latihan. Timer 60 menit akan langsung berjalan setelah kamu menekan tombol mulai. Kamu dapat mereset sesi dan memulai latihan baru kapan saja.</p>
       <label for="startStudentName">NAMA LENGKAP</label>
       <input id="startStudentName" type="text" maxlength="120" placeholder="Contoh: Ahmad Fulan" autocomplete="name" required>
       <p id="startSessionError" class="start-session-error" role="alert" hidden>Nama lengkap wajib diisi.</p>
       <div class="start-session-note"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>60 menit · 10 misi · Timer berjalan selama sesi</span></div>
-      <button id="startSessionSubmit" class="btn btn-primary start-session-button" type="submit"><span>Mulai Sesi</span><svg class="ui-icon" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
+      <button id="startSessionSubmit" class="btn btn-primary start-session-button" type="submit"><span id="startSessionSubmitLabel">Mulai Sesi</span><svg class="ui-icon" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
     </form>
   </div>
   <div id="clipboardWarningModal" class="clipboard-modal hidden" role="dialog" aria-modal="true" aria-labelledby="clipboardWarningTitle" aria-hidden="true">
@@ -100,5 +100,5 @@
   <div id="loadingOverlay" class="loading-overlay hidden"><div class="loading-card"><div class="loader-ring"></div><p class="eyebrow">WASM COMPILER</p><h2 id="loadingTitle">Menyiapkan compiler...</h2><p id="loadingMessage">Menginisialisasi C++ di browser.</p><div class="loading-progress"><span id="loadingProgress"></span></div><small>Proses pertama kali bisa membutuhkan waktu lebih lama.</small></div></div>
   <script src="./js/config.js"></script>
   <script src="./js/rules.config.js?v=practice-no-deadline-20261103"></script>
-  <script type="module" src="./js/app.js?v=activity-logging-20261105"></script>
+  <script type="module" src="./js/app.js?v=participant-switch-20261105"></script>
 </body></html>
