@@ -741,7 +741,7 @@ function runCompilerWorker(source, options = {}) {
   const interactive = mode === 'run' && options.interactive === true && INTERACTIVE_INPUT_SUPPORTED;
 
   return new Promise((resolve, reject) => {
-    const worker = new Worker(new URL('./compiler-worker.js?v=interactive-terminal-20261105', import.meta.url), { type: 'module' });
+    const worker = new Worker(new URL('./compiler-worker.js?v=interactive-terminal-v2-20261105', import.meta.url), { type: 'module' });
     compileWorker = worker;
     let settled = false;
     let timeout = null;
@@ -808,6 +808,14 @@ function runCompilerWorker(source, options = {}) {
           clearInteractiveExecutionWatchdog();
           setInteractiveTerminalState(true, true);
           hideLoading();
+        }
+        return;
+      }
+
+      if (data.type === 'input-consumed') {
+        if (interactive) {
+          setInteractiveTerminalState(true, false);
+          armInteractiveExecutionWatchdog();
         }
         return;
       }

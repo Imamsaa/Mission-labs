@@ -25,6 +25,7 @@ class SharedQueueStdin extends OpenFile {
         }
         Atomics.store(this.header, 1, read + count);
         Atomics.notify(this.header, 1);
+        self.postMessage({ type: 'input-consumed', bytes: count });
         return { ret: 0, data: result };
       }
 
