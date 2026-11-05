@@ -681,12 +681,12 @@ function setInteractiveTerminalState(active, waiting = false) {
   const eof = $('#terminalEofBtn');
   const status = $('#terminalStatus');
   if (input) {
-    input.disabled = !interactiveProgramActive;
+    input.disabled = !interactiveWaitingForInput;
     input.placeholder = interactiveWaitingForInput
       ? 'Program menunggu input… ketik lalu tekan Enter'
-      : 'Ketik input untuk cin lalu tekan Enter…';
+      : 'Input terkunci sampai program meminta data berikutnya';
   }
-  if (send) send.disabled = !interactiveProgramActive;
+  if (send) send.disabled = !interactiveWaitingForInput;
   if (eof) eof.disabled = !interactiveProgramActive;
   if (status) {
     status.textContent = !INTERACTIVE_INPUT_SUPPORTED
@@ -698,7 +698,7 @@ function setInteractiveTerminalState(active, waiting = false) {
 }
 function enqueueInteractiveInput(line) {
   if (!interactiveInputHeader || !interactiveInputBytes ||
-      !interactiveProgramActive || interactiveInputClosed) return false;
+      !interactiveProgramActive || !interactiveWaitingForInput || interactiveInputClosed) return false;
   const bytes = new TextEncoder().encode(line);
   const write = Atomics.load(interactiveInputHeader, 0);
   const read = Atomics.load(interactiveInputHeader, 1);
@@ -713,7 +713,7 @@ function enqueueInteractiveInput(line) {
   return true;
 }
 function sendInteractiveInput() {
-  if (!interactiveProgramActive || interactiveInputClosed) return;
+  if (!interactiveProgramActive || !interactiveWaitingForInput || interactiveInputClosed) return;
   const input = $('#terminalInput');
   const line = input.value;
   if (!enqueueInteractiveInput(line + '\n')) {
@@ -741,7 +741,7 @@ function runCompilerWorker(source, options = {}) {
   const interactive = mode === 'run' && options.interactive === true && INTERACTIVE_INPUT_SUPPORTED;
 
   return new Promise((resolve, reject) => {
-    const worker = new Worker(new URL('./compiler-worker.js?v=interactive-terminal-v2-20261105', import.meta.url), { type: 'module' });
+    const worker = new Worker(new URL('./compiler-worker.js?v=interactive-terminal-v3-20261105', import.meta.url), { type: 'module' });
     compileWorker = worker;
     let settled = false;
     let timeout = null;
@@ -814,6 +814,8 @@ function runCompilerWorker(source, options = {}) {
 
       if (data.type === 'input-consumed') {
         if (interactive) {
+          // Lock the field after this read; it is enabled again only when
+          // the next cin/getline call blocks in the worker.
           setInteractiveTerminalState(true, false);
           armInteractiveExecutionWatchdog();
         }
@@ -968,6 +970,7 @@ async function execute(mode) {
         compileOutput: result.compileOutput,
         executionStatus: result.runtimeError ? 'RUNTIME ERROR' : 'BERHASIL DIJALANKAN'
       };
+    } else {
       lastSubmission = null;
       showLoading('Menjalankan test case...', 'Memeriksa tiga skenario misi.', 25);
       lastSubmission = await evaluateTaskSource(projectFiles, task);

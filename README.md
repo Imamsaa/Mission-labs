@@ -106,7 +106,7 @@ Draft, progres, input standar, timer, dan penalti disimpan terpisah berdasarkan 
 
 ## Panel pengujian STDIN / STDOUT
 
-- **Run Code:** pada browser yang mendukung `SharedArrayBuffer`, terminal menerima input langsung saat program meminta data melalui `cin` atau `getline()`. Siswa dapat mengirim beberapa baris berturut-turut melalui Enter/Kirim. Tombol **EOF** menutup input standar. Jika browser tidak mendukung isolasi lintas-origin, panel STDIN manual menjadi mode cadangan.
+- **Run Code:** pada browser yang mendukung `SharedArrayBuffer`, terminal menunggu setiap kali program mencapai `cin` atau `getline()`. Kolom input terkunci saat program sedang berjalan dan baru aktif ketika program benar-benar meminta data. Setelah satu baris dikirim, program melanjutkan hingga permintaan input berikutnya. Tombol **EOF** menutup input standar. Jika browser tidak mendukung isolasi lintas-origin, panel STDIN manual menjadi mode cadangan.
 - **STDOUT:** output dari `cout` dan `cerr` tampil langsung di terminal selama program berjalan.
 - **Check Tests:** tetap menggunakan tiga input otomatis dari sistem; siswa tidak perlu mengetik ulang input untuk pengujian.
 - Setiap Run Code dan Check Tests tetap dicatat ke Google Sheets. STDIN pada log Run Code berisi baris yang benar-benar diketik siswa.
