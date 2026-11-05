@@ -7,7 +7,8 @@
 
   // A versioned key permits one reload when switching the existing controller
   // from COEP require-corp to credentialless.
-  const key = 'cppMissionCoiCredentiallessReloaded_v1';
+  const workerVersion = new URL(scriptURL).searchParams.get('v') || 'current';
+  const key = 'cppMissionCoiCredentiallessReloaded_' + workerVersion;
   if (sessionStorage.getItem(key) === '1') return;
 
   const hadController = Boolean(navigator.serviceWorker.controller);
@@ -34,7 +35,7 @@ if (typeof window === 'undefined') {
   // Keep cross-origin isolation while allowing public no-CORS resources (e.g. Apps Script JSONP).
   let credentialless = true;
   const cacheName = 'cpp-mission-runtime-v1';
-  const appCache = 'cpp-mission-app-v1';
+  const appCache = 'cpp-mission-app-v2';
   function addIsolationHeaders(response, crossOrigin = false) {
     if (!response || response.status === 0) return response;
     const headers = new Headers(response.headers);
@@ -45,7 +46,15 @@ if (typeof window === 'undefined') {
     return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
   }
   self.addEventListener('install', event => event.waitUntil(self.skipWaiting()));
-  self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));
+  self.addEventListener('activate', event => event.waitUntil((async () => {
+    // Remove only obsolete app assets. Keep the runtime CDN cache to avoid
+    // forcing every student to download the compiler dependencies again.
+    const keys = await caches.keys();
+    await Promise.all(keys
+      .filter(name => name.startsWith('cpp-mission-app-') && name !== appCache)
+      .map(name => caches.delete(name)));
+    await self.clients.claim();
+  })()));
   self.addEventListener('message', event => { if (event.data?.type === 'coepCredentialless') credentialless = Boolean(event.data.value); });
   self.addEventListener('fetch', event => {
     const request = event.request;
@@ -59,7 +68,10 @@ if (typeof window === 'undefined') {
       const cache = await caches.open(local ? appCache : cacheName);
       try {
         if (!local) { const cached = await cache.match(request); if (cached) return addIsolationHeaders(cached, true); }
-        const response = await fetch(request);
+        // Always bypass the browser's HTTP cache for same-origin app files.
+        // The Cache API remains a network-failure fallback only.
+        const networkRequest = local ? new Request(request, { cache: 'no-store' }) : request;
+        const response = await fetch(networkRequest);
         if (response.ok && (response.type === 'basic' || response.type === 'cors')) {
           const prepared = addIsolationHeaders(response.clone(), !local);
           try { await cache.put(request, prepared.clone()); } catch {}
