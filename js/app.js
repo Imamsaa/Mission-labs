@@ -772,7 +772,7 @@ let activityBackendCheck = null;
 async function ensureActivityBackendVersion() {
   if (!activityBackendCheck) {
     activityBackendCheck = jsonpRequest({action:'ping'}).then(response => {
-      if (Number(response.schemaVersion) < 2) {
+      if (Number(response.schemaVersion) !== 2) {
         throw new Error('Google Apps Script masih versi lama. Perbarui Code.gs dan deploy versi baru terlebih dahulu.');
       }
       return response;
