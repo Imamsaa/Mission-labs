@@ -783,7 +783,10 @@ function runCompilerWorker(source, options = {}) {
       const data = event.data || {};
 
       if (data.type === 'status') {
-        showLoading('Menyiapkan compiler C++20...', data.message || 'Memuat Clang WebAssembly.', 20);
+        // Compiler initialization is a lightweight status, not a blocking modal.
+        hideLoading();
+        $('#runDuration').textContent = mode === 'run' ? 'Mengompilasi…' : 'Menyiapkan compiler…';
+        if (mode === 'run') $('#terminalStatus').textContent = 'Menyiapkan compiler C++20…';
         return;
       }
 
@@ -797,7 +800,9 @@ function runCompilerWorker(source, options = {}) {
         } else {
           armTimeout(5000, 'TIME LIMIT EXCEEDED: program berjalan lebih dari 5 detik. Periksa kemungkinan infinite loop.');
           if (mode === 'run') {
-            showLoading('Menjalankan program...', 'Program dieksekusi pada worker WebAssembly.', 75);
+            hideLoading();
+            $('#runDuration').textContent = 'Menjalankan…';
+            $('#terminalStatus').textContent = 'Program berjalan…';
           }
         }
         return;
@@ -942,7 +947,6 @@ async function execute(mode) {
       } else {
         showConsole('input');
       }
-      showLoading('Mengompilasi C++20...', 'Menyiapkan Clang WebAssembly.', 15);
       const result = await runCompilerWorker(source, {
         mode:'run',
         stdin:interactive ? '' : activitySnapshot.stdin,
