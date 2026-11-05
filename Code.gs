@@ -12,7 +12,8 @@ const HEADERS = [
   'Test Lolos', 'Total Test', 'Nilai Akhir', 'Rincian Pengujian',
   'Tanggal Submit', 'Jam Submit', 'Keberhasilan', 'Waktu Mulai',
   'Sisa Waktu Saat Submit', 'Lama Pengerjaan', 'Jumlah Pelanggaran',
-  'Rincian Pelanggaran', 'Jenis Submit', 'ID Pengiriman'
+  'Rincian Pelanggaran', 'Jenis Aktivitas', 'STDIN', 'STDOUT',
+  'Durasi Eksekusi (ms)', 'Jenis Submit', 'ID Pengiriman'
 ];
 const MAX_SUBMISSION_CHARS = 110000;
 const MAX_CHUNKS = 240;
@@ -81,6 +82,10 @@ function setup() {
     'Lama Pengerjaan': 135,
     'Jumlah Pelanggaran': 125,
     'Rincian Pelanggaran': 360,
+    'Jenis Aktivitas': 145,
+    'STDIN': 240,
+    'STDOUT': 320,
+    'Durasi Eksekusi (ms)': 145,
     'Jenis Submit': 170,
     'ID Pengiriman': 260
   };
@@ -205,9 +210,28 @@ function saveSubmission_(payload) {
     throw new Error('ID pengiriman tidak valid.');
   }
 
-  const passed = Math.max(0, Math.min(3, Number(payload.passed) || 0));
-  const total = Math.max(1, Math.min(3, Number(payload.total) || 1));
-  const score = Math.max(0, Math.min(100, Math.round(passed / total * 100)));
+  const activityType = String(payload.activityType || (
+    String(payload.submitType || '').indexOf('OTOMATIS') === 0 ? 'AUTO SUBMIT' : 'SUBMIT MISSION'
+  )).trim();
+  const allowedActivityTypes = ['RUN CODE', 'CHECK TESTS', 'SUBMIT MISSION', 'AUTO SUBMIT'];
+  if (allowedActivityTypes.indexOf(activityType) === -1) throw new Error('Jenis aktivitas tidak valid.');
+
+  const rawTotal = Number(payload.total);
+  const hasTestMetrics = payload.total !== undefined && payload.total !== null &&
+    payload.total !== '' && Number.isFinite(rawTotal) && rawTotal > 0;
+  const total = hasTestMetrics ? Math.max(1, Math.min(3, Math.floor(rawTotal))) : 0;
+  const passed = hasTestMetrics ? Math.max(0, Math.min(total, Number(payload.passed) || 0)) : 0;
+  const score = hasTestMetrics ? Math.max(0, Math.min(100, Math.round(passed / total * 100))) : '';
+
+  const executionStatus = String(payload.executionStatus || '').slice(0, 120);
+  let statusText;
+  if (activityType === 'RUN CODE' || !hasTestMetrics) {
+    statusText = executionStatus || (activityType === 'RUN CODE' ? 'DIJALANKAN' : 'TERKIRIM');
+  } else {
+    statusText = score === 100 ? 'LULUS' : 'BELUM LULUS';
+  }
+  const durationMsValue = Number(payload.durationMs);
+  const durationMs = Number.isFinite(durationMsValue) ? Math.max(0, Math.min(600000, Math.floor(durationMsValue))) : '';
 
   const rawElapsed = Number(payload.elapsedSeconds);
   const elapsedSeconds = Number.isFinite(rawElapsed) ? Math.max(0, Math.min(86400, Math.floor(rawElapsed))) : 0;
@@ -240,7 +264,9 @@ function saveSubmission_(payload) {
   const dateText = Utilities.formatDate(submittedAt, TIME_ZONE, 'dd/MM/yyyy');
   const timeText = Utilities.formatDate(submittedAt, TIME_ZONE, 'HH:mm:ss');
   const startText = startedAt ? Utilities.formatDate(startedAt, TIME_ZONE, 'dd/MM/yyyy HH:mm:ss') : '';
-  const successText = passed + '/' + total + ' test berhasil (' + score + '%)';
+  const successText = hasTestMetrics
+    ? passed + '/' + total + ' test berhasil (' + score + '%)'
+    : (executionStatus || statusText);
   const violationText = violations.map(function (item, index) {
     let when = 'waktu tidak tersedia';
     if (item.occurredAt) {
@@ -257,11 +283,15 @@ function saveSubmission_(payload) {
     'Tugas': safeCellText_(task),
     'Waktu Submit': submittedAt,
     'Kode C++': safeCellText_(code),
-    'Status': score === 100 ? 'LULUS' : 'BELUM LULUS',
-    'Test Lolos': passed,
-    'Total Test': total,
-    'Nilai Akhir': score,
+    'Status': statusText,
+    'Test Lolos': hasTestMetrics ? passed : '',
+    'Total Test': hasTestMetrics ? total : '',
+    'Nilai Akhir': hasTestMetrics ? score : '',
     'Rincian Pengujian': safeCellText_(String(payload.details || '').slice(0, 45000)),
+    'Jenis Aktivitas': safeCellText_(activityType),
+    'STDIN': safeCellText_(String(payload.stdin || '').slice(0, 10000)),
+    'STDOUT': safeCellText_(String(payload.stdout || '').slice(0, 15000)),
+    'Durasi Eksekusi (ms)': durationMs,
     'Tanggal Submit': dateText,
     'Jam Submit': timeText,
     'Keberhasilan': successText,

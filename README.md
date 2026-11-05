@@ -10,7 +10,8 @@ Platform latihan praktik C++ untuk siswa SMP. Berisi **10 misi tingkat Hard deng
 4. Siswa dapat menekan **Reset Sesi** untuk memulai jatah 60 menit baru. Draft kode dan progres misi tetap tersimpan.
 5. Setiap pelanggaran yang terdeteksi mengurangi waktu lima menit. Semua proteksi tetap aktif pada sesi yang baru.
 6. Jika waktu habis, sesi dan editor dikunci. Kode pada misi yang sedang terbuka diuji otomatis dan dikirim ke Google Spreadsheet dengan jenis submit `OTOMATIS - WAKTU HABIS`.
-7. Siswa juga dapat menjalankan Check Tests lalu mengirim melalui tombol **Submit Mission**. Kolom Jenis Submit membedakan pengiriman manual dan otomatis.
+7. Setiap klik **Run Code** dan **Check Tests** juga dicatat ke Google Spreadsheet. Log menyimpan jenis aktivitas, kode multi-file, input/output, status eksekusi, durasi, dan rincian test.
+8. Siswa dapat mengirim hasil penilaian melalui tombol **Submit Mission**. Pengiriman manual dan otomatis tetap dibedakan dari log Run Code / Check Tests.
 
 ## Daftar 10 misi
 
@@ -82,11 +83,11 @@ Proteksi browser adalah deterrent, bukan jaminan anti-cheat mutlak. Screenshot s
 4. Buka **Deploy → Manage deployments → Edit → New version → Deploy**.
 5. Pertahankan URL `/exec` yang sama. URL yang telah diatur di `js/config.js` dapat tetap digunakan jika deployment yang sama diperbarui.
 
-Kolom tambahan **Jenis Submit** dan **ID Pengiriman** membedakan submit manual/otomatis serta mencegah satu pengiriman yang sama ditulis dua kali.
+Kolom **Jenis Aktivitas**, **STDIN**, **STDOUT**, dan **Durasi Eksekusi (ms)** mencatat setiap Run Code dan Check Tests. Kolom **Jenis Submit** tetap membedakan pengiriman manual/otomatis. **ID Pengiriman** mencegah satu event tercatat dua kali. Header baru ditambahkan secara otomatis tanpa menghapus data lama.
 
 ## Kolom spreadsheet
 
-Nama Peserta · Tugas · Waktu Submit · Tanggal Submit · Jam Submit · Status · Test Lolos · Total Test · Nilai Akhir · Rincian Pengujian · Kode C++ · Waktu Mulai · Sisa Waktu Saat Submit · Lama Pengerjaan · Jumlah Pelanggaran · Rincian Pelanggaran · Jenis Submit · ID Pengiriman.
+Nama Peserta · Tugas · Waktu Submit · Tanggal Submit · Jam Submit · Status · Test Lolos · Total Test · Nilai Akhir · Rincian Pengujian · Kode C++ · Waktu Mulai · Sisa Waktu Saat Submit · Lama Pengerjaan · Jumlah Pelanggaran · Rincian Pelanggaran · Jenis Aktivitas · STDIN · STDOUT · Durasi Eksekusi (ms) · Jenis Submit · ID Pengiriman.
 
 ## Deployment GitHub Pages
 

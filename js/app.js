@@ -40,6 +40,7 @@ const PENALTY_KEY = 'cppMissionLab_penaltySeconds_v1';
 const VIOLATION_COUNT_KEY = 'cppMissionLab_violationCount_v1';
 const VIOLATION_LOG_KEY = 'cppMissionLab_violationLog_v1';
 const AUTO_PENDING_KEY = 'cppMissionLab_autoSubmissionPending_v1';
+const ACTIVITY_PENDING_KEY = 'cppMissionLab_activityPending_v1';
 const SENT_PREFIX = 'cppMissionLab_sent_';
 const PROGRESS_KEY = 'cppMissionLab_progress_v3';
 const DRAFT_PREFIX = 'cppMissionLab_draft_v1_';
@@ -576,47 +577,81 @@ async function evaluateTaskSource(projectFiles,task) {
 async function execute(mode) {
   if (sessionStarted && remainingSeconds() <= 0) updateTimer();
   if (!sessionStarted || sessionFinished || compileBusy) { toast('Sesi belum aktif, waktu telah habis, atau proses masih berjalan.','bad'); return; }
-  const projectFiles=getProjectFilesSnapshot(tasks[currentTask]);
-  const source=projectFiles['main.cpp']||'';
-  const extraFiles=getCompilerExtraFiles(projectFiles);
+  const task = tasks[currentTask];
+  const projectFiles = getProjectFilesSnapshot(task);
+  const source = projectFiles['main.cpp'] || '';
+  const extraFiles = getCompilerExtraFiles(projectFiles);
   if (!source.trim()) { toast('Editor masih kosong.','bad'); return; }
   if (!source.includes('main(') && !source.includes('main (')) { toast('Program harus memiliki fungsi main().','bad'); return; }
-  compileBusy=true;
-  ['runBtn','checkTestsBtn','submitBtn'].forEach(id=>$('#'+id).disabled=true);
-  const started=performance.now();
-  $('#runDuration').textContent='Compiling';
+
+  const activityType = mode === 'run' ? 'RUN CODE' : 'CHECK TESTS';
+  const activitySnapshot = captureActivitySnapshot(projectFiles, task);
+  let activityResult = null;
+  compileBusy = true;
+  ['runBtn','checkTestsBtn','submitBtn'].forEach(id => $('#' + id).disabled = true);
+  const started = performance.now();
+  $('#runDuration').textContent = 'Compiling';
+
   try {
-    if (mode==='run') {
-      showLoading('Mengompilasi C++20...','Menyiapkan Clang WebAssembly.',15);
-      const result=await runCompilerWorker(source,{mode:'run',stdin:$('#stdinInput').value,extraFiles});
+    if (mode === 'run') {
+      showLoading('Mengompilasi C++20...', 'Menyiapkan Clang WebAssembly.', 15);
+      const result = await runCompilerWorker(source, {mode:'run', stdin:activitySnapshot.stdin, extraFiles});
       hideLoading();
-      const sections=[];
+      const sections = [];
       sections.push(result.stdout || '(Program selesai tanpa menghasilkan output.)');
-      if(result.stderr)sections.push('[STDERR]\n'+result.stderr);
-      if(result.runtimeError)sections.push('[RUNTIME ERROR]\n'+result.runtimeError);
-      showOutput(sections.join('\n\n'),result.runtimeError?'error':'success');
-      toast(result.runtimeError?'Program mengalami runtime error.':'Program berhasil dijalankan.',result.runtimeError?'bad':'good');
+      if (result.stderr) sections.push('[STDERR]\\n' + result.stderr);
+      if (result.runtimeError) sections.push('[RUNTIME ERROR]\\n' + result.runtimeError);
+      showOutput(sections.join('\\n\\n'), result.runtimeError ? 'error' : 'success');
+      toast(result.runtimeError ? 'Program mengalami runtime error.' : 'Program berhasil dijalankan.', result.runtimeError ? 'bad' : 'good');
+      activityResult = {
+        stdout: result.stdout,
+        stderr: result.stderr,
+        runtimeError: result.runtimeError,
+        compileOutput: result.compileOutput,
+        executionStatus: result.runtimeError ? 'RUNTIME ERROR' : 'BERHASIL DIJALANKAN'
+      };
     } else {
-      showLoading('Menjalankan test case...','Memeriksa tiga skenario misi.',25);
-      lastSubmission=await evaluateTaskSource(projectFiles,tasks[currentTask]);
-      const passed=renderTests(lastSubmission.rows,lastSubmission.total);
-      $('#scorePreview').textContent=passed+'/'+lastSubmission.total+' test lolos · Nilai '+lastSubmission.score+'/100';
-      $('#submitBtn').disabled=false;
+      lastSubmission = null;
+      showLoading('Menjalankan test case...', 'Memeriksa tiga skenario misi.', 25);
+      lastSubmission = await evaluateTaskSource(projectFiles, task);
+      const passed = renderTests(lastSubmission.rows, lastSubmission.total);
+      $('#scorePreview').textContent = passed + '/' + lastSubmission.total + ' test lolos · Nilai ' + lastSubmission.score + '/100';
+      $('#submitBtn').disabled = false;
       showConsole('tests');
-      toast('Pengujian selesai: '+passed+'/'+lastSubmission.total+' test lolos.',passed===lastSubmission.total?'good':'bad');
+      toast('Pengujian selesai: ' + passed + '/' + lastSubmission.total + ' test lolos.', passed === lastSubmission.total ? 'good' : 'bad');
+      activityResult = {
+        ...lastSubmission,
+        executionStatus: 'SELESAI - ' + passed + '/' + lastSubmission.total + ' TEST LOLOS'
+      };
     }
-    $('#runDuration').textContent=Math.round(performance.now()-started)+' ms';
-  } catch(error) {
-    hideLoading();showOutput(error.message||String(error),'error');$('#runDuration').textContent='Compile / runtime error';toast('Program gagal dijalankan. Periksa terminal.','bad');
-  } finally {
-    // Always dismiss the compiler overlay after Run Code or Check Tests completes.
+    $('#runDuration').textContent = Math.round(performance.now() - started) + ' ms';
+  } catch (error) {
     hideLoading();
-    compileBusy=false;
-    const locked=!sessionStarted||sessionFinished;
-    $('#runBtn').disabled=locked;$('#checkTestsBtn').disabled=locked;
-    $('#submitBtn').disabled=locked||!lastSubmission||lastSubmission.task!==tasks[currentTask].title||lastSubmission.code!==getProjectCodeSnapshot();
+    showOutput(error.message || String(error), 'error');
+    $('#runDuration').textContent = 'Compile / runtime error';
+    toast('Program gagal dijalankan. Periksa terminal.', 'bad');
+    if (mode === 'tests') lastSubmission = null;
+    activityResult = {
+      error: error.message || String(error),
+      executionStatus: 'GAGAL KOMPILASI / EKSEKUSI'
+    };
+  } finally {
+    // Queue the attempt even when compilation or execution fails.
+    if (activityResult) {
+      activityResult.durationMs = Math.round(performance.now() - started);
+      queueActivityLog(buildActivityPayload(activitySnapshot, activityType, activityResult));
+    }
+    hideLoading();
+    compileBusy = false;
+    const locked = !sessionStarted || sessionFinished;
+    $('#runBtn').disabled = locked;
+    $('#checkTestsBtn').disabled = locked;
+    $('#submitBtn').disabled = locked || !lastSubmission ||
+      lastSubmission.task !== tasks[currentTask].title ||
+      lastSubmission.code !== getProjectCodeSnapshot();
   }
 }
+
 function codeFingerprint(value) {
   let hash=2166136261;const source=String(value||'');
   for(let i=0;i<source.length;i++){hash^=source.charCodeAt(i);hash=Math.imul(hash,16777619);}
@@ -636,6 +671,7 @@ function captureSubmissionSnapshot(submitType) {
 function buildSubmissionPayload(snapshot,result) {
   return {
     submissionId:snapshot.submissionId,submitType:snapshot.submitType,
+    activityType:snapshot.submitType === 'OTOMATIS - WAKTU HABIS' ? 'AUTO SUBMIT' : 'SUBMIT MISSION',
     name:snapshot.name,task:snapshot.task,code:snapshot.code,
     passed:result.passed,total:result.total,score:result.score,
     details:JSON.stringify(result.rows.map(row=>({name:row.name,ok:row.ok,checks:row.checks}))),
@@ -643,6 +679,127 @@ function buildSubmissionPayload(snapshot,result) {
     remainingSeconds:snapshot.remainingSeconds,elapsedSeconds:snapshot.elapsedSeconds,
     violationCount:snapshot.violationCount,violations:JSON.stringify(snapshot.violations)
   };
+}
+function captureActivitySnapshot(projectFiles, task) {
+  return {
+    name: ($('#studentName').value || localStorage.getItem(NAME_KEY) || '').trim(),
+    task: task.title,
+    code: serializeProjectFiles(projectFiles),
+    stdin: $('#stdinInput').value || '',
+    startedAtMs: Number(localStorage.getItem(START_KEY)) || Date.now(),
+    elapsedSeconds: elapsedSessionSeconds(),
+    remainingSeconds: remainingSeconds(),
+    violationCount: getViolationCount(),
+    violations: getViolationLog()
+  };
+}
+function createActivityId() {
+  const token = window.crypto && typeof window.crypto.randomUUID === 'function'
+    ? window.crypto.randomUUID().replace(/-/g, '')
+    : Date.now() + '_' + Math.random().toString(36).slice(2);
+  return 'activity_' + token;
+}
+function buildActivityPayload(snapshot, activityType, result) {
+  const tests = Array.isArray(result.rows) ? result.rows.map(row => ({
+    name: row.name,
+    hidden: !!row.hidden,
+    ok: !!row.ok,
+    checks: row.checks,
+    output: row.output
+  })) : [];
+  const stdout = activityType === 'RUN CODE'
+    ? String(result.stdout || '')
+    : tests.map(row => '[' + row.name + '] ' + (row.ok ? 'PASS' : 'FAIL') + '\\n' + (row.output || '')).join('\\n\\n');
+  const details = {
+    compileOutput: result.compileOutput || '',
+    stderr: result.stderr || '',
+    runtimeError: result.runtimeError || '',
+    error: result.error || '',
+    tests
+  };
+  const hasTestMetrics = activityType === 'CHECK TESTS' &&
+    Number.isFinite(Number(result.total)) && Number(result.total) > 0;
+  return {
+    submissionId: createActivityId(),
+    activityType,
+    submitType: '',
+    name: snapshot.name,
+    task: snapshot.task,
+    code: snapshot.code,
+    passed: hasTestMetrics ? result.passed : '',
+    total: hasTestMetrics ? result.total : '',
+    score: hasTestMetrics ? result.score : '',
+    details: JSON.stringify(details).slice(0, 25000),
+    stdin: activityType === 'RUN CODE' ? snapshot.stdin.slice(0, 10000) : '',
+    stdout: stdout.slice(0, 15000),
+    executionStatus: result.executionStatus || '',
+    durationMs: result.durationMs || 0,
+    submittedAtClient: new Date().toISOString(),
+    startedAtMs: snapshot.startedAtMs,
+    remainingSeconds: snapshot.remainingSeconds,
+    elapsedSeconds: snapshot.elapsedSeconds,
+    violationCount: snapshot.violationCount,
+    violations: JSON.stringify(snapshot.violations)
+  };
+}
+function readPendingActivityLogs() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(ACTIVITY_PENDING_KEY) || '[]');
+    return Array.isArray(stored) ? stored : [];
+  } catch (error) {
+    return [];
+  }
+}
+function writePendingActivityLogs(queue) {
+  if (queue.length) localStorage.setItem(ACTIVITY_PENDING_KEY, JSON.stringify(queue));
+  else localStorage.removeItem(ACTIVITY_PENDING_KEY);
+}
+function enqueueActivityLog(payload) {
+  const queue = readPendingActivityLogs();
+  if (!queue.some(item => item.submissionId === payload.submissionId)) queue.push(payload);
+  writePendingActivityLogs(queue);
+}
+function removePendingActivityLog(payload) {
+  const queue = readPendingActivityLogs().filter(item => item.submissionId !== payload.submissionId);
+  writePendingActivityLogs(queue);
+}
+let activityFlushInFlight = false;
+async function flushPendingActivityLogs() {
+  if (activityFlushInFlight) return;
+  activityFlushInFlight = true;
+  try {
+    while (true) {
+      const queue = readPendingActivityLogs();
+      if (!queue.length) break;
+      const payload = queue[0];
+      if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('PASTE_APPS_SCRIPT')) {
+        throw new Error('URL Google Apps Script belum dikonfigurasi.');
+      }
+      await sendSubmission(payload);
+      removePendingActivityLog(payload);
+      toast('Aktivitas ' + payload.activityType + ' berhasil dicatat di Google Sheet.', 'good');
+    }
+  } catch (error) {
+    toast('Aktivitas belum terkirim. Data disimpan di antrean dan akan dicoba kembali saat halaman dibuka.', 'bad');
+    console.warn('Activity log delivery failed:', error);
+  } finally {
+    activityFlushInFlight = false;
+  }
+}
+function queueActivityLog(payload) {
+  try {
+    enqueueActivityLog(payload);
+    flushPendingActivityLogs();
+  } catch (storageError) {
+    // Try immediate delivery if the browser cannot persist the offline queue.
+    console.warn('Could not persist activity log queue:', storageError);
+    sendSubmission(payload).then(() => {
+      toast('Aktivitas ' + payload.activityType + ' berhasil dicatat di Google Sheet.', 'good');
+    }).catch(error => {
+      toast('Pengiriman aktivitas gagal: ' + (error.message || 'periksa koneksi.'), 'bad');
+      console.error('Activity log delivery failed:', error);
+    });
+  }
 }
 function markSubmissionSent(snapshot){localStorage.setItem(SENT_PREFIX+snapshot.submissionId,'1');}
 function readPendingSubmissions() {
@@ -977,3 +1134,4 @@ else if(sessionFinished)updateTimer();
 else {openStartSessionModal();updateTimer();}
 if(!sessionFinished)timerInterval=setInterval(updateTimer,1000);
 retryPendingAutoSubmission();
+retryPendingActivityLogs();
