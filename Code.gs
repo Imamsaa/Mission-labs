@@ -107,7 +107,7 @@ function doGet(e) {
     if (params.action === 'chunk') {
       result = receiveChunk_(params);
     } else if (params.action === 'ping') {
-      result = { ok: true, message: 'C++ Mission Lab endpoint aktif.' };
+      result = { ok: true, schemaVersion: 2, message: 'C++ Mission Lab endpoint aktif.' };
     } else {
       throw new Error('Action tidak dikenali.');
     }

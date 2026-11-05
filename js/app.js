@@ -768,6 +768,21 @@ function removePendingActivityLog(payload) {
   writePendingActivityLogs(queue);
 }
 let activityFlushInFlight = false;
+let activityBackendCheck = null;
+async function ensureActivityBackendVersion() {
+  if (!activityBackendCheck) {
+    activityBackendCheck = jsonpRequest({action:'ping'}).then(response => {
+      if (Number(response.schemaVersion) < 2) {
+        throw new Error('Google Apps Script masih versi lama. Perbarui Code.gs dan deploy versi baru terlebih dahulu.');
+      }
+      return response;
+    }).catch(error => {
+      activityBackendCheck = null;
+      throw error;
+    });
+  }
+  return activityBackendCheck;
+}
 async function flushPendingActivityLogs() {
   if (activityFlushInFlight) return;
   activityFlushInFlight = true;
@@ -779,12 +794,13 @@ async function flushPendingActivityLogs() {
       if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('PASTE_APPS_SCRIPT')) {
         throw new Error('URL Google Apps Script belum dikonfigurasi.');
       }
+      await ensureActivityBackendVersion();
       await sendSubmission(payload);
       removePendingActivityLog(payload);
       toast('Aktivitas ' + payload.activityType + ' berhasil dicatat di Google Sheet.', 'good');
     }
   } catch (error) {
-    toast('Aktivitas belum terkirim. Data disimpan di antrean dan akan dicoba kembali saat halaman dibuka.', 'bad');
+    toast('Aktivitas belum terkirim. ' + (error.message || 'Periksa koneksi.') + ' Data tetap disimpan di antrean.', 'bad');
     console.warn('Activity log delivery failed:', error);
   } finally {
     activityFlushInFlight = false;

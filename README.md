@@ -83,7 +83,7 @@ Proteksi browser adalah deterrent, bukan jaminan anti-cheat mutlak. Screenshot s
 4. Buka **Deploy → Manage deployments → Edit → New version → Deploy**.
 5. Pertahankan URL `/exec` yang sama. URL yang telah diatur di `js/config.js` dapat tetap digunakan jika deployment yang sama diperbarui.
 
-Kolom **Jenis Aktivitas**, **STDIN**, **STDOUT**, dan **Durasi Eksekusi (ms)** mencatat setiap Run Code dan Check Tests. Kolom **Jenis Submit** tetap membedakan pengiriman manual/otomatis. **ID Pengiriman** mencegah satu event tercatat dua kali. Header baru ditambahkan secara otomatis tanpa menghapus data lama.
+Kolom **Jenis Aktivitas**, **STDIN**, **STDOUT**, dan **Durasi Eksekusi (ms)** mencatat setiap Run Code dan Check Tests. Kolom **Jenis Submit** tetap membedakan pengiriman manual/otomatis. **ID Pengiriman** mencegah satu event tercatat dua kali. Header baru ditambahkan secara otomatis tanpa menghapus data lama. Sebelum mengirim log aktivitas, frontend memeriksa schemaVersion backend; bila Apps Script belum diperbarui, log tetap di antrean browser dan tidak dikirim ke backend lama.
 
 ## Kolom spreadsheet
 
