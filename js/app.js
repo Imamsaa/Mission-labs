@@ -1315,4 +1315,4 @@ else if(sessionFinished)updateTimer();
 else {openStartSessionModal();updateTimer();}
 if(!sessionFinished)timerInterval=setInterval(updateTimer,1000);
 retryPendingAutoSubmission();
-retryPendingActivityLogs();
+flushPendingActivityLogs();
