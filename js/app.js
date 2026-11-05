@@ -569,7 +569,7 @@ async function evaluateTaskSource(projectFiles,task) {
     if(execution.stdout)outputParts.push(execution.stdout);
     if(execution.stderr)outputParts.push('[STDERR]\\n'+execution.stderr);
     if(execution.runtimeError)outputParts.push('[RUNTIME ERROR]\\n'+execution.runtimeError);
-    return {name:test.name,hidden:!!test.hidden,ok:checks.every(check=>check.ok),checks,output:outputParts.join('\\n\\n')||'(Tidak ada output)'};
+    return {name:test.name,input:test.input||'',hidden:!!test.hidden,ok:checks.every(check=>check.ok),checks,output:outputParts.join('\\n\\n')||'(Tidak ada output)'};
   });
   const total=task.tests.length,passed=rows.filter(row=>row.ok).length;
   return {task:task.title,code:serializeProjectFiles(files),files,rows,passed,total,score:total?Math.round(passed/total*100):0};
@@ -703,6 +703,7 @@ function buildActivityPayload(snapshot, activityType, result) {
   const tests = Array.isArray(result.rows) ? result.rows.map(row => ({
     name: row.name,
     hidden: !!row.hidden,
+    input: row.input || '',
     ok: !!row.ok,
     checks: row.checks,
     output: row.output
@@ -710,6 +711,9 @@ function buildActivityPayload(snapshot, activityType, result) {
   const stdout = activityType === 'RUN CODE'
     ? String(result.stdout || '')
     : tests.map(row => '[' + row.name + '] ' + (row.ok ? 'PASS' : 'FAIL') + '\\n' + (row.output || '')).join('\\n\\n');
+  const stdin = activityType === 'RUN CODE'
+    ? snapshot.stdin
+    : tests.map(row => '[' + row.name + ']\\n' + (row.input || '')).join('\\n\\n');
   const details = {
     compileOutput: result.compileOutput || '',
     stderr: result.stderr || '',
@@ -730,7 +734,7 @@ function buildActivityPayload(snapshot, activityType, result) {
     total: hasTestMetrics ? result.total : '',
     score: hasTestMetrics ? result.score : '',
     details: JSON.stringify(details).slice(0, 25000),
-    stdin: activityType === 'RUN CODE' ? snapshot.stdin.slice(0, 10000) : '',
+    stdin: String(stdin || '').slice(0, 10000),
     stdout: stdout.slice(0, 15000),
     executionStatus: result.executionStatus || '',
     durationMs: result.durationMs || 0,
